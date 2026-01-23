@@ -1,0 +1,84 @@
+# ===========================================
+# CalEITC Labor Supply Project .gitignore
+# ===========================================
+
+# -------------------------------------------
+# API Keys and Credentials (NEVER COMMIT)
+# -------------------------------------------
+api_codes.txt
+*.key
+*.secret
+credentials.*
+
+# -------------------------------------------
+# Large Data Files
+# -------------------------------------------
+# ACS microdata (CSV and Stata formats)
+data/acs/*.csv
+data/acs/*.csv.gz
+
+# Final processed datasets (large .dta files)
+data/final/*.dta
+
+# Interim/working datasets
+data/interim/*.dta
+data/interim/*.csv
+
+# TAXSIM outputs
+data/taxsim/*.dta
+data/taxsim/*.csv
+
+# Raw data files
+data/raw/*
+
+# -------------------------------------------
+# Log Files
+# -------------------------------------------
+code/logs/*.log
+*.log
+
+# -------------------------------------------
+# R Session Files
+# -------------------------------------------
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# -------------------------------------------
+# Stata Temporary Files
+# -------------------------------------------
+*.stswp
+*.smcl
+__erase*
+
+# -------------------------------------------
+# OS Generated Files
+# -------------------------------------------
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# -------------------------------------------
+# Editor/IDE Files
+# -------------------------------------------
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# -------------------------------------------
+# Temporary Files
+# -------------------------------------------
+*.tmp
+*.temp
+*.bak
