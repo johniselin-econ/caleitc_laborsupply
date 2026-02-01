@@ -88,7 +88,7 @@ balancetable (mean if byvar1==1) (mean if byvar2==1) ///
              (mean if byvar3==1) (mean if byvar4==1) ///
              (mean if byvar5==1) (mean if byvar6==1) ///
              (mean if byvar7==1) (mean if byvar8==1) ///
-    `varlist' using "${results}paper/tab_appA_tab1.tex" [aw = weight], ///
+    `varlist' using "${results}tables/tab_appA_tab1.tex" [aw = weight], ///
     ctitles("No QC" "1+ QC" "No QC" "1+ QC" ///
             "No QC" "1+ QC" "No QC" "1+ QC" ) ///
     groups("CA - ${start_year}-2014" "CA - 2015-${end_year}" ///

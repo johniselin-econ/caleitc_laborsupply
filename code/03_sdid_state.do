@@ -44,6 +44,33 @@ local start = 2010
 local end = ${end_year}
 
 ** =============================================================================
+** Program to store SDID results as estimation results
+** =============================================================================
+
+capture program drop store_sdid_results
+program define store_sdid_results, eclass
+    syntax, att(real) se(real) n(integer) outcome(string)
+
+    ** Create matrices for ereturn post
+    tempname b V
+    matrix `b' = (`att')
+    matrix `V' = (`se'^2)
+    matrix colnames `b' = "ATT"
+    matrix colnames `V' = "ATT"
+    matrix rownames `V' = "ATT"
+
+    ** Post results
+    ereturn post `b' `V', obs(`n')
+    ereturn local depvar "`outcome'"
+    ereturn local cmd "sdid"
+
+    ** Store ATT and SE for later use
+    ereturn scalar ATT = `att'
+    ereturn scalar se = `se'
+
+end
+
+** =============================================================================
 ** Load and Prepare Data
 ** =============================================================================
 
@@ -68,6 +95,10 @@ foreach out in employed_y full_time_y part_time_y {
 ** Generate count variable for collapsing
 gen n = 1
 
+** Store sample size before collapse
+qui count
+local N_micro = r(N)
+
 ** =============================================================================
 ** Collapse to State x Year x QC Panel
 ** =============================================================================
@@ -79,6 +110,10 @@ collapse ///
 
 ** Summarize collapsed data
 summ
+
+** Store panel size
+qui count
+local N_panel = r(N)
 
 ** =============================================================================
 ** Reshape to Create Difference Variables for Triple SDID
@@ -118,9 +153,6 @@ foreach out of local outcomes {
     ** Generate difference: (QC > 0) - (QC = 0)
     gen `out'_diff = `out'1 - `out'0
 
-    ** Drop QC = 0 value (keep for Basic SDID)
-    ** rename `out'0 `out'_qc0
-
     ** Rename QC > 0 value for clarity
     rename `out'1 `out'
     rename `out'0 `out'_qc0
@@ -140,6 +172,10 @@ gen constant = 1
 ** Order variables
 order state_fips year treated
 
+** Store final panel size
+qui count
+local N_final = r(N)
+
 ** Save prepared data
 save "${data}interim/sdid_state_panel.dta", replace
 
@@ -157,10 +193,13 @@ local i = 1
 ** Loop over outcomes
 foreach out of local outcomes {
 
-    ** Create matrices to store results (2 rows: ATT, SE; 4 cols: specifications)
-    matrix table_`out' = J(2, 4, .)
-    matrix rownames table_`out' = ATT SE
-    matrix colnames table_`out' = "Basic_NoCov" "Basic_Cov" "Triple_NoCov" "Triple_Cov"
+    dis ""
+    dis "=============================================="
+    dis "Running SDID for outcome: `out'"
+    dis "=============================================="
+
+    ** Clear stored estimates
+    eststo clear
 
     ** Start column counter
     local ct = 1
@@ -186,23 +225,24 @@ foreach out of local outcomes {
 
             ** Identify loop
             dis ""
-            dis "=============================================="
-            dis "Running SDID"
-            dis "  - Outcome: `out'`prx'"
+            dis "----------------------------------------------"
             dis "  - Model: `mod'"
-            dis "  - Covariates: `covars'"
-            dis "=============================================="
+            dis "  - Covariates: `c'"
+            dis "----------------------------------------------"
 
             ** Run SDID
             sdid `out'`prx' state_fips year treated, ///
                 vce(placebo) `c_txt' reps(`B')
 
-            ** Store results
-            local att_`ct' = `e(ATT)'
-            local se_`ct' = `e(se)'
+            ** Store ATT and SE
+            local tmp_att = e(ATT)
+            local tmp_se = e(se)
 
-            matrix table_`out'[1, `ct'] = `att_`ct''
-            matrix table_`out'[2, `ct'] = `se_`ct''
+            ** Store as estimation result
+            store_sdid_results, att(`tmp_att') se(`tmp_se') n(`N_final') outcome(`out')
+
+            ** Store estimate
+            eststo est_`ct'
 
             ** Update column counter
             local ct = `ct' + 1
@@ -211,23 +251,87 @@ foreach out of local outcomes {
 
     }
 
-    ** Display matrix
-    dis ""
-    dis "Results for `out':"
-    matrix list table_`out'
+    ** -------------------------------------------------------------------------
+    ** Export table for this outcome
+    ** -------------------------------------------------------------------------
 
-    ** Export matrix to LaTeX
-    esttab matrix(table_`out', fmt(%9.2fc)) ///
-        using "${results}paper/tab_sdid_state_`i'.tex", ///
-        replace booktabs fragment mlabels(,none) ///
-        collabels(,none) nonumbers nolines
+    ** Define column titles
+    local coltitles `" "(1)" "(2)" "(3)" "(4)" "'
+
+    ** Save table locally
+    esttab est_1 est_2 est_3 est_4 using ///
+        "${results}tables/tab_sdid_state_`i'.tex", ///
+        booktabs fragment replace nonumbers nolines ///
+        mtitles(`coltitles') ///
+        b(2) se(2) ///
+        star(* 0.10 ** 0.05 *** 0.01) ///
+        stats(N, fmt(%9.0fc) labels("Observations")) ///
+        prehead("\\ \midrule")
 
     ** Save to Overleaf if enabled
     if ${overleaf} == 1 {
-        esttab matrix(table_`out', fmt(%9.2fc)) ///
-            using "${ol_tab}tab_sdid_state_`i'.tex", ///
-            replace booktabs fragment mlabels(,none) ///
-            collabels(,none) nonumbers nolines
+        esttab est_1 est_2 est_3 est_4 using ///
+            "${ol_tab}tab_sdid_state_`i'.tex", ///
+            booktabs fragment replace nonumbers nolines ///
+            mtitles(`coltitles') ///
+            b(2) se(2) ///
+            star(* 0.10 ** 0.05 *** 0.01) ///
+            stats(N, fmt(%9.0fc) labels("Observations")) ///
+            prehead("\\ \midrule")
+    }
+
+    ** For first outcome, create spec indicators table
+    if `i' == 1 {
+
+        ** Add spec indicators
+        est restore est_1
+        estadd local basic "\checkmark"
+        estadd local triple ""
+        estadd local covars ""
+        est store est_1
+
+        est restore est_2
+        estadd local basic "\checkmark"
+        estadd local triple ""
+        estadd local covars "\checkmark"
+        est store est_2
+
+        est restore est_3
+        estadd local basic ""
+        estadd local triple "\checkmark"
+        estadd local covars ""
+        est store est_3
+
+        est restore est_4
+        estadd local basic ""
+        estadd local triple "\checkmark"
+        estadd local covars "\checkmark"
+        est store est_4
+
+        ** Define statistics labels
+        local stats_list "basic triple covars"
+        local stats_fmt "%9s %9s %9s"
+        local stats_labels `" "  Basic SDID (QC $>$ 0 only)" "  Triple SDID (Difference)" "  Time-varying Covariates" "'
+
+        ** Save
+        esttab est_1 est_2 est_3 est_4 using ///
+            "${results}tables/tab_sdid_state_end.tex", ///
+            booktabs fragment replace nonumbers nolines nomtitles ///
+            stats(`stats_list', ///
+                fmt("`stats_fmt'") ///
+                labels(`stats_labels')) ///
+            cells(none) prehead("\\ \midrule")
+
+        if ${overleaf} == 1 {
+            esttab est_1 est_2 est_3 est_4 using ///
+                "${ol_tab}tab_sdid_state_end.tex", ///
+                booktabs fragment replace nonumbers nolines nomtitles ///
+                stats(`stats_list', ///
+                    fmt("`stats_fmt'") ///
+                    labels(`stats_labels')) ///
+                cells(none) prehead("\\ \midrule")
+        }
+
     }
 
     ** Update counter
@@ -243,9 +347,6 @@ dis ""
 dis "=============================================="
 dis "Running SDID Event Studies"
 dis "=============================================="
-
-** Reset counter
-local i = 1
 
 foreach out of local outcomes {
 
@@ -268,29 +369,29 @@ foreach out of local outcomes {
         dis "Event study: `out'`prx' (`mod_lbl')"
 
         ** Run SDID with event study (with covariates)
-        sdid_event `out'`prx' state_fips year treated, 				///
+        sdid_event `out'`prx' state_fips year treated, ///
            vce(placebo) brep(50) placebo(all) covariates(`covars')
-			
-		** Preserve data and export into dataset 
+
+		** Preserve data and export into dataset
         mat res = e(H)
         svmat res
-		gen id = _n - 1 if !missing(res1) 
-		replace id = . if id == 0 
-		replace id = 2010 + id - 4 if id >= 4 
+		gen id = _n - 1 if !missing(res1)
+		replace id = . if id == 0
+		replace id = 2010 + id - 4 if id >= 4
 		replace id = 2014 + id if inlist(id, 1, 2, 3)
 		sort id
-		
-		** Plot 
+
+		** Plot
         twoway 	(rcap res3 res4 id, color(gs7)) 				///
 				(scatter res1 id, color(black) ms(d)), 			///
 			legend(off) xtitle(Year)							///
             ytitle(Average Treatment Effect) 					///
 			xline(2014.5, lc(red) lp(-)) yline(0, lc(black) lp(solid))
 
-		drop id res1-res5 
-		
+		drop id res1-res5
+
         ** Save event study figure
-        graph export "${results}paper/fig_sdid_event_`out'_`mod_lbl'.jpg", ///
+        graph export "${results}tables/fig_sdid_event_`out'_`mod_lbl'.jpg", ///
             as(jpg) quality(100) replace
 
         if ${overleaf} == 1 {
@@ -300,47 +401,6 @@ foreach out of local outcomes {
 
     }
 
-}
-
-** =============================================================================
-** Create Summary Table Combining All Outcomes
-** =============================================================================
-
-** Create combined results matrix
-matrix results_all = J(8, 4, .)
-matrix rownames results_all = ///
-    "Employed_ATT" "Employed_SE" ///
-    "FullTime_ATT" "FullTime_SE" ///
-    "PartTime_ATT" "PartTime_SE" ///
-    "Earnings_ATT" "Earnings_SE"
-matrix colnames results_all = "Basic_NoCov" "Basic_Cov" "Triple_NoCov" "Triple_Cov"
-
-** Fill in from individual outcome matrices
-local row = 1
-foreach out of local outcomes {
-    matrix results_all[`row', 1] = table_`out'[1, 1..4]
-    matrix results_all[`row'+1, 1] = table_`out'[2, 1..4]
-    local row = `row' + 2
-}
-
-** Display combined results
-dis ""
-dis "=============================================="
-dis "Combined SDID Results (State Panel)"
-dis "=============================================="
-matrix list results_all
-
-** Export combined table
-esttab matrix(results_all, fmt(%9.2fc)) ///
-    using "${results}paper/tab_sdid_state_combined.tex", ///
-    replace booktabs fragment mlabels(,none) ///
-    collabels(,none) nonumbers nolines
-
-if ${overleaf} == 1 {
-    esttab matrix(results_all, fmt(%9.2fc)) ///
-        using "${ol_tab}tab_sdid_state_combined.tex", ///
-        replace booktabs fragment mlabels(,none) ///
-        collabels(,none) nonumbers nolines
 }
 
 ** =============================================================================

@@ -228,7 +228,7 @@ forvalues m = 1/3 {
 
 	** Save table locally
 	esttab 	est_`m'_1 est_`m'_2 est_`m'_3 est_`m'_4 using					///
-		"${results}paper/tab_hh_earn_`m'.tex",										///
+		"${results}tables/tab_hh_earn_`m'.tex",										///
 		booktabs fragment nobaselevels replace nomtitles nonumbers nolines	///
 		stats(`stats_list', 												///
 				fmt("`stats_fmt'") 											///
@@ -267,7 +267,7 @@ forvalues m = 1/3 {
 
 		** Save
 		esttab	est_`m'_1 est_`m'_2 est_`m'_3 est_`m'_4 using				///
-			"${results}paper/tab_hh_earn_end.tex",									///
+			"${results}tables/tab_hh_earn_end.tex",									///
 			booktabs fragment nobaselevels replace nomtitles nonumbers nolines	///
 			stats(`stats_list', 											///
 				fmt("`stats_fmt'") 											///

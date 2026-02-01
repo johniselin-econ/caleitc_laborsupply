@@ -95,13 +95,12 @@ twoway ///
 					5 "CA, 0 QC" 6 "CA, 1 QC" 7 "CA, 2 QC" 8 "CA, 3+ QC")		///
 		pos(6) row(2)) ///
     xtitle("Earned Income ($)") ///
-    ytitle("EITC Benefit ($)") ///
-	title("Panel A: Federal vs. CA EITC") ///
+    ytitle("EITC Benefit ($), Federal vs. California") ///
     xlabel(0(10000)50000, format(%9.0fc)) ///
-    ylabel(0(1000)7000, format(%9.0fc)) 
+    ylabel(0(1000)7000, format(%9.0fc))
 
 ** Save locally
-graph export "${results}paper/fig_eitc_sched_a.jpg", ///
+graph export "${results}figures/fig_eitc_sched_a.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1
@@ -122,14 +121,12 @@ twoway ///
                  5 "3+ QC (Fed)" 6 "3+ QC (Fed+Cal)") ///
            pos(6) row(2) size(small)) ///
     xtitle("Earned Income ($)") ///
-    ytitle("Total EITC Benefit ($)") ///
-    title("Panel B: Federal vs. Combined EITC") ///
+    ytitle("Total EITC Benefit ($), Federal vs. Combined") ///
     xlabel(0(10000)50000, format(%9.0fc)) ///
-    ylabel(0(1000)8000, format(%9.0fc)) ///
-    name(panel_b, replace)
+    ylabel(0(1000)8000, format(%9.0fc))
 
 ** Save locally
-graph export "${results}paper/fig_eitc_sched_b.jpg", ///
+graph export "${results}figures/fig_eitc_sched_b.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1

@@ -314,9 +314,8 @@ foreach out in employed_y full_time_y part_time_y {
            (scatter tau_insig spec_rank, mc(ltblue) ms(O) msize(vsmall)), ///
         legend(order(3 "Significant (p<0.05)" 4 "Insignificant") ///
                rows(1) pos(6) size(vsmall)) ///
-        ytitle("Treatment Effect (pp)") ///
+        ytitle("Treatment Effect (pp), `out_lbl'") ///
         xtitle("") ///
-        title("`out_lbl'", size(medium)) ///
         yline(0, lc(red) lp(dash)) ///
         xlabel(none) ///
         name(coef_`out', replace)
@@ -378,7 +377,7 @@ foreach out in employed_y full_time_y part_time_y {
         imargin(zero)
 
     ** Export figure
-    graph export "${results}paper/fig_spec_curve_`out'.jpg", as(jpg) quality(100) replace
+    graph export "${results}figures/fig_spec_curve_`out'.jpg", as(jpg) quality(100) replace
 
     if ${overleaf} == 1 {
         graph export "${ol_fig}fig_spec_curve_`out'.jpg", as(jpg) quality(100) replace

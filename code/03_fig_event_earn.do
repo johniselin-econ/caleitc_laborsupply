@@ -9,6 +9,7 @@ Purpose:        Creates Figure: Event-study estimates of the effect of the
                 Includes:
                 - Own earned income (incearn_real)
                 - Total household income (inctot_hh_real)
+                - Other household income (incother_hh_real = inctot_hh - incearn)
 
                 Uses utility programs: run_ppml_event_study
 
@@ -23,8 +24,8 @@ log using "${logs}03_fig_event_earn_log_${date}", name(log_03_fig_event_earn) re
 ** Define specifications
 ** =============================================================================
 
-** Define outcome variables
-local outcomes "incearn_real inctot_hh_real"
+** Define outcome variables (incother_hh_real created below)
+local outcomes "incearn_real inctot_hh_real incother_hh_real"
 
 ** Define control variables
 local controls "education age_bracket minage_qc race_group hispanic hh_adult_ct"
@@ -53,7 +54,7 @@ local did "`did' year#qc_ct"
 ** =============================================================================
 
 ** Load ACS data
-use weight `outcomes' `controls' `unemp' `minwage' qc_* year ///
+use weight incearn_real inctot_hh_real `controls' `unemp' `minwage' qc_* year ///
     female married in_school age citizen_test state_fips state_status ///
     if  female == 1 & ///
         married == 0 & ///
@@ -69,6 +70,10 @@ use weight `outcomes' `controls' `unemp' `minwage' qc_* year ///
 replace incearn_real = 0 if incearn_real == .
 replace inctot_hh_real = 0 if inctot_hh_real == .
 
+** Create other household income (HH income minus own earnings)
+gen incother_hh_real = inctot_hh_real - incearn_real
+replace incother_hh_real = 0 if incother_hh_real < 0
+
 ** Create event-study interaction variable
 ** This creates year-specific treatment indicators for CA + QC
 gen ca = (state_fips == 6)
@@ -83,7 +88,7 @@ label values hh_adult_ct lb_adult_ct
 label var mean_st_mw "Binding state minimum wage"
 
 ** =============================================================================
-** Run event-study regressions for both outcomes
+** Run event-study regressions for all outcomes
 ** =============================================================================
 
 foreach out of local outcomes {
@@ -130,52 +135,70 @@ coefplot est_incearn_real, ///
     keep(`keep') ///
     coeflabels(`coef') ///
     msize(medsmall) ///
-    ytitle("PPML Coefficient") ///
+    ytitle("PPML Coefficient, Own Earnings") ///
     xlabel(, angle(45)) ///
     xline(`xline_val', lcolor(red)) ///
     omitted baselevels ///
     yline(0, lcolor(black) lpattern(dash)) ///
     vertical ciopts(recast(rcap)) ///
-    legend(off) ///
-    title("Effect of CalEITC on Own Earnings (PPML)")
+    legend(off)
 
 ** Save figure
-graph export "${results}paper/fig_event_earn_own.jpg", as(jpg) name("Graph") quality(100) replace
+graph export "${results}figures/fig_event_earn_own.jpg", as(jpg) name("Graph") quality(100) replace
 
 if ${overleaf} == 1 {
     graph export "${ol_fig}fig_event_earn_own.jpg", as(jpg) quality(100) replace
 }
 
-** Plot for household earnings
+** Plot for household income
 coefplot est_inctot_hh_real, ///
     keep(`keep') ///
     coeflabels(`coef') ///
     msize(medsmall) ///
-    ytitle("PPML Coefficient") ///
+    ytitle("PPML Coefficient, Household Income") ///
     xlabel(, angle(45)) ///
     xline(`xline_val', lcolor(red)) ///
     omitted baselevels ///
     yline(0, lcolor(black) lpattern(dash)) ///
     vertical ciopts(recast(rcap)) ///
-    legend(off) ///
-    title("Effect of CalEITC on Household Earnings (PPML)")
+    legend(off)
 
 ** Save figure
-graph export "${results}paper/fig_event_earn_hh.jpg", as(jpg) name("Graph") quality(100) replace
+graph export "${results}figures/fig_event_inc_hh.jpg", as(jpg) name("Graph") quality(100) replace
 
 if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_event_earn_hh.jpg", as(jpg) quality(100) replace
+    graph export "${ol_fig}fig_event_inc_hh.jpg", as(jpg) quality(100) replace
+}
+
+** Plot for other household income (HH income minus own earnings)
+coefplot est_incother_hh_real, ///
+    keep(`keep') ///
+    coeflabels(`coef') ///
+    msize(medsmall) ///
+    ytitle("PPML Coefficient, Other HH Income") ///
+    xlabel(, angle(45)) ///
+    xline(`xline_val', lcolor(red)) ///
+    omitted baselevels ///
+    yline(0, lcolor(black) lpattern(dash)) ///
+    vertical ciopts(recast(rcap)) ///
+    legend(off)
+
+** Save figure
+graph export "${results}figures/fig_event_inc_other.jpg", as(jpg) name("Graph") quality(100) replace
+
+if ${overleaf} == 1 {
+    graph export "${ol_fig}fig_event_inc_other.jpg", as(jpg) quality(100) replace
 }
 
 ** =============================================================================
-** Create combined coefficient plot with both outcomes
+** Create combined coefficient plot with all three outcomes
 ** =============================================================================
 
 ** Build coefficient dataset for combined plot
 preserve
     clear
     local numyears = `end' - `start' + 1
-    local numobs = `numyears' * 2
+    local numobs = `numyears' * 3
     set obs `numobs'
 
     gen outcome = ""
@@ -186,7 +209,7 @@ preserve
     gen ci_hi = .
 
     local row = 1
-    foreach out in incearn_real inctot_hh_real {
+    foreach out in incearn_real inctot_hh_real incother_hh_real {
         qui est restore est_`out'
         forvalues y = `start'(1)`end' {
             if `y' != 2014 {
@@ -211,13 +234,56 @@ preserve
 
     ** Create x positions with offset for each outcome
     gen xpos = year - `start' + 1
-    replace xpos = xpos - 0.1 if outcome == "incearn_real"
-    replace xpos = xpos + 0.1 if outcome == "inctot_hh_real"
+    replace xpos = xpos - 0.15 if outcome == "incearn_real"
+    replace xpos = xpos + 0.15 if outcome == "incother_hh_real"
+    ** inctot_hh_real stays at center (no offset)
 
     ** Calculate xline position (after 2014, before 2015)
     local xline_pos = 2014 - `start' + 1.5
 
     ** Plot combined figure
+    twoway ///
+        (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(navy)) ///
+        (scatter coef xpos if outcome == "incearn_real", mcolor(navy) msymbol(O)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "inctot_hh_real", lcolor(cranberry)) ///
+        (scatter coef xpos if outcome == "inctot_hh_real", mcolor(cranberry) msymbol(D)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "incother_hh_real", lcolor(forest_green)) ///
+        (scatter coef xpos if outcome == "incother_hh_real", mcolor(forest_green) msymbol(T)) ///
+        , ///
+        yline(0, lcolor(black) lpattern(dash)) ///
+        xline(`xline_pos', lcolor(red)) ///
+        ytitle("PPML Coefficient") ///
+        xtitle("") ///
+        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid) ///
+        ylabel(-.3(.1).3, angle(0)) ///
+        legend(order(2 "Own Earnings" 4 "Total HH Income" 6 "Other HH Income") ///
+               rows(1) position(6) region(lcolor(white))) ///
+        graphregion(color(white)) ///
+        plotregion(margin(b=0))
+
+    ** Save combined figure
+    graph export "${results}figures/fig_event_earn.jpg", as(jpg) name("Graph") quality(100) replace
+
+    ** Also save as PNG
+    graph export "${results}figures/fig_event_earn.png", ///
+        as(png) name("Graph") width(2400) height(1600) replace
+
+    ** Save to Overleaf if enabled
+    if ${overleaf} == 1 {
+        graph export "${ol_fig}fig_event_earn.jpg", as(jpg) quality(100) replace
+    }
+
+    ** -------------------------------------------------------------------------
+    ** Version without Other HH Income (just Own Earnings and Total HH Income)
+    ** -------------------------------------------------------------------------
+
+    ** Adjust x positions for two-series plot
+    drop xpos
+    gen xpos = year - `start' + 1
+    replace xpos = xpos - 0.1 if outcome == "incearn_real"
+    replace xpos = xpos + 0.1 if outcome == "inctot_hh_real"
+
+    ** Plot combined figure (two outcomes only)
     twoway ///
         (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(navy)) ///
         (scatter coef xpos if outcome == "incearn_real", mcolor(navy) msymbol(O)) ///
@@ -229,23 +295,22 @@ preserve
         ytitle("PPML Coefficient") ///
         xtitle("") ///
         xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid) ///
-        ylabel(, angle(0)) ///
-        legend(order(2 "Own Earnings" 4 "Household Earnings") ///
+        ylabel(-.3(.1).3, angle(0)) ///
+        legend(order(2 "Own Earnings" 4 "Total HH Income") ///
                rows(1) position(6) region(lcolor(white))) ///
         graphregion(color(white)) ///
-        plotregion(margin(b=0)) ///
-        title("Effect of CalEITC on Earnings (PPML)")
+        plotregion(margin(b=0))
 
-    ** Save combined figure
-    graph export "${results}paper/fig_event_earn.jpg", as(jpg) name("Graph") quality(100) replace
+    ** Save figure
+    graph export "${results}figures/fig_event_earn_2.jpg", as(jpg) name("Graph") quality(100) replace
 
     ** Also save as PNG
-    graph export "${results}figures/fig_event_earn.png", ///
+    graph export "${results}figures/fig_event_earn_2.png", ///
         as(png) name("Graph") width(2400) height(1600) replace
 
     ** Save to Overleaf if enabled
     if ${overleaf} == 1 {
-        graph export "${ol_fig}fig_event_earn.jpg", as(jpg) quality(100) replace
+        graph export "${ol_fig}fig_event_earn_2.jpg", as(jpg) quality(100) replace
     }
 
     ** Export coefficients for reference

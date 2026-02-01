@@ -121,7 +121,7 @@ twoway  (line income income_fed income_tot norm_hours, ///
             place(west) size(vsmall))
 
 ** Save locally
-graph export "${results}paper/fig_budget.jpg", ///
+graph export "${results}figures/fig_budget.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1

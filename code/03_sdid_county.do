@@ -48,6 +48,33 @@ local end = ${end_year}
 local num_years = `end' - `start' + 1
 
 ** =============================================================================
+** Program to store SDID results as estimation results
+** =============================================================================
+
+capture program drop store_sdid_results
+program define store_sdid_results, eclass
+    syntax, att(real) se(real) n(integer) outcome(string)
+
+    ** Create matrices for ereturn post
+    tempname b V
+    matrix `b' = (`att')
+    matrix `V' = (`se'^2)
+    matrix colnames `b' = "ATT"
+    matrix colnames `V' = "ATT"
+    matrix rownames `V' = "ATT"
+
+    ** Post results
+    ereturn post `b' `V', obs(`n')
+    ereturn local depvar "`outcome'"
+    ereturn local cmd "sdid"
+
+    ** Store ATT and SE for later use
+    ereturn scalar ATT = `att'
+    ereturn scalar se = `se'
+
+end
+
+** =============================================================================
 ** Load and Prepare Data
 ** =============================================================================
 
@@ -187,6 +214,10 @@ gen constant = 1
 ** Order variables
 order state_fips county_fips fips year treated
 
+** Store panel size
+qui count
+local N_panel = r(N)
+
 ** Save prepared data
 save "${data}interim/sdid_county_panel.dta", replace
 
@@ -200,21 +231,13 @@ local i = 1
 ** Loop over outcomes
 foreach out of local outcomes {
 
-    ** Create matrices to store results
-    ** Standard SDID (for comparison)
-    matrix table_`out'_st = J(2, 4, .)
-    ** Unweighted via sdid_wt (for validation)
-    matrix table_`out'_nw = J(2, 4, .)
-    ** Population-weighted SDID
-    matrix table_`out'_wt = J(2, 4, .)
+    dis ""
+    dis "=============================================="
+    dis "Running SDID for outcome: `out'"
+    dis "=============================================="
 
-    ** Row and column names
-    matrix rownames table_`out'_st = ATT SE
-    matrix rownames table_`out'_nw = ATT SE
-    matrix rownames table_`out'_wt = ATT SE
-    matrix colnames table_`out'_st = "Basic_NoCov" "Basic_Cov" "Triple_NoCov" "Triple_Cov"
-    matrix colnames table_`out'_nw = "Basic_NoCov" "Basic_Cov" "Triple_NoCov" "Triple_Cov"
-    matrix colnames table_`out'_wt = "Basic_NoCov" "Basic_Cov" "Triple_NoCov" "Triple_Cov"
+    ** Clear stored estimates for this outcome
+    eststo clear
 
     ** Start column counter
     local ct = 1
@@ -229,65 +252,34 @@ foreach out of local outcomes {
         ** Loop over inclusion of controls
         forvalues c = 0/1 {
 
-            ** Set control text (standard sdid)
-            if `c' == 1 local c_txt1 "covariates(`controls_`mod'', projected)"
-            else local c_txt1 ""
-
             ** Set control text (sdid_wt)
-            if `c' == 1 local c_txt2 "covyn(1) covarlist(`controls_`mod'')"
-            else local c_txt2 ""
+            if `c' == 1 local c_txt "covyn(1) covarlist(`controls_`mod'')"
+            else local c_txt ""
 
             ** Identify loop
             dis ""
-            dis "=============================================="
-            dis "Running SDID"
-            dis "  - Outcome: `out'`prx'"
+            dis "----------------------------------------------"
             dis "  - Model: `mod'"
-            dis "  - Controls: `c'"
-            dis "=============================================="
+            dis "  - Covariates: `c'"
+            dis "----------------------------------------------"
 
             ** -----------------------------------------------------------------
-            ** Model 1: Standard (unweighted) SDID
-            ** -----------------------------------------------------------------
-            dis "Running standard SDID..."
-            sdid `out'`prx' fips year treated, ///
-                vce(bootstrap) `c_txt1' reps(`B')
-
-            local att_`ct' = `e(ATT)'
-            local se_`ct' = `e(se)'
-
-            matrix table_`out'_st[1, `ct'] = `att_`ct''
-            matrix table_`out'_st[2, `ct'] = `se_`ct''
-
-            ** -----------------------------------------------------------------
-            ** Model 2: Unweighted SDID via sdid_wt (validation)
-            ** -----------------------------------------------------------------
-            dis "Running sdid_wt (unweighted)..."
-            sdid_wt `out'`prx' fips year treated, ///
-                weight(constant) bs(`B') `c_txt2'
-
-            return list
-
-            local att_`ct' = `r(ate)'
-            local se_`ct' = `r(se)'
-
-            matrix table_`out'_nw[1, `ct'] = `att_`ct''
-            matrix table_`out'_nw[2, `ct'] = `se_`ct''
-
-            ** -----------------------------------------------------------------
-            ** Model 3: Population-weighted SDID
+            ** Population-weighted SDID (main results)
             ** -----------------------------------------------------------------
             dis "Running sdid_wt (population-weighted)..."
             sdid_wt `out'`prx' fips year treated, ///
-                weight(pop) bs(`B') `c_txt2'
+                weight(pop) bs(`B') `c_txt'
 
             return list
 
-            local att_`ct' = `r(ate)'
-            local se_`ct' = `r(se)'
+            local tmp_att = r(ate)
+            local tmp_se = r(se)
 
-            matrix table_`out'_wt[1, `ct'] = `att_`ct''
-            matrix table_`out'_wt[2, `ct'] = `se_`ct''
+            ** Store as estimation result
+            store_sdid_results, att(`tmp_att') se(`tmp_se') n(`N_panel') outcome(`out')
+
+            ** Store estimate
+            eststo est_`ct'
 
             ** Update column counter
             local ct = `ct' + 1
@@ -296,105 +288,92 @@ foreach out of local outcomes {
 
     }
 
-    ** Display matrices
-    dis ""
-    dis "Results for `out' (Standard SDID):"
-    matrix list table_`out'_st
-
-    dis ""
-    dis "Results for `out' (Unweighted via sdid_wt):"
-    matrix list table_`out'_nw
-
-    dis ""
-    dis "Results for `out' (Population-Weighted SDID):"
-    matrix list table_`out'_wt
-
     ** -------------------------------------------------------------------------
-    ** Export Tables
+    ** Export table for this outcome
     ** -------------------------------------------------------------------------
 
-    ** Export standard SDID
-    esttab matrix(table_`out'_st, fmt(%9.2fc)) ///
-        using "${results}paper/tab_sdid_county_`i'_standard.tex", ///
-        replace booktabs fragment mlabels(,none) ///
-        collabels(,none) nonumbers nolines
+    ** Define column titles
+    local coltitles `" "(1)" "(2)" "(3)" "(4)" "'
 
-    ** Export weighted SDID (main table)
-    esttab matrix(table_`out'_wt, fmt(%9.2fc)) ///
-        using "${results}paper/tab_sdid_county_`i'_weighted.tex", ///
-        replace booktabs fragment mlabels(,none) ///
-        collabels(,none) nonumbers nolines
-
-    ** Export unweighted via sdid_wt (for validation)
-    esttab matrix(table_`out'_nw, fmt(%9.2fc)) ///
-        using "${results}paper/tab_sdid_county_`i'_nonweighted.tex", ///
-        replace booktabs fragment mlabels(,none) ///
-        collabels(,none) nonumbers nolines
+    ** Save table locally
+    esttab est_1 est_2 est_3 est_4 using ///
+        "${results}tables/tab_sdid_county_`i'.tex", ///
+        booktabs fragment replace nonumbers nolines ///
+        mtitles(`coltitles') ///
+        b(2) se(2) ///
+        star(* 0.10 ** 0.05 *** 0.01) ///
+        stats(N, fmt(%9.0fc) labels("Observations")) ///
+        prehead("\\ \midrule")
 
     ** Save to Overleaf if enabled
     if ${overleaf} == 1 {
+        esttab est_1 est_2 est_3 est_4 using ///
+            "${ol_tab}tab_sdid_county_`i'.tex", ///
+            booktabs fragment replace nonumbers nolines ///
+            mtitles(`coltitles') ///
+            b(2) se(2) ///
+            star(* 0.10 ** 0.05 *** 0.01) ///
+            stats(N, fmt(%9.0fc) labels("Observations")) ///
+            prehead("\\ \midrule")
+    }
 
-        esttab matrix(table_`out'_st, fmt(%9.2fc)) ///
-            using "${ol_tab}tab_sdid_county_`i'_standard.tex", ///
-            replace booktabs fragment mlabels(,none) ///
-            collabels(,none) nonumbers nolines
+    ** For first outcome, create spec indicators table
+    if `i' == 1 {
 
-        esttab matrix(table_`out'_wt, fmt(%9.2fc)) ///
-            using "${ol_tab}tab_sdid_county_`i'_weighted.tex", ///
-            replace booktabs fragment mlabels(,none) ///
-            collabels(,none) nonumbers nolines
+        ** Add spec indicators
+        est restore est_1
+        estadd local basic "\checkmark"
+        estadd local triple ""
+        estadd local covars ""
+        est store est_1
 
-        esttab matrix(table_`out'_nw, fmt(%9.2fc)) ///
-            using "${ol_tab}tab_sdid_county_`i'_nonweighted.tex", ///
-            replace booktabs fragment mlabels(,none) ///
-            collabels(,none) nonumbers nolines
+        est restore est_2
+        estadd local basic "\checkmark"
+        estadd local triple ""
+        estadd local covars "\checkmark"
+        est store est_2
+
+        est restore est_3
+        estadd local basic ""
+        estadd local triple "\checkmark"
+        estadd local covars ""
+        est store est_3
+
+        est restore est_4
+        estadd local basic ""
+        estadd local triple "\checkmark"
+        estadd local covars "\checkmark"
+        est store est_4
+
+        ** Define statistics labels
+        local stats_list "basic triple covars"
+        local stats_fmt "%9s %9s %9s"
+        local stats_labels `" "  Basic SDID (QC $>$ 0 only)" "  Triple SDID (Difference)" "  Time-varying Covariates" "'
+
+        ** Save
+        esttab est_1 est_2 est_3 est_4 using ///
+            "${results}tables/tab_sdid_county_end.tex", ///
+            booktabs fragment replace nonumbers nolines nomtitles ///
+            stats(`stats_list', ///
+                fmt("`stats_fmt'") ///
+                labels(`stats_labels')) ///
+            cells(none) prehead("\\ \midrule")
+
+        if ${overleaf} == 1 {
+            esttab est_1 est_2 est_3 est_4 using ///
+                "${ol_tab}tab_sdid_county_end.tex", ///
+                booktabs fragment replace nonumbers nolines nomtitles ///
+                stats(`stats_list', ///
+                    fmt("`stats_fmt'") ///
+                    labels(`stats_labels')) ///
+                cells(none) prehead("\\ \midrule")
+        }
 
     }
 
     ** Update counter
     local i = `i' + 1
 
-}
-
-** =============================================================================
-** Create Combined Summary Tables
-** =============================================================================
-
-** Create combined results matrix for weighted SDID
-matrix results_weighted = J(8, 4, .)
-matrix rownames results_weighted = ///
-    "Employed_ATT" "Employed_SE" ///
-    "FullTime_ATT" "FullTime_SE" ///
-    "PartTime_ATT" "PartTime_SE" ///
-    "Earnings_ATT" "Earnings_SE"
-matrix colnames results_weighted = "Basic_NoCov" "Basic_Cov" "Triple_NoCov" "Triple_Cov"
-
-** Fill in from individual outcome matrices
-local row = 1
-foreach out of local outcomes {
-    matrix results_weighted[`row', 1] = table_`out'_wt[1, 1..4]
-    matrix results_weighted[`row'+1, 1] = table_`out'_wt[2, 1..4]
-    local row = `row' + 2
-}
-
-** Display combined results
-dis ""
-dis "=============================================="
-dis "Combined Weighted SDID Results (County Panel)"
-dis "=============================================="
-matrix list results_weighted
-
-** Export combined table
-esttab matrix(results_weighted, fmt(%9.2fc)) ///
-    using "${results}paper/tab_sdid_county_combined.tex", ///
-    replace booktabs fragment mlabels(,none) ///
-    collabels(,none) nonumbers nolines
-
-if ${overleaf} == 1 {
-    esttab matrix(results_weighted, fmt(%9.2fc)) ///
-        using "${ol_tab}tab_sdid_county_combined.tex", ///
-        replace booktabs fragment mlabels(,none) ///
-        collabels(,none) nonumbers nolines
 }
 
 ** =============================================================================

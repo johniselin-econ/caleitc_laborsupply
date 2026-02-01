@@ -154,7 +154,7 @@ forvalues y = $start_year_data(1)$end_year_data {
     gen byte mom2_present = (momloc2 != 0)
     gen byte dad2_present = (poploc2 != 0)
     egen int parent_ct = rowtotal(mom_present dad_present mom2_present dad2_present)
-    drop momloc* poploc* sploc mom*_present dad*_present
+    drop momloc* poploc* mom*_present dad*_present
 
     ** Compressed brackets of minimum age among QC
     gen minage_qc_compr = 0
@@ -262,6 +262,12 @@ forvalues y = $start_year_data(1)$end_year_data {
     label var married "Married"
     label define lb_married 0 "Single" 1 "Married"
     label values married lb_married
+	
+	** Marital status
+    gen byte mfs = inlist(marst, 3) & sploc == 0
+    label var mfs "MFS (Seperated)"
+    label define lb_mfs 0 "Single / Married" 1 "MFS"
+    label values mfs lb_mfs
 
     ** Hispanic origin
     gen byte hispanic = (hispan != 0)
@@ -380,6 +386,20 @@ forvalues y = $start_year_data(1)$end_year_data {
     gen byte incwage_reported = (qincwage == 0)
     label var incwage_real "Wage income (2019 USD)"
 
+	** SE income
+	gen incse_nom = incearn - incwage 
+    gen incse_real = incse_nom * cpi99 / 0.652
+    gen byte incse_reported = (qincwage == 0 & qincbus == 0)
+    label var incse_nom "SE income (Nominal)"
+	label var incse_real "SE income (2019 USD)"
+	
+	** Investment income
+	gen incinvst_nom = incinvst
+    gen incinvst_real = incinvst_nom * cpi99 / 0.652
+    gen byte incinvst_reported = (qincinvs == 0 )
+    label var incinvst_nom "Investment income (Nominal)"
+	label var incinvst_real "Investment income (2019 USD)"
+	
     ** Welfare income
     gen incwel_real = 0
     replace incwel_real = incwelfr * cpi99 / 0.652 if ///
@@ -389,7 +409,7 @@ forvalues y = $start_year_data(1)$end_year_data {
     label var incwel_real "Welfare income (2019 USD)"
 
 	** Loop over income variables 
-	foreach v1 in "inctot" "incwage" "incearn" {
+	foreach v1 in "inctot" "incwage" "incearn" "incse" "incinvst" {
 		
 		** Loop over real vs nominal 
 		foreach v2 in "real" "nom" {
@@ -480,6 +500,192 @@ forvalues y = $start_year_data(1)$end_year_data {
 
     ** SAMPLE RESTRICTION: Drop if assigned as QC
     drop if qc == 1
+	
+	** -------------------------------------------------------------------------
+    ** Step 9: TAXSIM Runs
+    ** -------------------------------------------------------------------------
+	/*
+	** ID Variable 
+	sort hh_id unit_id
+	gen double taxsimid = group(hh_id unit_id)
+	
+	** Set up taxsim variables 
+	gen depx = min(qc_ct, 3)
+	gen mstat = 1 
+	replace mstat = 2 if married == 1 
+	replace mstat = 6 if mfs == 1 
+	gen page = age 
+	gen sage = 0
+	bysort hh_id unit_id: gen max_age = max(age)
+	bysort hh_id unit_id: gen min_age = max(min)
+	replace sage = max_age if age == min_age & married == 1 
+	replace sage = min_age if age == max_age & married == 1 
+	drop max_age min_age
+	gen pwages = max(incwage_nom, 0 ) 
+	gen psemp = incse_nom
+	gen swages = max(incwage_tax_nom - pwages, 0)
+	gen ssemp = incse_tax_nom - psemp
+	gen intrec = max(incinvst_unit_nom, 0) 
+	
+	** Preserve data 
+	preserve 
+	
+	** Keep sample (CA only)
+	keep if state_fips == 6
+	keep if unit_id = pernum
+	
+	** State (SOI)
+	gen state = 5
+	
+	** Keep required variables 
+	keep taxsimid year mstat depx state page sage pwages swages psemp ssemp intrec 
+	
+	
+	
+	
+	
+			** Create wage variable equal to the wage that recieves:
+			** (1) Maximum CalEITC  
+			** (2) Maximum Federal EITC
+		
+			** Preserve data 
+			preserve 
+			
+			** Load excel file with stored values 
+			import excel using 	///
+				"${data}eitc_parameters/`type'eitc_max_inc_max_cred.xlsx", clear ///
+				firstrow
+			
+			** Rename year variable 
+			rename tax_year year
+			rename qc_ct depx
+		
+			** Save as temporary file 
+			tempfile `type'_eitc_max_inc_max_cred
+			save ``type'_eitc_max_inc_max_cred'
+			clear
+		
+			** Restore 
+			restore 
+		
+			** Merge 
+			merge m:1 year depx using ``type'_eitc_max_inc_max_cred'
+			tab year _merge  
+			keep if _merge == 3
+			drop _merge 
+			
+			** Store 2015 CPI value 
+			qui summ cpi99 if year == 2015
+			local cpi_15 = r(mean)
+		
+			** For years prior to 2015, CPI Update 2015 values 
+			replace pwages = pwages_unadj * `cpi_15'/cpi99  if year < 2015
+
+			** Keep required variables 
+			keep taxsimid year state mstat page depx age* pwages intrec otherprop
+			
+			des 
+			sum 
+			
+			** Store as temporary file 
+			tempfile `type'_atr_prerun 
+			save ``type'_atr_prerun'
+			
+			** Change working directory for taxsim  
+			cd "${data}taxsim"
+			
+			** Use taxsim 
+			taxsimlocal35, full 
+			clear 
+			
+			** Load results 
+			import delimited results.raw, clear 
+			
+			** Revert working directory 
+			cd "${dir}"
+			
+			** Keep relevent variables 
+			destring taxsimid, replace 
+			keep taxsimid year fiitax siitax fica v10
+			rename v10 `type'_agi 
+			rename fiitax `type'_fiitax
+			rename siitax `type'_siitax 
+			rename fica `type'_fica
+			
+			** Save as tempfile 
+			tempfile `type'_atr_run1 
+			save ``type'_atr_run1'
+			clear
+			
+			** Load pre-taxsim data 
+			use ``type'_atr_prerun'
+			
+			** Replace wage == 0 
+			replace pwages = 0 
+			
+			** Change working directory for taxsim  
+			cd "${data}taxsim"
+			
+			** Use taxsim 
+			taxsimlocal35, full 
+			clear 
+			
+			** Load results 
+			import delimited results.raw, clear 
+			
+			** Revert working directory 
+			cd "${dir}"
+			
+			** Keep relevent variables 
+			destring taxsimid, replace 
+			keep taxsimid year fiitax siitax fica
+			rename fiitax `type'_fiitax_0 
+			rename siitax `type'_siitax_0 
+			rename fica `type'_fica_0 
+			
+			** Merge with prior run 
+			merge 1:1 year taxsimid  using ``type'_atr_run1'
+			
+			** Save as tempfile 
+			tempfile `type'_atr_run2 
+			save ``type'_atr_run2'
+			clear
+			
+		} // END EITC LOOP 
+		
+		** Merge with preserved data 
+		if ${debug} == 0 use ${data}working_data/`d'_working_file, clear 
+		else use ${data}working_data/`d'_working_file_debug, clear 
+		
+		* merge m:1 taxsimid using `fed_atr_run2', nogen keep(master match)
+		merge m:1 year taxsimid using `cal_atr_run2', nogen keep(master match)
+		
+		** Generate ATR variables (Kleven 2023, Eq. 7)
+		gen taxsim_sim3_atr_st = 	///
+			((cal_fiitax - cal_fiitax_0) + (cal_siitax - cal_siitax_0) + cal_fica) / cal_agi 
+		*gen taxsim_sim3_atr_fed = 	///
+			((fed_fiitax - fed_fiitax_0) + (fed_siitax - fed_siitax_0) + fed_fica) / fed_agi 
+				
+		label var taxsim_sim3_atr_st "Average Tax Rate at CalEITC Max Inc, via TAXSIM"
+		*label var taxsim_sim3_atr_fed "Average Tax Rate at FedEITC Max Inc, via TAXSIM"
+		
+		** Check that adjustment was done correctly 
+		tab year if qc_present == 0, sum(taxsim_sim3_atr_st)
+		tab year if qc_ct == 1, sum(taxsim_sim3_atr_st)
+		tab year if qc_ct == 2, sum(taxsim_sim3_atr_st)
+		tab year if qc_ct == 3, sum(taxsim_sim3_atr_st)
+
+		drop state cal_*tax* cal_agi *_fica* 
+		drop sample mstat 
+		
+		** Save file as DTA
+		if ${debug} == 0 save ${data}working_data/`d'_working_file, replace 
+		else save ${data}working_data/`d'_working_file_debug, replace 
+		clear 	
+		
+	} // END SPM Calculations 
+	
+	*/
 
     ** -------------------------------------------------------------------------
     ** Save processed file for year

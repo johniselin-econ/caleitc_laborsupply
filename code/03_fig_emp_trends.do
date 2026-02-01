@@ -76,7 +76,7 @@ twoway  (line full_time_y year if qc_present == 0, ///
     xline(2018, lcolor(gs7%30))
 
 ** Save locally
-graph export "${results}paper/fig_emp_trends_a.jpg", ///
+graph export "${results}figures/fig_emp_trends_a.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1
@@ -106,7 +106,7 @@ twoway  (line part_time_y year if qc_present == 0, ///
     xline(2018, lcolor(gs7%30))
 
 ** Save locally
-graph export "${results}paper/fig_emp_trends_b.jpg", ///
+graph export "${results}figures/fig_emp_trends_b.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1

@@ -158,7 +158,7 @@ foreach out of local outcomes {
 
 	** Save table locally
 	esttab 	est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4	using			///
-		"${results}paper/tab_intensive_`ct'.tex",							///
+		"${results}tables/tab_intensive_`ct'.tex",							///
 		booktabs fragment nobaselevels replace nomtitles nonumbers nolines	///
 		stats(`stats_list', 												///
 				fmt("`stats_fmt'") 											///
@@ -200,7 +200,7 @@ foreach out of local outcomes {
 
 		** Save
 		esttab	est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4	using			///
-			"${results}paper/tab_intensive_end.tex",							///
+			"${results}tables/tab_intensive_end.tex",							///
 			booktabs fragment nobaselevels replace nomtitles nonumbers nolines	///
 			stats(`stats_list', 												///
 				fmt("`stats_fmt'") 												///
@@ -246,11 +246,11 @@ make_table_coefplot, ///
     numspecs(4) ///
     speclabels(`spec_labels') ///
     ytitle("Effect of the CalEITC") ///
-    ymin(-100) ymax(100) ycut(50) ///
+    ymin(-1) ymax(1) ycut(.5) ///
     savepath("${results}figures/fig_tab_intensive.png")
 
 ** Also save as JPG for paper
-graph export "${results}paper/fig_tab_intensive.jpg", as(jpg) quality(100) replace
+graph export "${results}figures/fig_tab_intensive.jpg", as(jpg) quality(100) replace
 
 ** Save to Overleaf if enabled
 if ${overleaf} == 1 {

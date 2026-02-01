@@ -21,6 +21,7 @@ For more information, contact john.iselin@yale.edu
 ** INSTALLATION
 * net install github, from("https://haghish.github.io/github/")
 * github install haghish/rcall, stable
+* net install parallel, from(https://raw.github.com/gvegayon/parallel/stable/) replace
 * ssc install ftools
 * ssc install reghdfe
 * ssc install ppmlhdfe
@@ -173,6 +174,12 @@ do ${code}03_fig_spec_curve.do
 ** Figure: Event-study estimates of the CalEITC on earnings 
 do ${code}03_fig_event_earn.do
 
+** Figure: Distributional estimates of the CalEITC on earnings 
+do ${code}03_fig_treat_by_earn.do
+
+** Figure: Distributional estimates of the CalEITC on earnings 
+do ${code}03_fig_earn_bins.do
+
 ** Table: Triple-difference estimates on annual employment (main results)
 do ${code}03_tab_main.do
 
@@ -205,11 +212,58 @@ do ${code}03_sdid_county.do
 ** (04) APPENDIX MATERIAL
 ** =============================================================================
 
-** Appendix Table 1: Descriptive statistics
+** Appendix A: Descriptive statistics
 do ${code}04_appA_tab1.do
+
+** Appendix A: NY Placebo Test (falsification)
+do ${code}04_appA_fig_event_ny_placebo.do
+do ${code}04_appA_tab_ny_placebo.do
+
+** Appendix A: College-Educated Sample (falsification)
+do ${code}04_appA_fig_event_col_placebo.do
+do ${code}04_appA_tab_col_placebo.do
+
+** Appendix A: Specification curves (reported hours/weeks only)
+*do ${code}04_appA_fig_spec_curve_reported.do
 
 ** Additional appendix figures and tables
 do ${code}04_appendix.do
+
+** Appendix: Alternative populations (single/married men/women)
+do ${code}04_appendix_otherpops.do
+
+** -----------------------------------------------------------------------------
+** Appendix C: Wage Workers and Self-Employment
+** -----------------------------------------------------------------------------
+
+** Appendix C Figure 1: Event study for wage workers
+do ${code}04_appC_fig_wage_emp.do
+
+** Appendix C Figure 2: Event study for self-employment
+do ${code}04_appC_fig_self_emp.do
+
+** Appendix C Table 1: Triple-diff for wage workers
+do ${code}04_appC_tab_wage_emp.do
+
+** Appendix C Table 2: Triple-diff for self-employment
+do ${code}04_appC_tab_self_emp.do
+
+** -----------------------------------------------------------------------------
+** Appendix D: Elasticity Calculations
+** -----------------------------------------------------------------------------
+
+** Appendix D: Participation and mobility elasticity calculations
+do ${code}04_appD_elasticity.do
+
+** -----------------------------------------------------------------------------
+** Appendix E: Alternative Inference
+** -----------------------------------------------------------------------------
+
+** Appendix E: Alternative inference procedures (CRVE, Wild Bootstrap, etc.)
+do ${code}04_appE_inference.do  
+
+*do ${code}04_appE_inference_programs.do  // Load programs first
+*do ${code}04_appE_inference_parallel.do
 
 ** End log file
 capture log close

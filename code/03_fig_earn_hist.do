@@ -90,7 +90,7 @@ twoway  (hist incearn_topcode if part_time_y == 1 & year == 2014 ///
         ytitle("", axis(2)) yscale(lstyle(none) axis(2))
 
 ** Save locally
-graph export "${results}paper/fig_earn_hist_a.jpg", ///
+graph export "${results}figures/fig_earn_hist_a.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1
@@ -165,7 +165,7 @@ twoway  (hist incearn_topcode [fw = weight_int], 					///
         ytitle("Weighted count of workers") ylabel(none, axis(2))
        
 ** Save locally
-graph export "${results}paper/fig_earn_hist_b.jpg", ///
+graph export "${results}figures/fig_earn_hist_b.jpg", ///
     as(jpg) name("Graph") quality(100) replace
 
 ** Save to overleaf if ${overleaf} == 1

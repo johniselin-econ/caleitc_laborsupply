@@ -155,7 +155,7 @@ foreach out of local outcomes {
 				
 	** Save table locally 
 	esttab 	est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4	using			///
-		"${results}paper/tab_main_`ct'.tex",									///
+		"${results}tables/tab_main_`ct'.tex",									///
 		booktabs fragment nobaselevels replace nomtitles nonumbers nolines	///	
 		stats(`stats_list', 												///
 				fmt("`stats_fmt'") 											///
@@ -197,7 +197,7 @@ foreach out of local outcomes {
 	
 		** Save 			
 		esttab	est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4	using			///
-			"${results}paper/tab_main_end.tex",										///
+			"${results}tables/tab_main_end.tex",										///
 			booktabs fragment nobaselevels replace nomtitles nonumbers nolines	///	
 			stats(`stats_list', 												///
 				fmt("`stats_fmt'") 												///
@@ -248,7 +248,7 @@ make_table_coefplot, ///
     savepath("${results}figures/fig_tab_main.png")
 
 ** Also save as JPG for paper
-graph export "${results}paper/fig_tab_main.jpg", as(jpg) quality(100) replace
+graph export "${results}figures/fig_tab_main.jpg", as(jpg) quality(100) replace
 
 ** Save to Overleaf if enabled
 if ${overleaf} == 1 {

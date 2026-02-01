@@ -102,8 +102,6 @@ foreach out of local outcomes {
     levelsof weeks_worked_y, local(weeks)
     foreach i of local weeks {
 
-        ** Counter
-        local ++j
 
         ** Generate binned employment variable
         ** = 100 if employed in this outcome AND in this weeks bucket, 0 otherwise
@@ -120,6 +118,10 @@ foreach out of local outcomes {
             vce(cluster `clustervar')
 
         drop `out'_`j'
+		
+		        ** Counter
+        local ++j
+
 
     }
 
@@ -134,13 +136,13 @@ foreach out of local outcomes {
         keep(treated) ///
         ytitle("Average Treatment Effect (pp)") ///
         xtitle("Weeks worked per year (bins)") ///
-        title("") subtitle("") pstyle(p1) msize(medsmall) ///
+        pstyle(p1) msize(medsmall) ///
         yline(0, lcolor(black) lpattern(dash)) ///
         ciopts(recast(rcap)) ylabel(-4(2)4) ///
         vertical aseq swapnames legend(off)
 
     ** Save individual figure locally
-    graph export "${results}paper/fig_weeks_`sub'.jpg", ///
+    graph export "${results}figures/fig_weeks_`sub'.jpg", ///
         as(jpg) name("Graph") quality(100) replace
 
     ** Save to Overleaf if enabled
@@ -222,7 +224,7 @@ preserve
         plotregion(margin(b=0))
 
     ** Save combined figure
-    graph export "${results}paper/fig_weeks.jpg", as(jpg) name("Graph") quality(100) replace
+    graph export "${results}figures/fig_weeks.jpg", as(jpg) name("Graph") quality(100) replace
 
     ** Also save as PNG
     graph export "${results}figures/fig_weeks.png", ///

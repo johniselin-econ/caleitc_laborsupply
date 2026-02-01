@@ -203,7 +203,7 @@ forvalues m = 1/3 {
 
     ** Export table for this model
     esttab est_`m'_1 est_`m'_2 est_`m'_3 est_`m'_4 using ///
-        "${results}paper/tab_earn_hhcomp_`m'.tex", ///
+        "${results}tables/tab_earn_hhcomp_`m'.tex", ///
         booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
         stats(`stats_list', ///
             fmt(`stats_fmt') ///
@@ -232,7 +232,7 @@ forvalues m = 1/3 {
 ** =============================================================================
 
 ** Create a simple tex file with column headers
-file open colhead using "${results}paper/tab_earn_hhcomp_colhead.tex", write replace
+file open colhead using "${results}tables/tab_earn_hhcomp_colhead.tex", write replace
 file write colhead "& `lbl1' & `lbl2' & `lbl3' & `lbl4' \\" _n
 file close colhead
 

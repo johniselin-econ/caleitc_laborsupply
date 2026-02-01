@@ -321,6 +321,9 @@ end
 ** =============================================================================
 ** PROGRAM 4: make_event_plot
 ** Creates event study coefficient plot
+**
+** Labels are passed using | as separator to avoid quote handling issues
+** e.g., labels(Employed|Employed full-time|Employed part-time)
 ** =============================================================================
 
 capture program drop make_event_plot
@@ -351,10 +354,21 @@ program define make_event_plot
     ** Parse model names and labels
     local nmodels : word count `namelist'
 
+    ** Parse labels (| separated) into individual locals
     if "`labels'" == "" {
-        local labels `""'
+        ** Default labels if none provided
         forvalues i = 1/`nmodels' {
-            local labels `"`labels' "Model `i'""'
+            local lbl`i' "Model `i'"
+        }
+    }
+    else {
+        ** Parse | separated labels using gettoken
+        local lbl_remaining "`labels'"
+        forvalues i = 1/`nmodels' {
+            gettoken lbl`i' lbl_remaining : lbl_remaining, parse("|")
+            if "`lbl`i''" == "|" {
+                gettoken lbl`i' lbl_remaining : lbl_remaining, parse("|")
+            }
         }
     }
 
@@ -362,8 +376,7 @@ program define make_event_plot
     local plotcmd "coefplot"
     local i = 1
     foreach m of local namelist {
-        local lbl : word `i' of `labels'
-        local plotcmd `"`plotcmd' (`m', label("`lbl'"))"'
+        local plotcmd `"`plotcmd' (`m', label("`lbl`i''"))"'
         local i = `i' + 1
     }
 

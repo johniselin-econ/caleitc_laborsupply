@@ -35,8 +35,20 @@ caleitc_laborsupply/
 │   ├── 03_tab_hh_earn.do          # Table: Household earnings effects (OLS & PPML)
 │   ├── 03_sdid_state.do           # SDID Table 1: State panel SDID (with event study)
 │   ├── 03_sdid_county.do          # SDID Table 2: County panel weighted SDID
-│   ├── 04_appA_tab1.do            # Appendix Table 1: Descriptive statistics
+│   ├── 04_appA_tab1.do            # Appendix A Table 1: Descriptive statistics
+│   ├── 04_appA_fig_event_ny_placebo.do      # Appendix A: NY placebo event study
+│   ├── 04_appA_tab_ny_placebo.do            # Appendix A: NY placebo table
+│   ├── 04_appA_fig_event_col_placebo.do     # Appendix A: College sample event study
+│   ├── 04_appA_tab_col_placebo.do           # Appendix A: College sample table
+│   ├── 04_appA_fig_spec_curve_reported.do   # Appendix A: Spec curves (reported hours/weeks)
 │   ├── 04_appendix.do             # Additional appendix tables and figures
+│   ├── 04_appendix_otherpops.do   # Appendix: Alternative populations analysis
+│   ├── 04_appC_fig_wage_emp.do    # Appendix C Fig 1: Event study (wage workers)
+│   ├── 04_appC_fig_self_emp.do    # Appendix C Fig 2: Event study (self-employment)
+│   ├── 04_appC_tab_wage_emp.do    # Appendix C Tab 1: Triple-diff (wage workers)
+│   ├── 04_appC_tab_self_emp.do    # Appendix C Tab 2: Triple-diff (self-employment)
+│   ├── 04_appD_elasticity.do      # Appendix D: Elasticity calculations
+│   ├── 04_appE_inference.do       # Appendix E: Alternative inference procedures
 │   ├── R/
 │   │   ├── api_code.R             # IPUMS API data download
 │   │   └── 01_data_prep_other.R   # BLS and minimum wage data prep
@@ -207,6 +219,10 @@ The `code/utils/programs.do` file contains reusable Stata programs:
 - **`export_table_panel`**: Exports regression results to LaTeX format
 - **`sdid_wt`**: Population-weighted Synthetic DID estimation with bootstrap standard errors
 
+The `code/04_appE_inference.do` file contains inference programs:
+- **`ferman_pinto_boot_ind`**: Block bootstrap with Ferman-Pinto (2019) adjustment for few treated clusters
+- **`ri_bs`**: Randomization inference wild cluster bootstrap (MacKinnon & Webb 2019)
+
 ## Output
 
 ### Figures
@@ -241,8 +257,34 @@ The `code/utils/programs.do` file contains reusable Stata programs:
 - **fig_sdid_event_part_time_y:** SDID event study for part-time employment
 - **fig_sdid_event_incearn_real:** SDID event study for earnings
 
-### Appendix
+### Appendix A
 - **Appendix Table 1:** Descriptive statistics
+- **fig_event_ny_placebo:** NY placebo event study (NY as treatment, CA excluded)
+- **tab_ny_placebo:** NY placebo triple-diff table
+- **fig_event_col_placebo:** College-educated sample event study (falsification test)
+- **tab_col_placebo:** College-educated sample triple-diff table
+- **fig_appA_spec_curve_reported_*:** Specification curves restricted to individuals with reported (non-imputed) hours and weeks worked
+- **tab_otherpops_nocov:** Triple-diff by population (no covariates)
+- **tab_otherpops_allcov:** Triple-diff by population (all covariates)
+- **fig_event_emp_sw/sm/mw/mm:** Event study by population
+- **fig_event_emp_allpops:** Combined event study (all populations)
+
+### Appendix C: Wage Workers and Self-Employment
+- **fig_appC_fig1:** Event-study estimates for wage workers only
+- **fig_appC_fig2:** Event-study estimates for self-employment
+- **tab_appC_tab1:** Triple-diff estimates for wage workers
+- **tab_appC_tab2:** Triple-diff estimates for self-employment
+
+### Appendix D: Elasticity Calculations
+- **Participation elasticity:** Calculated using ATR changes at CalEITC kink point
+- **Mobility elasticity:** Calculated using TAXSIM simulations for different wage scenarios
+
+### Appendix E: Alternative Inference
+- **tab_appE_tab1:** Alternative inference procedures for main results
+  - Cluster-robust variance estimator (CRVE)
+  - Wild cluster bootstrap (WCBS)
+  - Randomization inference wild bootstrap (RIWB-t, RIWB-b)
+  - Block bootstrap with Ferman-Pinto (2019) correction
 
 ## Notes
 
@@ -277,3 +319,7 @@ This project is for academic research purposes. Please contact the author for pe
 - Moved descriptive statistics to appendix
 - Added Synthetic DID (SDID) analysis: state panel with event studies, county panel with population weights
 - Created `sdid_wt` program for weighted SDID estimation
+- Added Appendix A: NY placebo test and college-educated sample falsification tests
+- Added Appendix C: Wage workers and self-employment analysis
+- Added Appendix D: Participation and mobility elasticity calculations (with TAXSIM)
+- Added Appendix E: Alternative inference procedures (CRVE, Wild Bootstrap, Ferman-Pinto correction)

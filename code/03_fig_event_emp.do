@@ -112,8 +112,8 @@ make_event_plot est_employed_y est_full_time_y est_part_time_y, ///
     baseyear(2014) ///
     ymax(6) ///
     ycut(2) ///
-    savepath("${results}paper/fig_event_emp.jpg") ///
-    labels("Employed" "Employed full-time" "Employed part-time")
+    savepath("${results}figures/fig_event_emp.jpg") ///
+    labels(Employed|Employed full-time|Employed part-time)
 
 ** Also save as PNG
 graph export "${results}figures/fig_event_emp.png", ///
