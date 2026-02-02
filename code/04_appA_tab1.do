@@ -7,6 +7,8 @@ Purpose:        Creates Appendix Table 1
                 Descriptive statistics, single women aged 20-49 without
                 a college degree via the ACS
 
+                Uses utility programs: load_baseline_sample
+
 Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
@@ -18,16 +20,8 @@ log using "${logs}04_appA_tab1_log_${date}", name(log_04_appA_tab1) replace text
 ** Load data
 ** =============================================================================
 
-** Load ACS data
-use if  female == 1 & ///
-        married == 0 & ///
-        in_school == 0 & ///
-        age_sample_20_49 == 1 & ///
-        citizen_test == 1 & ///
-        education < 4 & ///
-        state_status > 0 & ///
-        inrange(year, ${start_year}, ${end_year}) ///
-    using ${data}final/acs_working_file, clear
+** Load baseline sample with additional variables for descriptive stats
+load_baseline_sample, varlist(race_hisp hours_worked_y weeks_worked_y incearn_nom)
 
 ** =============================================================================
 ** Generate splitting variables
@@ -96,7 +90,7 @@ balancetable (mean if byvar1==1) (mean if byvar2==1) ///
            pattern(1 0  1 0 1 0  1 0) end("\cline{2-9}")) ///
     replace varlabels wrap(20 indent) nonumbers leftctitle("") format(%12.1fc)
 
-** Save to overleaf if ${overleaf} == 1
+** Save to overleaf if enabled
 if ${overleaf} == 1 {
     balancetable (mean if byvar1==1) (mean if byvar2==1) ///
                  (mean if byvar3==1) (mean if byvar4==1) ///

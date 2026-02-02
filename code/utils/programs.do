@@ -932,6 +932,470 @@ end
 
 
 ** =============================================================================
+** PROGRAM 12: load_baseline_sample
+** Loads ACS data with standard sample restrictions
+** =============================================================================
+
+capture program drop load_baseline_sample
+program define load_baseline_sample
+
+    syntax, ///
+        [VARlist(string)]        /// Additional variables to load
+        [STARTyear(integer 0)]   /// Start year (default: use global)
+        [ENDyear(integer 0)]     /// End year (default: use global)
+        [SAMPLEcond(string)]     /// Additional sample conditions
+        [NOQCvars]               /// Omit qc_* variables
+
+    ** Set year defaults from globals if not specified
+    if `startyear' == 0 local startyear = ${start_year}
+    if `endyear' == 0 local endyear = ${end_year}
+
+    ** Build variable list
+    local base_vars "weight $outcomes $controls $unemp $minwage year"
+    local base_vars "`base_vars' $baseline_vars"
+
+    ** Add QC variables unless omitted
+    if "`noqcvars'" == "" {
+        local base_vars "`base_vars' qc_*"
+    }
+
+    ** Add any additional variables
+    if "`varlist'" != "" {
+        local base_vars "`base_vars' `varlist'"
+    }
+
+    ** Build sample condition
+    local samp_cond "$baseline_sample & inrange(year, `startyear', `endyear')"
+
+    ** Add additional conditions if specified
+    if "`samplecond'" != "" {
+        local samp_cond "`samp_cond' & `samplecond'"
+    }
+
+    ** Load data
+    use `base_vars' if `samp_cond' using "${data}final/acs_working_file.dta", clear
+
+    di _n "Loaded baseline sample: `startyear'-`endyear'"
+    di "  N = " _N
+
+end
+
+
+** =============================================================================
+** PROGRAM 13: setup_did_vars
+** Creates standard DID variables (ca, post, treated) and caps hh_adult_ct
+** =============================================================================
+
+capture program drop setup_did_vars
+program define setup_did_vars
+
+    syntax, ///
+        [TREATlabel(string)]     /// Label for treated variable (default: "ATE")
+        [EVENTstudy]             /// Also create event study variable
+        [POSTyear(integer 2014)] /// Year after which post=1 (default: 2014)
+
+    ** Set default label
+    if "`treatlabel'" == "" local treatlabel "ATE"
+
+    ** Create California indicator
+    capture drop ca
+    gen ca = (state_fips == 6)
+
+    ** Create post-period indicator
+    capture drop post
+    gen post = (year > `postyear')
+
+    ** Create treatment indicator
+    capture drop treated
+    gen treated = (qc_present == 1 & ca == 1 & post == 1)
+    label var treated "`treatlabel'"
+
+    ** Create event study variable if requested
+    if "`eventstudy'" != "" {
+        capture drop childXyearXca
+        gen childXyearXca = cond(qc_present == 1 & ca == 1, year, `postyear')
+    }
+
+    ** Cap adults per HH at 3 and label
+    replace hh_adult_ct = 3 if hh_adult_ct > 3
+    capture label drop lb_adult_ct
+    label define lb_adult_ct 1 "1" 2 "2" 3 "3+"
+    label values hh_adult_ct lb_adult_ct
+
+    di "DID variables created (post year = `postyear')"
+
+end
+
+
+** =============================================================================
+** PROGRAM 14: export_results
+** Exports table to local and Overleaf (if enabled) with single call
+** =============================================================================
+
+capture program drop export_results
+program define export_results
+
+    syntax namelist(min=1), ///
+        FILEname(string)             /// Base filename (without path)
+        [STATSlist(string)]          /// Statistics to include
+        [STATSfmt(string)]           /// Statistics formats
+        [STATSlabels(string)]        /// Statistics labels (compound quoted)
+        [KEEPvars(string)]           /// Variables to keep
+        [ORDERvars(string)]          /// Variable order
+        [BDIGITS(integer 1)]         /// Decimal places for coefficients
+        [SEDIGITS(integer 1)]        /// Decimal places for SEs
+        [PREHEAD(string)]            /// Prehead option
+        [CELLSnone]                  /// Use cells(none) for indicator tables
+        [SUBfolder(string)]          /// Subfolder (tables or figures)
+
+    ** Set defaults
+    if "`statslist'" == "" local statslist "N r2_a ymean C"
+    if "`statsfmt'" == "" local statsfmt "%9.0fc %9.3fc %9.1fc %9.0fc"
+    if "`keepvars'" == "" local keepvars "treated"
+    if "`ordervars'" == "" local ordervars "treated"
+    if "`prehead'" == "" local prehead "\\ \midrule"
+    if "`subfolder'" == "" local subfolder "tables"
+
+    ** Build cells option
+    if "`cellsnone'" != "" {
+        local cells_opt "cells(none)"
+    }
+    else {
+        local cells_opt "b(`bdigits') se(`sedigits')"
+    }
+
+    ** Export to local results folder
+    if "`statslabels'" != "" {
+        esttab `namelist' using "${results}`subfolder'/`filename'", ///
+            booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
+            stats(`statslist', fmt(`statsfmt') labels(`statslabels')) ///
+            `cells_opt' label order(`ordervars') keep(`keepvars') ///
+            star(* 0.10 ** 0.05 *** 0.01) ///
+            prehead("`prehead'")
+    }
+    else {
+        esttab `namelist' using "${results}`subfolder'/`filename'", ///
+            booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
+            stats(`statslist', fmt(`statsfmt')) ///
+            `cells_opt' label order(`ordervars') keep(`keepvars') ///
+            star(* 0.10 ** 0.05 *** 0.01) ///
+            prehead("`prehead'")
+    }
+
+    ** Export to Overleaf if enabled
+    if ${overleaf} == 1 {
+        if "`statslabels'" != "" {
+            esttab `namelist' using "${ol_tab}`filename'", ///
+                booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
+                stats(`statslist', fmt(`statsfmt') labels(`statslabels')) ///
+                `cells_opt' label order(`ordervars') keep(`keepvars') ///
+                star(* 0.10 ** 0.05 *** 0.01) ///
+                prehead("`prehead'")
+        }
+        else {
+            esttab `namelist' using "${ol_tab}`filename'", ///
+                booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
+                stats(`statslist', fmt(`statsfmt')) ///
+                `cells_opt' label order(`ordervars') keep(`keepvars') ///
+                star(* 0.10 ** 0.05 *** 0.01) ///
+                prehead("`prehead'")
+        }
+    }
+
+end
+
+
+** =============================================================================
+** PROGRAM 15: run_all_specs
+** Runs all 4 specifications for a given outcome
+** =============================================================================
+
+capture program drop run_all_specs
+program define run_all_specs
+
+    syntax varlist(min=1 max=1), ///
+        ESTprefix(string)            /// Prefix for stored estimates
+        TREATvar(varname)            /// Treatment variable
+        [CONTROLs(varlist)]          /// Demographic controls
+        [UNEMPvar(varname)]          /// Unemployment variable
+        [MINWAGEvar(varname)]        /// Minimum wage variable
+        [FEs(string)]                /// Fixed effects
+        [WEIGHTvar(varname)]         /// Weight variable
+        [CLUSTERvar(varname)]        /// Cluster variable
+        [QCvar(varname)]             /// QC count variable for interactions
+        [POSTvar(varname)]           /// Post-period indicator
+        [STATEvar(varname)]          /// State indicator
+        [QCpresvar(varname)]         /// QC presence indicator
+        [SAMPLEcond(string)]         /// Additional sample condition
+
+    local outcome `varlist'
+
+    ** Set defaults
+    if "`postvar'" == "" local postvar "post"
+    if "`statevar'" == "" local statevar "ca"
+    if "`qcpresvar'" == "" local qcpresvar "qc_present"
+
+    ** Build if condition
+    local ifcond ""
+    if "`samplecond'" != "" {
+        local ifcond "if `samplecond'"
+    }
+
+    ** SPEC 1: Basic triple-diff FEs only
+    eststo `estprefix'_1: ///
+        run_triple_diff `outcome' `ifcond', ///
+            treatvar(`treatvar') ///
+            fes(`fes') ///
+            weightvar(`weightvar') ///
+            clustervar(`clustervar')
+
+    add_table_stats, outcome(`outcome') treatvar(`treatvar') ///
+        postvar(`postvar') statevar(`statevar') qcvar(`qcpresvar') ///
+        weightvar(`weightvar') `samplecond_opt'
+    add_spec_indicators, spec(1)
+
+    ** SPEC 2: Add demographic controls
+    eststo `estprefix'_2: ///
+        run_triple_diff `outcome' `ifcond', ///
+            treatvar(`treatvar') ///
+            controls(`controls') ///
+            fes(`fes') ///
+            weightvar(`weightvar') ///
+            clustervar(`clustervar')
+
+    add_table_stats, outcome(`outcome') treatvar(`treatvar') ///
+        postvar(`postvar') statevar(`statevar') qcvar(`qcpresvar') ///
+        weightvar(`weightvar') `samplecond_opt'
+    add_spec_indicators, spec(2)
+
+    ** SPEC 3: Add unemployment controls
+    eststo `estprefix'_3: ///
+        run_triple_diff `outcome' `ifcond', ///
+            treatvar(`treatvar') ///
+            controls(`controls') ///
+            unempvar(`unempvar') ///
+            fes(`fes') ///
+            weightvar(`weightvar') ///
+            clustervar(`clustervar') ///
+            qcvar(`qcvar')
+
+    add_table_stats, outcome(`outcome') treatvar(`treatvar') ///
+        postvar(`postvar') statevar(`statevar') qcvar(`qcpresvar') ///
+        weightvar(`weightvar') `samplecond_opt'
+    add_spec_indicators, spec(3)
+
+    ** SPEC 4: Add minimum wage controls
+    eststo `estprefix'_4: ///
+        run_triple_diff `outcome' `ifcond', ///
+            treatvar(`treatvar') ///
+            controls(`controls') ///
+            unempvar(`unempvar') ///
+            minwagevar(`minwagevar') ///
+            fes(`fes') ///
+            weightvar(`weightvar') ///
+            clustervar(`clustervar') ///
+            qcvar(`qcvar')
+
+    add_table_stats, outcome(`outcome') treatvar(`treatvar') ///
+        postvar(`postvar') statevar(`statevar') qcvar(`qcpresvar') ///
+        weightvar(`weightvar') `samplecond_opt'
+    add_spec_indicators, spec(4)
+
+end
+
+
+** =============================================================================
+** PROGRAM 16: export_event_coefficients
+** Exports event study coefficients to CSV
+** =============================================================================
+
+capture program drop export_event_coefficients
+program define export_event_coefficients
+
+    syntax namelist(min=1), ///
+        EVENTvar(varname)        /// Event study variable
+        STARTyear(integer)       /// Start year
+        ENDyear(integer)         /// End year
+        BASEyear(integer)        /// Base year (omitted)
+        OUTfile(string)          /// Output file path
+
+    ** Store current data
+    preserve
+
+    ** Create empty dataset for coefficients
+    clear
+    gen outcome = ""
+    gen year = .
+    gen coef = .
+    gen se = .
+    gen ci_lo = .
+    gen ci_hi = .
+
+    local row = 1
+
+    ** Loop over estimates and years
+    foreach est of local namelist {
+        ** Extract outcome name from estimate name (assumes est_OUTCOME format)
+        local out = subinstr("`est'", "est_", "", 1)
+
+        forvalues y = `startyear'(1)`endyear' {
+            if `y' != `baseyear' {
+                qui est restore `est'
+
+                ** Get coefficient and SE
+                local b = _b[`y'.`eventvar']
+                local s = _se[`y'.`eventvar']
+
+                ** Add row
+                set obs `row'
+                qui replace outcome = "`out'" in `row'
+                qui replace year = `y' in `row'
+                qui replace coef = `b' in `row'
+                qui replace se = `s' in `row'
+                qui replace ci_lo = `b' - 1.96 * `s' in `row'
+                qui replace ci_hi = `b' + 1.96 * `s' in `row'
+
+                local row = `row' + 1
+            }
+        }
+    }
+
+    ** Export
+    export delimited "`outfile'", replace
+
+    ** Restore original data
+    restore
+
+    di "Coefficients exported to: `outfile'"
+
+end
+
+
+** =============================================================================
+** PROGRAM 17: export_graph
+** Exports graph to local and Overleaf (if enabled)
+** =============================================================================
+
+capture program drop export_graph
+program define export_graph
+
+    syntax, ///
+        FILEname(string)         /// Base filename (without extension)
+        [FORMATlocal(string)]    /// Format for local (default: png)
+        [FORMATol(string)]       /// Format for Overleaf (default: jpg)
+        [WIDTH(integer 2400)]    /// Width in pixels
+        [HEIGHT(integer 1600)]   /// Height in pixels
+        [QUALITY(integer 100)]   /// JPG quality
+
+    ** Set defaults
+    if "`formatlocal'" == "" local formatlocal "png"
+    if "`formatol'" == "" local formatol "jpg"
+
+    ** Export to local results folder
+    if "`formatlocal'" == "png" {
+        graph export "${results}figures/`filename'.png", ///
+            as(png) name("Graph") width(`width') height(`height') replace
+    }
+    else if "`formatlocal'" == "jpg" {
+        graph export "${results}figures/`filename'.jpg", ///
+            as(jpg) name("Graph") quality(`quality') replace
+    }
+
+    ** Also save alternate format locally
+    if "`formatlocal'" == "png" {
+        graph export "${results}figures/`filename'.jpg", ///
+            as(jpg) name("Graph") quality(`quality') replace
+    }
+
+    ** Export to Overleaf if enabled
+    if ${overleaf} == 1 {
+        if "`formatol'" == "jpg" {
+            graph export "${ol_fig}`filename'.jpg", ///
+                as(jpg) quality(`quality') replace
+        }
+        else {
+            graph export "${ol_fig}`filename'.png", ///
+                as(png) width(`width') height(`height') replace
+        }
+    }
+
+    di "Graph exported: `filename'"
+
+end
+
+
+** =============================================================================
+** PROGRAM 18: run_heterogeneity_table
+** Runs heterogeneity analysis across subgroups
+** =============================================================================
+
+capture program drop run_heterogeneity_table
+program define run_heterogeneity_table
+
+    syntax varlist(min=1 max=1), ///
+        HETvar(varname)              /// Heterogeneity variable
+        HETvals(numlist)             /// Values to loop over (0=all)
+        ESTprefix(string)            /// Prefix for stored estimates
+        TREATvar(varname)            /// Treatment variable
+        [CONTROLs(varlist)]          /// Demographic controls
+        [UNEMPvar(varname)]          /// Unemployment variable
+        [MINWAGEvar(varname)]        /// Minimum wage variable
+        [FEs(string)]                /// Fixed effects
+        [WEIGHTvar(varname)]         /// Weight variable
+        [CLUSTERvar(varname)]        /// Cluster variable
+        [QCvar(varname)]             /// QC count variable
+        [POSTvar(varname)]           /// Post-period indicator
+        [STATEvar(varname)]          /// State indicator
+        [QCpresvar(varname)]         /// QC presence indicator
+
+    local outcome `varlist'
+
+    ** Set defaults
+    if "`postvar'" == "" local postvar "post"
+    if "`statevar'" == "" local statevar "ca"
+    if "`qcpresvar'" == "" local qcpresvar "qc_present"
+
+    ** Loop over heterogeneity values
+    local i = 1
+    foreach h of numlist `hetvals' {
+
+        ** Define sample condition
+        if `h' == 0 {
+            capture drop _het_samp
+            gen _het_samp = 1
+        }
+        else {
+            capture drop _het_samp
+            gen _het_samp = (`hetvar' == `h')
+        }
+
+        ** Run regression with full controls (spec 4)
+        eststo `estprefix'_`i': ///
+            run_triple_diff `outcome' if _het_samp == 1, ///
+                treatvar(`treatvar') ///
+                controls(`controls') ///
+                unempvar(`unempvar') ///
+                minwagevar(`minwagevar') ///
+                fes(`fes') ///
+                weightvar(`weightvar') ///
+                clustervar(`clustervar') ///
+                qcvar(`qcvar')
+
+        add_table_stats, outcome(`outcome') treatvar(`treatvar') ///
+            postvar(`postvar') statevar(`statevar') qcvar(`qcpresvar') ///
+            weightvar(`weightvar') samplecond(_het_samp == 1)
+        add_spec_indicators, spec(4)
+
+        ** Clean up
+        drop _het_samp
+
+        local i = `i' + 1
+    }
+
+end
+
+
+** =============================================================================
 ** Display loaded programs
 ** =============================================================================
 
@@ -948,3 +1412,10 @@ di "  - add_spec_indicators: Add specification indicators to estimates"
 di "  - add_table_stats: Add common table statistics (ymean, C)"
 di "  - export_spec_indicators: Export specification indicators table"
 di "  - make_table_coefplot: Create coefficient plot from table estimates"
+di "  - load_baseline_sample: Load ACS data with standard restrictions"
+di "  - setup_did_vars: Create standard DID variables"
+di "  - export_results: Export table to local and Overleaf"
+di "  - run_all_specs: Run all 4 specifications for outcome"
+di "  - export_event_coefficients: Export event study coefficients to CSV"
+di "  - export_graph: Export graph to local and Overleaf"
+di "  - run_heterogeneity_table: Run heterogeneity analysis"

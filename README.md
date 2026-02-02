@@ -24,7 +24,7 @@ caleitc_laborsupply/
 │   ├── 03_fig_earn_bins.do        # Figure: Earnings distribution by bins
 │   ├── 03_fig_treat_by_earn.do    # Figure: Treatment effects by earnings
 │   ├── 03_fig_budget.do           # Figure: Budget constraint
-│   ├── 03_tab_desc.do             # Table: Descriptive statistics
+│   ├── 03_tab_desc.do             # Table: Descriptive statistics (deprecated)
 │   ├── 03_fig_emp_trends.do       # Figure: Employment trends
 │   ├── 03_fig_event_emp.do        # Figure: Event-study estimates (employment)
 │   ├── 03_fig_weeks.do            # Figure: Effect by weeks worked
@@ -41,16 +41,19 @@ caleitc_laborsupply/
 │   ├── 03_sdid_state.do           # SDID Table 1: State panel SDID (with event study)
 │   ├── 03_sdid_county.do          # SDID Table 2: County panel weighted SDID
 │   ├── 04_appA_tab1.do            # Appendix A Table 1: Descriptive statistics
-│   ├── 04_appA_fig2.do            # Appendix A Fig 2: EITC/CTC/CalEITC schedules (2016)
-│   ├── 04_appA_fig3.do            # Appendix A Fig 3: State unemployment trends
-│   ├── 04_appA_fig4.do            # Appendix A Fig 4: State minimum wages
-│   ├── 04_appA_fig5.do            # Appendix A Fig 5: 2018-2019 schedules with TCJA
-│   ├── 04_appA_fig6.do            # Appendix A Fig 6: CalEITC effect on ATR
-│   ├── 04_appA_fig_event_ny_placebo.do      # Appendix A: NY placebo event study
-│   ├── 04_appA_tab_ny_placebo.do            # Appendix A: NY placebo table
-│   ├── 04_appA_fig_event_col_placebo.do     # Appendix A: College sample event study
-│   ├── 04_appA_tab_col_placebo.do           # Appendix A: College sample table
-│   ├── 04_appA_fig_spec_curve_reported.do   # Appendix A: Spec curves (reported hours/weeks)
+│   ├── 04_appA_tab_balance.do     # Appendix A: Balance test for pre-treatment covariates
+│   ├── 04_appA_tab_het_qc_age.do  # Appendix A: Heterogeneity by youngest QC age
+│   ├── 04_appA_fig_eitc_sched_15_17.do     # Appendix A: EITC schedules 2015 vs 2017
+│   ├── 04_appA_fig_eitc_ctc_sched.do       # Appendix A: EITC/CTC/CalEITC schedules (2016)
+│   ├── 04_appA_fig_unemp_trends.do         # Appendix A: State unemployment trends
+│   ├── 04_appA_fig_minwage.do              # Appendix A: State minimum wages
+│   ├── 04_appA_fig_tcja_yctc.do            # Appendix A: 2018-2019 schedules with TCJA
+│   ├── 04_appA_fig_atr_event.do            # Appendix A: CalEITC effect on ATR
+│   ├── 04_appA_fig_event_ny_placebo.do     # Appendix A: NY placebo event study
+│   ├── 04_appA_tab_ny_placebo.do           # Appendix A: NY placebo table
+│   ├── 04_appA_fig_event_col_placebo.do    # Appendix A: College sample event study
+│   ├── 04_appA_tab_col_placebo.do          # Appendix A: College sample table
+│   ├── 04_appA_fig_spec_curve_reported.do  # Appendix A: Spec curves (reported hours/weeks)
 │   ├── 04_appendix.do             # Additional appendix tables and figures
 │   ├── 04_appendix_otherpops.do   # Appendix: Alternative populations analysis
 │   ├── 04_appC_fig_wage_emp.do    # Appendix C Fig 1: Event study (wage workers)
@@ -59,12 +62,20 @@ caleitc_laborsupply/
 │   ├── 04_appC_tab_self_emp.do    # Appendix C Tab 2: Triple-diff (self-employment)
 │   ├── 04_appD_elasticity.do      # Appendix D: Elasticity calculations
 │   ├── 04_appE_inference.do       # Appendix E: Alternative inference procedures
+│   ├── 04_appE_inference_parallel.do       # Appendix E: Parallelized inference
+│   ├── 04_appE_inference_programs.do       # Appendix E: Inference helper programs
+│   ├── 04_appE_inference_worker.do         # Appendix E: Worker program for parallel
+│   ├── 05_mvpf.do                 # MVPF calculations
+│   ├── 05_fig_mvpf_dist.do        # Figure: MVPF distribution
+│   ├── 05_fig_mvpf_spillovers.do  # Figure: MVPF fiscal spillovers
 │   ├── R/
 │   │   ├── api_code.R             # IPUMS API data download
 │   │   └── 01_data_prep_other.R   # BLS and minimum wage data prep
 │   ├── utils/
+│   │   ├── globals.do             # Global macro definitions (NEW)
 │   │   ├── programs.do            # Reusable Stata programs
 │   │   └── sdid_wt.do             # Weighted SDID estimation program
+│   ├── archive/                   # Archived/backup files
 │   └── logs/                      # Log files
 ├── data/
 │   ├── raw/                       # Raw data files (not tracked)
@@ -139,6 +150,12 @@ ssc install balancetable
 ssc install ivreghdfe
 ssc install ivreg2
 ssc install ranktest
+ssc install _gwtmean
+ssc install rwolf2
+ssc install wyoung
+
+* For parallelized inference (optional)
+net install parallel, from(https://raw.github.com/gvegayon/parallel/stable/) replace
 
 * Install rcall for R integration
 net install github, from("https://haghish.github.io/github/")
@@ -174,6 +191,8 @@ install.packages("ipumsr")
    ```
 
    This will:
+   - Load global macro definitions (`utils/globals.do`)
+   - Load utility programs (`utils/programs.do`)
    - Download ACS data via IPUMS API (R)
    - Download BLS and minimum wage data (R)
    - Clean and prepare data (Stata)
@@ -220,8 +239,8 @@ Where:
 
 ### Sample Restrictions
 - Single women
-- Ages 20-50
-- No college degree
+- Ages 20-49 (using `age_sample_20_49` indicator)
+- No college degree (education < 4)
 - US citizens
 - Not in armed services
 - Not currently in school
@@ -262,18 +281,47 @@ States are classified based on their EITC policies during the study period:
 
 ## Key Programs
 
-The `code/utils/programs.do` file contains reusable Stata programs:
+### Global Macros (`code/utils/globals.do`)
 
-- **`qc_assignment`**: Assigns qualifying children to potential adults in household based on IPUMS relationship variables
-- **`run_triple_diff`**: Runs triple-difference regression with specified controls and FEs
-- **`run_event_study`**: Runs event study regression with year interactions
-- **`make_event_plot`**: Creates event study coefficient plots
-- **`get_pre_period_mean`**: Calculates weighted mean for treated group in pre-period
-- **`run_ppml_regression`**: Runs PPML regression with margins for average marginal effect
-- **`export_table_panel`**: Exports regression results to LaTeX format
+Centralizes standard variable definitions used across all analysis files:
+- **`$outcomes`**: Primary outcome variables (`employed_y full_time_y part_time_y`)
+- **`$controls`**: Demographic controls (`education age_bracket minage_qc race_group hispanic hh_adult_ct`)
+- **`$unemp`**, **`$minwage`**: Economic control variables
+- **`$clustervar`**: Clustering variable (`state_fips`)
+- **`$did_base`**, **`$did_event`**: Fixed effects specifications
+- **`$baseline_sample`**: Standard sample restriction conditions
+- **`$stats_list`**, **`$stats_fmt`**: Table statistics formatting
+
+### Utility Programs (`code/utils/programs.do`)
+
+Reusable Stata programs for analysis:
+
+| Program | Purpose |
+|---------|---------|
+| `qc_assignment` | Assigns qualifying children to potential adults in household based on IPUMS relationship variables |
+| `load_baseline_sample` | Loads ACS data with standard sample restrictions |
+| `setup_did_vars` | Creates ca, post, treated variables and caps hh_adult_ct |
+| `run_triple_diff` | Runs triple-difference regression with specified controls and FEs |
+| `run_event_study` | Runs event study regression with year interactions |
+| `make_event_plot` | Creates event study coefficient plots |
+| `get_pre_period_mean` | Calculates weighted mean for treated group in pre-period |
+| `run_ppml_event_study` | Runs PPML event study regression |
+| `run_ppml_regression` | Runs PPML regression with margins for average marginal effect |
+| `export_results` | Dual export to local and Overleaf with single call |
+| `run_all_specs` | Runs all 4 specifications for a given outcome |
+| `export_event_coefficients` | Exports event study coefficients to CSV |
+| `export_graph` | Exports graph to local and Overleaf |
+| `run_heterogeneity_table` | Runs heterogeneity analysis across subgroups |
+| `add_spec_indicators` | Adds specification indicator statistics to stored estimates |
+| `add_table_stats` | Adds common table statistics (ymean, implied effect) |
+| `export_spec_indicators` | Exports specification indicators table |
+| `export_table_panel` | Exports regression results to LaTeX format |
+| `make_table_coefplot` | Creates coefficient plot from table estimates |
+
+### SDID Program (`code/utils/sdid_wt.do`)
 - **`sdid_wt`**: Population-weighted Synthetic DID estimation with bootstrap standard errors
 
-The `code/04_appE_inference.do` file contains inference programs:
+### Inference Programs (`code/04_appE_inference_programs.do`)
 - **`ferman_pinto_boot_ind`**: Block bootstrap with Ferman-Pinto (2019) adjustment for few treated clusters
 - **`ri_bs`**: Randomization inference wild cluster bootstrap (MacKinnon & Webb 2019)
 
@@ -288,7 +336,9 @@ The `code/04_appE_inference.do` file contains inference programs:
 - **fig_weeks:** Effect by annual weeks of work
 - **fig_event_earn:** Event-study estimates (earnings, PPML)
 - **fig_spec_curve:** Specification curve analysis
-- **fig_tab_intensive:** Coefficient plot for intensive margin table
+- **fig_tab_main:** Coefficient plot for main results table
+- **fig_tab_het_qc:** Coefficient plot for QC heterogeneity table
+- **fig_tab_het_adults:** Coefficient plot for adult count heterogeneity table
 
 ### Tables
 - **tab_main:** Triple-difference estimates on employment (main results)
@@ -315,12 +365,12 @@ The `code/04_appE_inference.do` file contains inference programs:
 
 ### Appendix A
 - **Appendix Table 1:** Descriptive statistics
-- **fig_appA_fig2a-d:** Federal EITC, CTC, and CalEITC benefit schedules for TY 2016 (by QC count)
-- **fig_appA_fig3:** State-level unemployment trends (2006-2019), CA vs control states
-- **fig_appA_fig4:** Binding state minimum wages in control pool (2010-2017)
-- **fig_appA_fig5a:** CTC comparison 2017 vs 2018 (TCJA)
-- **fig_appA_fig5b:** Benefit schedules for 2019 with YCTC
-- **fig_appA_fig6:** Triple-diff estimate of CalEITC effect on after-tax rates (event study)
+- **tab_balance:** Balance test for pre-treatment covariate balance
+- **fig_appA_eitc_ctc_sched:** Federal EITC, CTC, and CalEITC benefit schedules for TY 2016 (by QC count)
+- **fig_appA_unemp_trends:** State-level unemployment trends (2006-2019), CA vs control states
+- **fig_appA_minwage:** Binding state minimum wages in control pool (2010-2017)
+- **fig_appA_tcja_yctc:** CTC comparison 2017 vs 2018 (TCJA) and 2019 with YCTC
+- **fig_appA_atr_event:** Triple-diff estimate of CalEITC effect on after-tax rates (event study)
 - **fig_event_ny_placebo:** NY placebo event study (NY as treatment, CA excluded)
 - **tab_ny_placebo:** NY placebo triple-diff table
 - **fig_event_col_placebo:** College-educated sample event study (falsification test)
@@ -329,7 +379,6 @@ The `code/04_appE_inference.do` file contains inference programs:
 - **tab_otherpops_nocov:** Triple-diff by population (no covariates)
 - **tab_otherpops_allcov:** Triple-diff by population (all covariates)
 - **fig_event_emp_sw/sm/mw/mm:** Event study by population
-- **fig_event_emp_allpops:** Combined event study (all populations)
 
 ### Appendix C: Wage Workers and Self-Employment
 - **fig_appC_fig1:** Event-study estimates for wage workers only
@@ -375,7 +424,41 @@ This project is for academic research purposes. Please contact the author for pe
 
 ## Changelog
 
-### February 2026
+### February 2026 (Code Refactoring)
+- **Major code refactoring for improved maintainability:**
+  - Created `utils/globals.do` to centralize standard variable definitions
+  - Added 7 new utility programs to `utils/programs.do`:
+    - `load_baseline_sample`: Standardized data loading with sample restrictions
+    - `setup_did_vars`: Standardized DID variable creation
+    - `export_results`: Dual export to local and Overleaf
+    - `run_all_specs`: Run all 4 specifications in one call
+    - `export_event_coefficients`: Export coefficients to CSV
+    - `export_graph`: Standardized graph export
+    - `run_heterogeneity_table`: Standardized heterogeneity analysis
+  - Refactored 15+ analysis files to use new utilities
+  - ~50% reduction in boilerplate code
+- **Bug fixes:**
+  - Fixed export paths in `03_tab_het_qc.do` and `03_tab_het_adults.do` (was exporting to `tables/` instead of `figures/`)
+  - Standardized age restriction to 20-49 using `age_sample_20_49` indicator across all files
+  - Fixed hardcoded start year in `04_appE_inference_parallel.do`
+- **File organization:**
+  - Renamed Appendix A figure files with descriptive names:
+    - `04_appA_fig2.do` → `04_appA_fig_eitc_ctc_sched.do`
+    - `04_appA_fig3.do` → `04_appA_fig_unemp_trends.do`
+    - `04_appA_fig4.do` → `04_appA_fig_minwage.do`
+    - `04_appA_fig5.do` → `04_appA_fig_tcja_yctc.do`
+    - `04_appA_fig6.do` → `04_appA_fig_atr_event.do`
+  - Created `code/archive/` folder for backup files
+  - Moved deprecated inference files to archive
+- **New appendix files:**
+  - `04_appA_tab_balance.do`: Balance test for pre-treatment covariate balance
+  - `04_appA_tab_het_qc_age.do`: Heterogeneity by age of youngest qualifying child
+- **Package updates:**
+  - Added `rwolf2` for Romano-Wolf p-values
+  - Added `wyoung` for Westfall-Young q-values
+  - Added `parallel` for parallelized inference (optional)
+
+### February 2026 (TAXSIM Integration)
 - Added TAXSIM simulations to data cleaning pipeline (`01_clean_data.do`)
   - Simulation 1: Observed characteristics (all states) for actual EITC receipt
   - Simulation 2: Simulated instrument using 2014 base year with CPI projection (Gruber & Saez approach)
@@ -385,12 +468,6 @@ This project is for academic research purposes. Please contact the author for pe
 - Created `03_tab_sim_inst.do` for simulated instrument results (reduced form and IV/2SLS)
 - Added CalEITC parameters file (`data/eitc_parameters/caleitc_params.txt`)
 - Updated package requirements: added `ivreghdfe`, `ivreg2`, `ranktest`, `taxsimlocal35`
-- Added Appendix A figures:
-  - `04_appA_fig2.do`: EITC/CTC/CalEITC benefit schedules for TY 2016
-  - `04_appA_fig3.do`: State-level unemployment trends (2006-2019)
-  - `04_appA_fig4.do`: Binding state minimum wages in control pool
-  - `04_appA_fig5.do`: 2018-2019 benefit schedules with TCJA CTC and YCTC
-  - `04_appA_fig6.do`: Triple-diff effect of CalEITC on after-tax rates
 
 ### January 2026
 - Initial repository setup

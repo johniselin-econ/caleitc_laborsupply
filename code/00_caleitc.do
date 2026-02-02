@@ -92,7 +92,8 @@ global overleaf = 1
 ** DEBUG OPTION (1=debug on, 0=debug off)
 global debug = 0
 
-** Load utility programs
+** Load global macros and utility programs
+do ${code}utils/globals.do
 do ${code}utils/programs.do
 
 ** =============================================================================

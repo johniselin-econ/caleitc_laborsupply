@@ -11,7 +11,8 @@ Purpose:        Creates Figure: Event-study estimates of the effect of the
                 - Total household income (inctot_hh_real)
                 - Other household income (incother_hh_real = inctot_hh - incearn)
 
-                Uses utility programs: run_ppml_event_study
+                Uses utility programs: load_baseline_sample, setup_did_vars,
+                run_ppml_event_study, export_graph
 
 Project: CalEITC Labor Supply Effects
 *******************************************************************************/
@@ -27,44 +28,12 @@ log using "${logs}03_fig_event_earn_log_${date}", name(log_03_fig_event_earn) re
 ** Define outcome variables (incother_hh_real created below)
 local outcomes "incearn_real inctot_hh_real incother_hh_real"
 
-** Define control variables
-local controls "education age_bracket minage_qc race_group hispanic hh_adult_ct"
-
-** Define unemployment control variable
-local unemp "state_unemp"
-
-** Define minimum wage control variable
-local minwage "mean_st_mw"
-
-** Define cluster variable
-local clustervar "state_fips"
-
-** Define start and end dates
-local start = ${start_year}
-local end = ${end_year}
-
-** SPECIFICATION (Fixed Effects)
-local did "qc_ct year state_fips"
-local did "`did' state_fips#year"
-local did "`did' state_fips#qc_ct"
-local did "`did' year#qc_ct"
-
 ** =============================================================================
-** Load data and define sample
+** Load data and setup
 ** =============================================================================
 
-** Load ACS data
-use weight incearn_real inctot_hh_real `controls' `unemp' `minwage' qc_* year ///
-    female married in_school age_sample_20_49 citizen_test state_fips state_status ///
-    if  female == 1 & ///
-        married == 0 & ///
-        in_school == 0 & ///
-        age_sample_20_49 == 1 & ///
-        citizen_test == 1 & ///
-        education < 4 & ///
-        state_status > 0 & ///
-        inrange(year, `start', `end') ///
-    using "${data}final/acs_working_file.dta", clear
+** Load baseline sample with income variables
+load_baseline_sample, varlist(incearn_real inctot_hh_real)
 
 ** Handle missing income values
 replace incearn_real = 0 if incearn_real == .
@@ -74,15 +43,8 @@ replace inctot_hh_real = 0 if inctot_hh_real == .
 gen incother_hh_real = inctot_hh_real - incearn_real
 replace incother_hh_real = 0 if incother_hh_real < 0
 
-** Create event-study interaction variable
-** This creates year-specific treatment indicators for CA + QC
-gen ca = (state_fips == 6)
-gen childXyearXca = cond(qc_present == 1 & ca == 1, year, 2014)
-
-** Update adults per HH (cap at 3)
-replace hh_adult_ct = 3 if hh_adult_ct > 3
-label define lb_adult_ct 1 "1" 2 "2" 3 "3+"
-label values hh_adult_ct lb_adult_ct
+** Create DID variables (including event study variable)
+setup_did_vars, eventstudy
 
 ** Label minimum wage variable
 label var mean_st_mw "Binding state minimum wage"
@@ -101,12 +63,12 @@ foreach out of local outcomes {
         run_ppml_event_study `out', ///
             eventvar(childXyearXca) ///
             baseyear(2014) ///
-            controls(`controls') ///
-            unempvar(`unemp') ///
-            minwagevar(`minwage') ///
-            fes(`did') ///
+            controls($controls) ///
+            unempvar($unemp) ///
+            minwagevar($minwage) ///
+            fes($did_event) ///
             weightvar(weight) ///
-            clustervar(`clustervar') ///
+            clustervar($clustervar) ///
             qcvar(qc_ct) ///
             samplecond(sample == 1)
 
@@ -122,13 +84,13 @@ foreach out of local outcomes {
 local coef `""'
 local keep ""
 
-forvalues y = `start'(1)`end' {
+forvalues y = ${start_year}(1)${end_year} {
     local keep "`keep' `y'.childXyearXca"
     local coef `"`coef' `y'.childXyearXca = "`y'""'
 }
 
 ** Set up xlines (line should appear AFTER base year, before treatment)
-local xline_val = 2014 - `start' + 1.5
+local xline_val = 2014 - ${start_year} + 1.5
 
 ** Plot for own earnings (scheme-consistent)
 coefplot est_incearn_real, ///
@@ -144,12 +106,8 @@ coefplot est_incearn_real, ///
     vertical ciopts(recast(rcap)) ///
     legend(off)
 
-** Save figure
-graph export "${results}figures/fig_event_earn_own.jpg", as(jpg) name("Graph") quality(100) replace
-
-if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_event_earn_own.jpg", as(jpg) quality(100) replace
-}
+** Export graph
+export_graph, filename("fig_event_earn_own")
 
 ** Plot for household income (scheme-consistent)
 coefplot est_inctot_hh_real, ///
@@ -165,12 +123,8 @@ coefplot est_inctot_hh_real, ///
     vertical ciopts(recast(rcap)) ///
     legend(off)
 
-** Save figure
-graph export "${results}figures/fig_event_inc_hh.jpg", as(jpg) name("Graph") quality(100) replace
-
-if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_event_inc_hh.jpg", as(jpg) quality(100) replace
-}
+** Export graph
+export_graph, filename("fig_event_inc_hh")
 
 ** Plot for other household income (scheme-consistent)
 coefplot est_incother_hh_real, ///
@@ -186,12 +140,8 @@ coefplot est_incother_hh_real, ///
     vertical ciopts(recast(rcap)) ///
     legend(off)
 
-** Save figure
-graph export "${results}figures/fig_event_inc_other.jpg", as(jpg) name("Graph") quality(100) replace
-
-if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_event_inc_other.jpg", as(jpg) quality(100) replace
-}
+** Export graph
+export_graph, filename("fig_event_inc_other")
 
 ** =============================================================================
 ** Create combined coefficient plot with all three outcomes
@@ -200,7 +150,7 @@ if ${overleaf} == 1 {
 ** Build coefficient dataset for combined plot
 preserve
     clear
-    local numyears = `end' - `start' + 1
+    local numyears = ${end_year} - ${start_year} + 1
     local numobs = `numyears' * 3
     set obs `numobs'
 
@@ -214,7 +164,7 @@ preserve
     local row = 1
     foreach out in incearn_real inctot_hh_real incother_hh_real {
         qui est restore est_`out'
-        forvalues y = `start'(1)`end' {
+        forvalues y = ${start_year}(1)${end_year} {
             if `y' != 2014 {
                 local b = _b[`y'.childXyearXca]
                 local s = _se[`y'.childXyearXca]
@@ -236,13 +186,13 @@ preserve
     }
 
     ** Create x positions with offset for each outcome
-    gen xpos = year - `start' + 1
+    gen xpos = year - ${start_year} + 1
     replace xpos = xpos - 0.15 if outcome == "incearn_real"
     replace xpos = xpos + 0.15 if outcome == "incother_hh_real"
     ** inctot_hh_real stays at center (no offset)
 
     ** Calculate xline position (after 2014, before 2015)
-    local xline_pos = 2014 - `start' + 1.5
+    local xline_pos = 2014 - ${start_year} + 1.5
 
     ** Plot combined figure (scheme-consistent)
     twoway ///
@@ -262,17 +212,8 @@ preserve
         legend(order(2 "Own Earnings" 4 "Total HH Income" 6 "Other HH Income") ///
                rows(1) position(6) size(small))
 
-    ** Save combined figure
-    graph export "${results}figures/fig_event_earn.jpg", as(jpg) name("Graph") quality(100) replace
-
-    ** Also save as PNG
-    graph export "${results}figures/fig_event_earn.png", ///
-        as(png) name("Graph") width(2400) height(1600) replace
-
-    ** Save to Overleaf if enabled
-    if ${overleaf} == 1 {
-        graph export "${ol_fig}fig_event_earn.jpg", as(jpg) quality(100) replace
-    }
+    ** Export combined figure
+    export_graph, filename("fig_event_earn")
 
     ** -------------------------------------------------------------------------
     ** Version without Other HH Income (just Own Earnings and Total HH Income)
@@ -280,7 +221,7 @@ preserve
 
     ** Adjust x positions for two-series plot
     drop xpos
-    gen xpos = year - `start' + 1
+    gen xpos = year - ${start_year} + 1
     replace xpos = xpos - 0.1 if outcome == "incearn_real"
     replace xpos = xpos + 0.1 if outcome == "inctot_hh_real"
 
@@ -300,17 +241,8 @@ preserve
         legend(order(2 "Own Earnings" 4 "Total HH Income") ///
                rows(1) position(6) size(small))
 
-    ** Save figure
-    graph export "${results}figures/fig_event_earn_2.jpg", as(jpg) name("Graph") quality(100) replace
-
-    ** Also save as PNG
-    graph export "${results}figures/fig_event_earn_2.png", ///
-        as(png) name("Graph") width(2400) height(1600) replace
-
-    ** Save to Overleaf if enabled
-    if ${overleaf} == 1 {
-        graph export "${ol_fig}fig_event_earn_2.jpg", as(jpg) quality(100) replace
-    }
+    ** Export figure
+    export_graph, filename("fig_event_earn_2")
 
     ** Export coefficients for reference
     export delimited "${results}tables/fig_event_earn_coefficients.csv", replace

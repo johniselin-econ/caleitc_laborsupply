@@ -55,8 +55,8 @@ di _n "Parallel processing enabled with `ncores' clusters"
 ** =============================================================================
 
 ** Sample period
-local start = 2012
-local end = 2017
+local start = ${start_year}
+local end = ${end_year}
 
 ** Define outcomes
 local outcomes "full_time_y part_time_y"
