@@ -76,7 +76,7 @@ di _n "Preparing data for parallel workers..."
 use if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         state_status > 0 & ///
         education <= 3 & ///

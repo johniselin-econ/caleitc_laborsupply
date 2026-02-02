@@ -55,11 +55,11 @@ local did "`did' year#qc_ct"
 
 ** Load ACS data
 use weight incearn_real inctot_hh_real `controls' `unemp' `minwage' qc_* year ///
-    female married in_school age citizen_test state_fips state_status ///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status ///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///
@@ -130,16 +130,17 @@ forvalues y = `start'(1)`end' {
 ** Set up xlines (line should appear AFTER base year, before treatment)
 local xline_val = 2014 - `start' + 1.5
 
-** Plot for own earnings
+** Plot for own earnings (scheme-consistent)
 coefplot est_incearn_real, ///
     keep(`keep') ///
     coeflabels(`coef') ///
-    msize(medsmall) ///
+    msize(small) pstyle(p1) ///
     ytitle("PPML Coefficient, Own Earnings") ///
-    xlabel(, angle(45)) ///
-    xline(`xline_val', lcolor(red)) ///
+    xlabel(, angle(45) labsize(small)) ///
+    ylabel(, labsize(small)) ///
+    xline(`xline_val', lcolor(gs6)) ///
     omitted baselevels ///
-    yline(0, lcolor(black) lpattern(dash)) ///
+    yline(0, lcolor(gs8) lpattern(dash)) ///
     vertical ciopts(recast(rcap)) ///
     legend(off)
 
@@ -150,16 +151,17 @@ if ${overleaf} == 1 {
     graph export "${ol_fig}fig_event_earn_own.jpg", as(jpg) quality(100) replace
 }
 
-** Plot for household income
+** Plot for household income (scheme-consistent)
 coefplot est_inctot_hh_real, ///
     keep(`keep') ///
     coeflabels(`coef') ///
-    msize(medsmall) ///
+    msize(small) pstyle(p1) ///
     ytitle("PPML Coefficient, Household Income") ///
-    xlabel(, angle(45)) ///
-    xline(`xline_val', lcolor(red)) ///
+    xlabel(, angle(45) labsize(small)) ///
+    ylabel(, labsize(small)) ///
+    xline(`xline_val', lcolor(gs6)) ///
     omitted baselevels ///
-    yline(0, lcolor(black) lpattern(dash)) ///
+    yline(0, lcolor(gs8) lpattern(dash)) ///
     vertical ciopts(recast(rcap)) ///
     legend(off)
 
@@ -170,16 +172,17 @@ if ${overleaf} == 1 {
     graph export "${ol_fig}fig_event_inc_hh.jpg", as(jpg) quality(100) replace
 }
 
-** Plot for other household income (HH income minus own earnings)
+** Plot for other household income (scheme-consistent)
 coefplot est_incother_hh_real, ///
     keep(`keep') ///
     coeflabels(`coef') ///
-    msize(medsmall) ///
+    msize(small) pstyle(p1) ///
     ytitle("PPML Coefficient, Other HH Income") ///
-    xlabel(, angle(45)) ///
-    xline(`xline_val', lcolor(red)) ///
+    xlabel(, angle(45) labsize(small)) ///
+    ylabel(, labsize(small)) ///
+    xline(`xline_val', lcolor(gs6)) ///
     omitted baselevels ///
-    yline(0, lcolor(black) lpattern(dash)) ///
+    yline(0, lcolor(gs8) lpattern(dash)) ///
     vertical ciopts(recast(rcap)) ///
     legend(off)
 
@@ -241,25 +244,23 @@ preserve
     ** Calculate xline position (after 2014, before 2015)
     local xline_pos = 2014 - `start' + 1.5
 
-    ** Plot combined figure
+    ** Plot combined figure (scheme-consistent)
     twoway ///
-        (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(navy)) ///
-        (scatter coef xpos if outcome == "incearn_real", mcolor(navy) msymbol(O)) ///
-        (rcap ci_lo ci_hi xpos if outcome == "inctot_hh_real", lcolor(cranberry)) ///
-        (scatter coef xpos if outcome == "inctot_hh_real", mcolor(cranberry) msymbol(D)) ///
-        (rcap ci_lo ci_hi xpos if outcome == "incother_hh_real", lcolor(forest_green)) ///
-        (scatter coef xpos if outcome == "incother_hh_real", mcolor(forest_green) msymbol(T)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(stc1)) ///
+        (scatter coef xpos if outcome == "incearn_real", mcolor(stc1) msymbol(O) msize(small)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "inctot_hh_real", lcolor(stc2)) ///
+        (scatter coef xpos if outcome == "inctot_hh_real", mcolor(stc2) msymbol(D) msize(small)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "incother_hh_real", lcolor(stc3)) ///
+        (scatter coef xpos if outcome == "incother_hh_real", mcolor(stc3) msymbol(T) msize(small)) ///
         , ///
-        yline(0, lcolor(black) lpattern(dash)) ///
-        xline(`xline_pos', lcolor(red)) ///
+        yline(0, lcolor(gs8) lpattern(dash)) ///
+        xline(`xline_pos', lcolor(gs6)) ///
         ytitle("PPML Coefficient") ///
         xtitle("") ///
-        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid) ///
-        ylabel(-.3(.1).3, angle(0)) ///
+        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid labsize(small)) ///
+        ylabel(-.3(.1).3, angle(0) labsize(small)) ///
         legend(order(2 "Own Earnings" 4 "Total HH Income" 6 "Other HH Income") ///
-               rows(1) position(6) region(lcolor(white))) ///
-        graphregion(color(white)) ///
-        plotregion(margin(b=0))
+               rows(1) position(6) size(small))
 
     ** Save combined figure
     graph export "${results}figures/fig_event_earn.jpg", as(jpg) name("Graph") quality(100) replace
@@ -283,23 +284,21 @@ preserve
     replace xpos = xpos - 0.1 if outcome == "incearn_real"
     replace xpos = xpos + 0.1 if outcome == "inctot_hh_real"
 
-    ** Plot combined figure (two outcomes only)
+    ** Plot combined figure (two outcomes only, scheme-consistent)
     twoway ///
-        (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(navy)) ///
-        (scatter coef xpos if outcome == "incearn_real", mcolor(navy) msymbol(O)) ///
-        (rcap ci_lo ci_hi xpos if outcome == "inctot_hh_real", lcolor(cranberry)) ///
-        (scatter coef xpos if outcome == "inctot_hh_real", mcolor(cranberry) msymbol(D)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(stc1)) ///
+        (scatter coef xpos if outcome == "incearn_real", mcolor(stc1) msymbol(O) msize(small)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "inctot_hh_real", lcolor(stc2)) ///
+        (scatter coef xpos if outcome == "inctot_hh_real", mcolor(stc2) msymbol(D) msize(small)) ///
         , ///
-        yline(0, lcolor(black) lpattern(dash)) ///
-        xline(`xline_pos', lcolor(red)) ///
+        yline(0, lcolor(gs8) lpattern(dash)) ///
+        xline(`xline_pos', lcolor(gs6)) ///
         ytitle("PPML Coefficient") ///
         xtitle("") ///
-        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid) ///
-        ylabel(-.3(.1).3, angle(0)) ///
+        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid labsize(small)) ///
+        ylabel(-.3(.1).3, angle(0) labsize(small)) ///
         legend(order(2 "Own Earnings" 4 "Total HH Income") ///
-               rows(1) position(6) region(lcolor(white))) ///
-        graphregion(color(white)) ///
-        plotregion(margin(b=0))
+               rows(1) position(6) size(small))
 
     ** Save figure
     graph export "${results}figures/fig_event_earn_2.jpg", as(jpg) name("Graph") quality(100) replace

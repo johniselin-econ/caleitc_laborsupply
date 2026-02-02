@@ -60,32 +60,32 @@ local cal_kink2 = `cal_mc' / `cal_po' + `cal_kink1'
 ** Minwage marks
 local minwage = 9 * 40 * 52
 
-** Histogram of earnings by full vs part-time status
+** Histogram of earnings by full vs part-time status (scheme-consistent)
 twoway  (hist incearn_topcode if part_time_y == 1 & year == 2014 ///
             [fw = weight_int], ///
             fcolor(stc1) lcolor(stc1) width(5000) frequency) ///
         (hist incearn_topcode if full_time_y == 1 & year == 2014 ///
             [fw = weight_int], ///
-            fcolor(none) lcolor(black) width(5000) frequency) ///
+            fcolor(none) lcolor(gs4) width(5000) frequency) ///
         (function y = x * `cal_pi', /// CALEITC
-            range(0 `cal_kink1') yaxis(2) lc(red) lp(dash)) ///
+            range(0 `cal_kink1') yaxis(2) lc(stc2) lp(dash)) ///
         (function y = `cal_mc' - (x - `cal_kink1') * `cal_po', ///
             range(`cal_kink1' `cal_kink2') ///
-            yaxis(2) lc(red) lp(dash)) ///
+            yaxis(2) lc(stc2) lp(dash)) ///
         (function y = x * `fed_pi', /// FEDEITC
-            range(0 `fed_kink1') yaxis(2) lc(black) lp(dash)) ///
+            range(0 `fed_kink1') yaxis(2) lc(gs6) lp(dash)) ///
         (function y = `fed_mc', ///
             range(`fed_kink1' `fed_kink2') ///
-            yaxis(2) lc(black) lp(dash)) ///
+            yaxis(2) lc(gs6) lp(dash)) ///
         (function y = `fed_mc' - (x - `fed_kink2') * `fed_po', ///
             range(`fed_kink2' `fed_kink3') ///
-            yaxis(2) lc(black) lp(dash)), ///
+            yaxis(2) lc(gs6) lp(dash)), ///
         legend(order(1 "Part-time" 2 "Full-time" ///
                      3 "CalEITC" 6 "Federal EITC") ///
-               ring(0) position(2) bmargin(large)) ///
+               ring(0) position(2) bmargin(large) size(small)) ///
         xtitle("Topcoded earned income (2014 USD)") ///
         ytitle("Weighted count of workers") ///
-        ylabel(,format(%12.0fc)) xlabel(,format(%12.0fc)) ///
+        ylabel(,format(%12.0fc) labsize(small)) xlabel(,format(%12.0fc) labsize(small)) ///
         ylabel(none, axis(2)) ///
         ytitle("", axis(2)) yscale(lstyle(none) axis(2))
 
@@ -108,12 +108,13 @@ clear
 ** Load ACS data
 use weight incearn_tax_nom part_time_y full_time_y year qc_present 		///
     female married in_school age citizen_test state_fips cpi99			///
-    if  in_school == 0 & ///
-		qc_present == 1 & ///
-        inrange(age, 20, 49) & ///
-        citizen_test == 1 & ///
-        state_fips == 6 & ///
-        inrange(year, 2012,2014) ///
+    if  in_school == 0 & 			///
+		qc_present == 1 & 			///
+        inrange(age, 20, 49) & 		///
+        citizen_test == 1 & 		///
+        state_fips == 6 &			///
+		qc_present == 1 & 			///
+        inrange(year, 2012,2014) 	///
     using ${data}final/acs_working_file, clear
 
 ** Generate integer weights
@@ -141,25 +142,25 @@ label define lb_bin 1 "Single Women" 2 "Married Women" 3 "Single Men" 4 "Married
 label values bin lb_bin
 
 
-** Histogram of earnings by full vs part-time status
+** Histogram of earnings by full vs part-time status (scheme-consistent)
 twoway  (hist incearn_topcode [fw = weight_int], 					///
             fcolor(stc1) lcolor(stc1) width(5000) frequency) 		///
         (function y = x * `cal_pi', 								/// CALEITC
-            range(0 `cal_kink1') yaxis(2) lc(red) lp(dash)) 		///
+            range(0 `cal_kink1') yaxis(2) lc(stc2) lp(dash)) 		///
         (function y = `cal_mc' - (x - `cal_kink1') * `cal_po', 		///
             range(`cal_kink1' `cal_kink2') 							///
-            yaxis(2) lc(red) lp(dash)) 								///
+            yaxis(2) lc(stc2) lp(dash)) 							///
         (function y = x * `fed_pi', 								/// FEDEITC
-            range(0 `fed_kink1') yaxis(2) lc(black) lp(dash)) 		///
+            range(0 `fed_kink1') yaxis(2) lc(gs6) lp(dash)) 		///
         (function y = `fed_mc', 									///
             range(`fed_kink1' `fed_kink2') 							///
-            yaxis(2) lc(black) lp(dash)) 							///
+            yaxis(2) lc(gs6) lp(dash)) 								///
         (function y = `fed_mc' - (x - `fed_kink2') * `fed_po', 		///
             range(`fed_kink2' `fed_kink3') 							///
-            yaxis(2) lc(black) lp(dash)), 							///
-		by(bin, legend(pos(6)))										///
-		legend(order(3 "CalEITC" 6 "Federal EITC")  row(1))			///
-		ylabel(,format(%12.0fc)) xlabel(,format(%12.0fc)) 			///
+            yaxis(2) lc(gs6) lp(dash)), 							///
+        by(bin, legend(pos(6)))										///
+        legend(order(3 "CalEITC" 6 "Federal EITC") row(1) size(small))	///
+        ylabel(,format(%12.0fc) labsize(small)) xlabel(,format(%12.0fc) labsize(small)) ///
         ytitle("", axis(2)) yscale(lstyle(none) axis(2)) 			///
         xtitle("Topcoded earned income (2014 USD)") 				///
         ytitle("Weighted count of workers") ylabel(none, axis(2))

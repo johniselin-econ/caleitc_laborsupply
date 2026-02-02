@@ -4,7 +4,7 @@ Creator:        John Iselin
 Date Update:    January 2026
 
 Purpose:        Creates Appendix Table 1
-                Descriptive statistics, single women aged 20-50 without
+                Descriptive statistics, single women aged 20-49 without
                 a college degree via the ACS
 
 Project: CalEITC Labor Supply Effects
@@ -22,7 +22,7 @@ log using "${logs}04_appA_tab1_log_${date}", name(log_04_appA_tab1) replace text
 use if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///

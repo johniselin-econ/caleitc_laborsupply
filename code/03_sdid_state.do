@@ -76,11 +76,11 @@ end
 
 ** Load ACS data with sample restrictions
 use weight `outcomes' `controls' qc_* year education					///
-    female married in_school age citizen_test state_fips state_status 	///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status 	///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///

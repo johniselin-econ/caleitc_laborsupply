@@ -248,9 +248,9 @@ order tax_year qc_ct pwages pwages_unadj max_credit max_income ///
 sort tax_year qc_ct
 
 ** Display summary
-di _n "=" * 70
+di _n _dup(70)"="
 di "CalEITC Max Income Parameters by Year and QC Count"
-di "=" * 70
+di _dup(70)"="
 list tax_year qc_ct pwages pwages_unadj max_credit max_income, sepby(tax_year)
 
 ** Export to Excel

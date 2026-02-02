@@ -25,8 +25,7 @@ data/interim/*.dta
 data/interim/*.csv
 
 # TAXSIM outputs
-data/taxsim/*.dta
-data/taxsim/*.csv
+data/taxsim/*
 
 # Raw data files
 data/raw/*

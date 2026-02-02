@@ -80,12 +80,12 @@ end
 
 ** Load ACS data with sample restrictions
 use weight `outcomes' state_unemp county_unemp mean_st_mw qc_* year ///
-    female married in_school age citizen_test state_fips county_fips state_status ///
+    female married in_school age_sample_20_49 citizen_test state_fips county_fips state_status ///
     race_group hispanic education age_bracket ///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///
@@ -292,14 +292,10 @@ foreach out of local outcomes {
     ** Export table for this outcome
     ** -------------------------------------------------------------------------
 
-    ** Define column titles
-    local coltitles `" "(1)" "(2)" "(3)" "(4)" "'
-
     ** Save table locally
     esttab est_1 est_2 est_3 est_4 using ///
         "${results}tables/tab_sdid_county_`i'.tex", ///
         booktabs fragment replace nonumbers nolines ///
-        mtitles(`coltitles') ///
         b(2) se(2) ///
         star(* 0.10 ** 0.05 *** 0.01) ///
         stats(N, fmt(%9.0fc) labels("Observations")) ///
@@ -310,7 +306,6 @@ foreach out of local outcomes {
         esttab est_1 est_2 est_3 est_4 using ///
             "${ol_tab}tab_sdid_county_`i'.tex", ///
             booktabs fragment replace nonumbers nolines ///
-            mtitles(`coltitles') ///
             b(2) se(2) ///
             star(* 0.10 ** 0.05 *** 0.01) ///
             stats(N, fmt(%9.0fc) labels("Observations")) ///

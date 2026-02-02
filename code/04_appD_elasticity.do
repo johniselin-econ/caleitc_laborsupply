@@ -76,7 +76,7 @@ di "LOADING DATA AND PREPARING SAMPLE"
 use if female == 1 & ///
        married == 0 & ///
        in_school == 0 & ///
-       inrange(age, 20, 50) & ///
+       age_sample_20_49 == 1 & ///
        citizen_test == 1 & ///
        inrange(year, 2012, 2017) ///
     using "${data}final/acs_working_file.dta", replace
@@ -116,16 +116,16 @@ di _n "Analysis sample: `N' observations"
 ** SECTION 3: Participation Elasticity - Baseline Estimates
 ** =============================================================================
 
-di _n "=" * 70
+di _n _dup(70)"="
 di "PARTICIPATION ELASTICITY CALCULATIONS"
-di "=" * 70
+di _dup(70)"="
 
 ** -----------------------------------------------------------------------------
 ** Step 3.1: Calculate baseline net-of-tax rate (denominator component)
 ** -----------------------------------------------------------------------------
 
 di _n "Step 3.1: Baseline net-of-tax rate"
-di "-" * 40
+di _dup(40)"-"
 
 ** Mean after-tax rate for treated group in pre-period
 qui summ taxsim_sim3_atr_st if qc_present == 1 & ca == 1 & post == 0 [aw = weight]
@@ -139,7 +139,7 @@ di "  Net-of-tax rate (1-ATR): " %6.4f `netoftax_pre'
 ** -----------------------------------------------------------------------------
 
 di _n "Step 3.2: DiD estimate of ATR change"
-di "-" * 40
+di _dup(40)"-"
 
 qui reghdfe taxsim_sim3_atr_st treated [aw = weight], ///
     absorb(`did') vce(cluster `clustervar')
@@ -160,7 +160,7 @@ di _n "  DENOMINATOR = delta(1-ATR)/(1-ATR) = " %8.5f `denom'
 ** -----------------------------------------------------------------------------
 
 di _n "Step 3.3: Baseline employment rate"
-di "-" * 40
+di _dup(40)"-"
 
 qui summ part_time_y if qc_present == 1 & ca == 1 & post == 0 [aw = weight]
 local P_base = r(mean)
@@ -171,7 +171,7 @@ di "  Part-time employment rate (treated, pre): " %6.4f `P_base'
 ** -----------------------------------------------------------------------------
 
 di _n "Step 3.4: DiD estimate of employment change"
-di "-" * 40
+di _dup(40)"-"
 
 qui reghdfe part_time_y treated `state_controls' [aw = weight], ///
     absorb(`did' `controls') vce(cluster `clustervar')
@@ -186,7 +186,7 @@ di "  DiD coefficient (part-time): " %8.5f `beta_pt' " (SE: " %8.5f `se_pt' ")"
 ** -----------------------------------------------------------------------------
 
 di _n "Step 3.5: Participation Elasticity"
-di "-" * 40
+di _dup(40)"-"
 
 ** Using margins for proper standard error calculation
 margins, expression((_b[treated] / `P_base') / (`denom')) post
@@ -207,9 +207,9 @@ scalar e_participation = `e_part'
 ** SECTION 4: Adjusted Elasticity (FT to PT Transitions)
 ** =============================================================================
 
-di _n "=" * 70
+di _n _dup(70)"="
 di "ADJUSTED PARTICIPATION ELASTICITY (FT to PT)"
-di "=" * 70
+di _dup(70)"="
 
 ** Some part-time employment gains may come from full-time workers
 ** reducing hours, not non-workers entering employment.
@@ -219,7 +219,7 @@ di "=" * 70
 use if female == 1 & ///
        married == 0 & ///
        in_school == 0 & ///
-       inrange(age, 20, 50) & ///
+       age_sample_20_49 == 1 & ///
        citizen_test == 1 & ///
        inrange(year, 2012, 2017) ///
     using "${data}final/acs_working_file.dta", replace
@@ -253,20 +253,15 @@ di _n "  ADJUSTED PARTICIPATION ELASTICITY: " %6.3f `e_part_adj'
 ** SECTION 5: Elasticity with $27K Earnings Bin
 ** =============================================================================
 
-di _n "=" * 70
+di _n _dup(70)"="
 di "ELASTICITY WITH $27K EARNINGS BIN ADJUSTMENT"
-di "=" * 70
+di _dup(70)"="
 
 ** Alternative adjustment: focus on full-time workers in $24K-$30K range
 ** These are workers who might reduce earnings to reach CalEITC kink
 
-** CPI adjustment to 2017 dollars
-qui summ cpi99 if year == 2017
-local cpi_2017 = r(mean)
-gen real_earnings = incearn * (cpi99 / `cpi_2017')
-
 ** Flag full-time workers in $27K bin
-gen ft_27k = (full_time_y == 1 & inrange(real_earnings, 24001, 30000))
+gen ft_27k = (full_time_y == 1 & inrange(incearn_real, 24000, 29999))
 label var ft_27k "Full-time in $24K-$30K earnings bin"
 
 ** Estimate effect on FT in $27K bin
@@ -290,9 +285,9 @@ di _n "  PARTICIPATION ELASTICITY ($27K adjustment): " %6.3f `e_part_27k'
 ** SECTION 6: Mobility Elasticity using TAXSIM
 ** =============================================================================
 
-di _n "=" * 70
+di _n _dup(70)"="
 di "MOBILITY ELASTICITY CALCULATIONS (TAXSIM)"
-di "=" * 70
+di _dup(70)"="
 
 ** Mobility elasticity compares net-of-tax earnings at:
 ** 1. CalEITC kink point (part-time target)
@@ -304,8 +299,10 @@ di "=" * 70
 
 di _n "Step 6.1: Loading CalEITC parameters"
 
-import excel using "${data}eitc_parameters/caleitc_max_inc_max_cred.xlsx", ///
-    clear firstrow
+import delimited "${data}eitc_parameters/caleitc_params.txt", clear
+
+** Handle missing values - pwages is for years >= 2015, pwages_unadj for < 2015
+destring pwages pwages_unadj, replace force
 
 ** Keep 2014 (pre) and 2017 (post) only
 keep if inlist(tax_year, 2014, 2017)
@@ -326,7 +323,7 @@ di _n "Step 6.2: Calculating QC distribution"
 
 use if female == 1 & ///
        married == 0 & ///
-       inrange(age, 20, 50) & ///
+       age_sample_20_49 == 1 & ///
        in_school == 0 & ///
        citizen_test == 1 & ///
        education < 4 & ///
@@ -396,7 +393,8 @@ tab year _merge
 gen pwages_scenario = 0
 
 ** Scenario 1: CalEITC kink point
-replace pwages_scenario = pwages if work == 1
+replace pwages_scenario = pwages_unadj if work == 1 & year == 2014
+replace pwages_scenario = pwages if work == 1 & year == 2017
 
 ** Scenario 2: Full-time at 2017 minimum wage ($10.50/hr)
 local ft_minwage = 10.50 * 40 * 52  // $21,840
@@ -494,25 +492,22 @@ gen log_denom_27k = ln(diff_kink_27k_2017) - ln(diff_kink_27k_2014)
 
 ** Numerator: ln(P + beta) - ln(P)
 gen log_numer_full = ln(`P_base' + `beta_pt') - ln(`P_base')
-gen log_numer_partial = ln(`P_base' + abs(`beta_ft27')) - ln(`P_base')
 
 ** Mobility elasticities
 gen e_mob_ft_full = log_numer_full / log_denom_ft
 gen e_mob_27k_full = log_numer_full / log_denom_27k
-gen e_mob_ft_partial = log_numer_partial / log_denom_ft
-gen e_mob_27k_partial = log_numer_partial / log_denom_27k
 
 ** -----------------------------------------------------------------------------
 ** Step 6.6: Display mobility elasticity results
 ** -----------------------------------------------------------------------------
 
-di _n "=" * 70
+di _n _dup(70)"="
 di "MOBILITY ELASTICITY RESULTS"
-di "=" * 70
+di _dup(70)"="
 
 di _n "By QC count (weighted by sample distribution):"
 table depx [aw = share], ///
-    stat(mean e_mob_ft_full e_mob_27k_full e_mob_ft_partial e_mob_27k_partial)
+    stat(mean e_mob_ft_full e_mob_27k_full)
 
 ** Weighted average
 qui summ e_mob_ft_full [aw = share]
@@ -521,25 +516,19 @@ local e_mob_ft_full_avg = r(mean)
 qui summ e_mob_27k_full [aw = share]
 local e_mob_27k_full_avg = r(mean)
 
-qui summ e_mob_ft_partial [aw = share]
-local e_mob_ft_partial_avg = r(mean)
-
-qui summ e_mob_27k_partial [aw = share]
-local e_mob_27k_partial_avg = r(mean)
 
 di _n "Weighted average mobility elasticities:"
 di "  vs FT minwage (full effect): " %6.3f `e_mob_ft_full_avg'
 di "  vs $27K (full effect): " %6.3f `e_mob_27k_full_avg'
-di "  vs FT minwage (partial): " %6.3f `e_mob_ft_partial_avg'
-di "  vs $27K (partial): " %6.3f `e_mob_27k_partial_avg'
+
 
 ** =============================================================================
 ** SECTION 7: Summary Table
 ** =============================================================================
 
-di _n "=" * 70
+di _n _dup(70)"="
 di "SUMMARY OF ELASTICITY ESTIMATES"
-di "=" * 70
+di _dup(70)"="
 
 di _n "PARTICIPATION ELASTICITIES:"
 di "  Baseline (all NW to PT): " %6.3f `e_part'
@@ -549,10 +538,8 @@ di "  $27K bin adjustment: " %6.3f `e_part_27k'
 di _n "MOBILITY ELASTICITIES:"
 di "  vs FT minwage (full): " %6.3f `e_mob_ft_full_avg'
 di "  vs $27K (full): " %6.3f `e_mob_27k_full_avg'
-di "  vs FT minwage (partial): " %6.3f `e_mob_ft_partial_avg'
-di "  vs $27K (partial): " %6.3f `e_mob_27k_partial_avg'
 
-di _n "=" * 70
+di _n _dup(70)"="
 
 ** =============================================================================
 ** End

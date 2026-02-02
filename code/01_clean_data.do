@@ -47,10 +47,29 @@ keep year state_fips mean_st_mw
 save "${data}interim/st_minwage_year.dta", replace
 
 ** =============================================================================
-** (2) LOOP OVER YEARS TO PROCESS ACS DATA
+** (2) CAPTURE 2015 CPI VALUE FOR SIMULATION 3
 ** =============================================================================
 
-forvalues y = $start_year_data(1)$end_year_data {
+** Need 2015 CPI value for adjusting CalEITC parameters in earlier years
+capture confirm file "${data}acs/acs_2015.csv"
+if _rc == 0 {
+    import delimited "${data}acs/acs_2015.csv", clear
+    qui summ cpi99, meanonly
+    global cpi_2015 = r(mean)
+    dis "Captured 2015 CPI value: ${cpi_2015}"
+    clear
+}
+else {
+    ** Fallback to approximate value if 2015 file not found
+    global cpi_2015 = 0.811
+    dis "Using fallback 2015 CPI value: ${cpi_2015}"
+}
+
+** =============================================================================
+** (3) LOOP OVER YEARS TO PROCESS ACS DATA
+** =============================================================================
+
+forvalues y = $end_year_data(-1)$start_year_data {
 
     dis ""
     dis "=============================================="
@@ -500,192 +519,317 @@ forvalues y = $start_year_data(1)$end_year_data {
 
     ** SAMPLE RESTRICTION: Drop if assigned as QC
     drop if qc == 1
-	
-	** -------------------------------------------------------------------------
-    ** Step 9: TAXSIM Runs
+
     ** -------------------------------------------------------------------------
-	/*
-	** ID Variable 
-	sort hh_id unit_id
-	gen double taxsimid = group(hh_id unit_id)
-	
-	** Set up taxsim variables 
-	gen depx = min(qc_ct, 3)
-	gen mstat = 1 
-	replace mstat = 2 if married == 1 
-	replace mstat = 6 if mfs == 1 
-	gen page = age 
-	gen sage = 0
-	bysort hh_id unit_id: gen max_age = max(age)
-	bysort hh_id unit_id: gen min_age = max(min)
-	replace sage = max_age if age == min_age & married == 1 
-	replace sage = min_age if age == max_age & married == 1 
-	drop max_age min_age
-	gen pwages = max(incwage_nom, 0 ) 
-	gen psemp = incse_nom
-	gen swages = max(incwage_tax_nom - pwages, 0)
-	gen ssemp = incse_tax_nom - psemp
-	gen intrec = max(incinvst_unit_nom, 0) 
-	
-	** Preserve data 
-	preserve 
-	
-	** Keep sample (CA only)
-	keep if state_fips == 6
-	keep if unit_id = pernum
-	
-	** State (SOI)
-	gen state = 5
-	
-	** Keep required variables 
-	keep taxsimid year mstat depx state page sage pwages swages psemp ssemp intrec 
-	
-	
-	
-	
-	
-			** Create wage variable equal to the wage that recieves:
-			** (1) Maximum CalEITC  
-			** (2) Maximum Federal EITC
-		
-			** Preserve data 
-			preserve 
-			
-			** Load excel file with stored values 
-			import excel using 	///
-				"${data}eitc_parameters/`type'eitc_max_inc_max_cred.xlsx", clear ///
-				firstrow
-			
-			** Rename year variable 
-			rename tax_year year
-			rename qc_ct depx
-		
-			** Save as temporary file 
-			tempfile `type'_eitc_max_inc_max_cred
-			save ``type'_eitc_max_inc_max_cred'
-			clear
-		
-			** Restore 
-			restore 
-		
-			** Merge 
-			merge m:1 year depx using ``type'_eitc_max_inc_max_cred'
-			tab year _merge  
-			keep if _merge == 3
-			drop _merge 
-			
-			** Store 2015 CPI value 
-			qui summ cpi99 if year == 2015
-			local cpi_15 = r(mean)
-		
-			** For years prior to 2015, CPI Update 2015 values 
-			replace pwages = pwages_unadj * `cpi_15'/cpi99  if year < 2015
+    ** Step 9: TAXSIM Calculations (Simulation 1 and 3)
+    ** -------------------------------------------------------------------------
 
-			** Keep required variables 
-			keep taxsimid year state mstat page depx age* pwages intrec otherprop
-			
-			des 
-			sum 
-			
-			** Store as temporary file 
-			tempfile `type'_atr_prerun 
-			save ``type'_atr_prerun'
-			
-			** Change working directory for taxsim  
-			cd "${data}taxsim"
-			
-			** Use taxsim 
-			taxsimlocal35, full 
-			clear 
-			
-			** Load results 
-			import delimited results.raw, clear 
-			
-			** Revert working directory 
-			cd "${dir}"
-			
-			** Keep relevent variables 
-			destring taxsimid, replace 
-			keep taxsimid year fiitax siitax fica v10
-			rename v10 `type'_agi 
-			rename fiitax `type'_fiitax
-			rename siitax `type'_siitax 
-			rename fica `type'_fica
-			
-			** Save as tempfile 
-			tempfile `type'_atr_run1 
-			save ``type'_atr_run1'
-			clear
-			
-			** Load pre-taxsim data 
-			use ``type'_atr_prerun'
-			
-			** Replace wage == 0 
-			replace pwages = 0 
-			
-			** Change working directory for taxsim  
-			cd "${data}taxsim"
-			
-			** Use taxsim 
-			taxsimlocal35, full 
-			clear 
-			
-			** Load results 
-			import delimited results.raw, clear 
-			
-			** Revert working directory 
-			cd "${dir}"
-			
-			** Keep relevent variables 
-			destring taxsimid, replace 
-			keep taxsimid year fiitax siitax fica
-			rename fiitax `type'_fiitax_0 
-			rename siitax `type'_siitax_0 
-			rename fica `type'_fica_0 
-			
-			** Merge with prior run 
-			merge 1:1 year taxsimid  using ``type'_atr_run1'
-			
-			** Save as tempfile 
-			tempfile `type'_atr_run2 
-			save ``type'_atr_run2'
-			clear
-			
-		} // END EITC LOOP 
-		
-		** Merge with preserved data 
-		if ${debug} == 0 use ${data}working_data/`d'_working_file, clear 
-		else use ${data}working_data/`d'_working_file_debug, clear 
-		
-		* merge m:1 taxsimid using `fed_atr_run2', nogen keep(master match)
-		merge m:1 year taxsimid using `cal_atr_run2', nogen keep(master match)
-		
-		** Generate ATR variables (Kleven 2023, Eq. 7)
-		gen taxsim_sim3_atr_st = 	///
-			((cal_fiitax - cal_fiitax_0) + (cal_siitax - cal_siitax_0) + cal_fica) / cal_agi 
-		*gen taxsim_sim3_atr_fed = 	///
-			((fed_fiitax - fed_fiitax_0) + (fed_siitax - fed_siitax_0) + fed_fica) / fed_agi 
-				
-		label var taxsim_sim3_atr_st "Average Tax Rate at CalEITC Max Inc, via TAXSIM"
-		*label var taxsim_sim3_atr_fed "Average Tax Rate at FedEITC Max Inc, via TAXSIM"
-		
-		** Check that adjustment was done correctly 
-		tab year if qc_present == 0, sum(taxsim_sim3_atr_st)
-		tab year if qc_ct == 1, sum(taxsim_sim3_atr_st)
-		tab year if qc_ct == 2, sum(taxsim_sim3_atr_st)
-		tab year if qc_ct == 3, sum(taxsim_sim3_atr_st)
+    ** Only run TAXSIM for years 2010-2019
+    if inrange(`y', 2010, 2019) {
 
-		drop state cal_*tax* cal_agi *_fica* 
-		drop sample mstat 
-		
-		** Save file as DTA
-		if ${debug} == 0 save ${data}working_data/`d'_working_file, replace 
-		else save ${data}working_data/`d'_working_file_debug, replace 
-		clear 	
-		
-	} // END SPM Calculations 
-	
-	*/
+        dis "Step 9: TAXSIM Calculations for year `y'"
+
+        ** ---------------------------------------------------------------------
+        ** Step 9a: Create FIPS to SOI Crosswalk
+        ** ---------------------------------------------------------------------
+
+        ** FIPS codes map to SOI codes (note: FIPS 3,7,14,43,52 don't exist)
+        recode state_fips ///
+            (1=1) (2=2) (4=3) (5=4) (6=5) (8=6) (9=7) (10=8) (11=9) ///
+            (12=10) (13=11) (15=12) (16=13) (17=14) (18=15) (19=16) (20=17) (21=18) ///
+            (22=19) (23=20) (24=21) (25=22) (26=23) (27=24) (28=25) (29=26) (30=27) ///
+            (31=28) (32=29) (33=30) (34=31) (35=32) (36=33) (37=34) (38=35) (39=36) ///
+            (40=37) (41=38) (42=39) (44=40) (45=41) (46=42) (47=43) (48=44) (49=45) ///
+            (50=46) (51=47) (53=48) (54=49) (55=50) (56=51), gen(state_soi)
+        label var state_soi "State SOI code (for TAXSIM)"
+
+        ** ---------------------------------------------------------------------
+        ** Step 9b: Prepare TAXSIM Input Variables
+        ** ---------------------------------------------------------------------
+
+        ** Create unique tax unit ID
+        sort hh_id unit_id pernum
+        gegen double taxsimid = group(hh_id unit_id)
+        label var taxsimid "TAXSIM tax unit ID"
+
+        ** Create TAXSIM input file
+        gen state = state_soi
+
+        ** Marital status for TAXSIM (1=single, 2=married joint, 6=married separate)
+        gen byte mstat = 1
+        replace mstat = 2 if married == 1
+        replace mstat = 6 if mfs == 1
+        label var mstat "TAXSIM marital status"
+
+        ** Dependent exemptions (capped at 3 already)
+        gen byte depx = qc_ct
+        label var depx "TAXSIM dependent exemptions"
+
+        ** Primary taxpayer age
+        gen page = age
+        label var page "TAXSIM primary taxpayer age"
+
+        ** Spouse age (for married couples, use other spouse's age)
+        gen sage = 0
+        bysort hh_id unit_id (pernum): gen tmp_max_age = age[_N]
+        bysort hh_id unit_id (pernum): gen tmp_min_age = age[1]
+        replace sage = tmp_max_age if age == tmp_min_age & married == 1 & unit_ct > 1
+        replace sage = tmp_min_age if age == tmp_max_age & married == 1 & unit_ct > 1
+        drop tmp_max_age tmp_min_age
+        label var sage "TAXSIM spouse age"
+
+        ** Primary wages (own wage income, non-negative)
+        gen double pwages = max(incwage_nom, 0)
+        label var pwages "TAXSIM primary wages"
+
+        ** Spousal wages (tax unit wages minus own wages, non-negative)
+        gen double swages = max(incwage_tax_nom - incwage_nom, 0)
+        label var swages "TAXSIM spouse wages"
+
+        ** Primary self-employment income (can be negative)
+        gen double psemp = incse_nom
+        label var psemp "TAXSIM primary self-employment"
+
+        ** Spousal self-employment income
+        gen double ssemp = incse_tax_nom - incse_nom
+        label var ssemp "TAXSIM spouse self-employment"
+
+        ** Interest/dividend income (investment income, non-negative)
+        gen double intrec = max(incinvst_tax_nom, 0)
+        label var intrec "TAXSIM interest/dividend income"
+
+        ** Other property income calculation
+        ** Start with total tax-unit income, subtract enumerated taxable income and non-taxable transfers
+        gen double otherprop = inctot_tax_nom
+        replace otherprop = otherprop - max(incwage_tax_nom, 0)  // wages
+        replace otherprop = otherprop - incse_tax_nom            // SE income
+        replace otherprop = otherprop - incinvst_tax_nom         // investment
+        replace otherprop = otherprop - incwel_nom               // welfare (non-taxable)
+        replace otherprop = max(otherprop, 0)                    // floor at zero
+        label var otherprop "TAXSIM other property income"
+
+        ** Flag for primary filer in tax unit (one observation per tax unit for TAXSIM)
+        gen byte primary_filer = (unit_id == pernum)
+        label var primary_filer "Primary filer in tax unit"
+
+        ** ---------------------------------------------------------------------
+        ** Simulation 1 - Observed Characteristics (CA Only)
+        ** ---------------------------------------------------------------------
+
+        ** Initialize output variables
+        gen double taxsim_sim1_fedeitc = .
+        gen double taxsim_sim1_steitc = .
+        label var taxsim_sim1_fedeitc "Federal EITC (Sim 1: observed)"
+        label var taxsim_sim1_steitc "State EITC (Sim 1: observed)"
+
+        ** Preserve current data
+        preserve
+
+        ** Keep CA residents only, one observation per tax unit
+        keep if primary_filer == 1
+
+        ** Keep required TAXSIM variables
+        keep taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+
+        ** Order variables for TAXSIM
+        order taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+
+        ** Run TAXSIM
+        cd "${data}taxsim"
+
+        ** Export and run TAXSIM
+        capture noisily taxsimlocal35, full
+        if _rc != 0 {
+            di as error "TAXSIM Simulation 1 failed for year `y'"
+            cd "${dir}"
+            restore
+        }
+        else {
+            ** Load results
+            clear
+            import delimited results.raw, clear
+
+            ** Return to main directory
+            cd "${dir}"
+
+            ** Clean results
+            destring taxsimid, replace force
+            drop if missing(taxsimid)
+
+            ** Keep EITC variables
+            keep taxsimid year v25 v39
+            rename v25 sim1_fedeitc
+            rename v39 sim1_steitc
+
+            ** Save temporary file
+            tempfile sim1_results
+            save `sim1_results'
+
+            ** Restore and merge
+            restore
+
+            ** Merge results back
+            merge m:1 taxsimid year using `sim1_results', nogen keep(master match)
+
+            ** Update main variables
+            replace taxsim_sim1_fedeitc = sim1_fedeitc if !missing(sim1_fedeitc)
+            replace taxsim_sim1_steitc = sim1_steitc if !missing(sim1_steitc)
+            drop sim1_fedeitc sim1_steitc
+
+            ** Verification
+            dis "Simulation 1 verification for year `y':"
+            tab year if state_fips == 6, sum(taxsim_sim1_steitc)
+        }
+
+        ** ---------------------------------------------------------------------
+        ** Simulation 3 - ATR at CalEITC Kink (Sex-Specific)
+        ** ---------------------------------------------------------------------
+
+        ** Initialize output variable
+        gen double taxsim_sim3_atr_st = .
+        label var taxsim_sim3_atr_st "Average Tax Rate at CalEITC kink (via TAXSIM)"
+
+        ** Load CalEITC parameters
+        preserve
+
+        import delimited "${data}eitc_parameters/caleitc_params.txt", clear
+
+        ** Handle missing values - pwages is for years >= 2015, pwages_unadj for < 2015
+        destring pwages pwages_unadj, replace force
+
+        ** Rename
+        rename tax_year year
+        rename qc_ct depx
+
+        ** Save parameters
+        tempfile caleitc_params
+        save `caleitc_params'
+
+        restore
+
+        ** Preserve current data
+        preserve
+
+        ** Keep one observation per tax unit
+        keep if primary_filer == 1
+
+        ** Keep required variables
+        keep taxsimid state mstat year page sage depx intrec otherprop cpi99
+
+        ** Merge CalEITC parameters
+        merge m:1 year depx using `caleitc_params', keep(master match) nogen
+
+        ** Set wages to CalEITC-maximizing income
+        ** For years >= 2015: use pwages column
+        ** For years < 2015: use pwages_unadj with CPI adjustment
+        replace pwages = pwages_unadj * (${cpi_2015} / cpi99) if year < 2015 & !missing(pwages_unadj)
+
+        ** Other income variables
+        gen swages = 0  // Set to zero for kink calculation
+        gen psemp = 0
+        gen ssemp = 0
+
+        ** Save cell info
+        tempfile sim3_pretaxsim
+        save `sim3_pretaxsim'
+
+        ** Keep TAXSIM input
+        keep taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+        order taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+
+        ** Run TAXSIM at CalEITC kink
+        cd "${data}taxsim"
+
+        capture noisily taxsimlocal35, full
+        if _rc != 0 {
+            di as error "TAXSIM Simulation 3 (run 1) failed for year `y'"
+            cd "${dir}"
+            restore
+        }
+        else {
+            ** Load results
+            clear
+            import delimited results.raw, clear
+            cd "${dir}"
+
+            ** Clean results
+            destring taxsimid, replace force
+            drop if missing(taxsimid)
+
+            ** Keep tax variables (v4=fiitax, v5=siitax, v7=fica, v10=AGI)
+            keep taxsimid fiitax siitax fica v10
+            rename v10 agi
+
+            tempfile sim3_run1
+            save `sim3_run1'
+
+            ** Now run with pwages = 0
+            use `sim3_pretaxsim', clear
+            replace pwages = 0
+
+            keep taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+            order taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+
+            cd "${data}taxsim"
+            capture noisily taxsimlocal35, full
+
+            if _rc != 0 {
+                di as error "TAXSIM Simulation 3 (run 2) failed for year `y'"
+                cd "${dir}"
+                restore
+            }
+            else {
+                ** Load results
+                clear
+                import delimited results.raw, clear
+                cd "${dir}"
+
+                ** Clean results
+                destring taxsimid, replace force
+                drop if missing(taxsimid)
+
+                ** Keep tax variables (v4=fiitax, v5=siitax, v7=fica, v10=AGI)
+                keep taxsimid fiitax siitax fica v10
+                rename v10 agi_0
+                rename fiitax fiitax_0
+                rename siitax siitax_0
+                rename fica fica_0
+
+                ** Save data
+                tempfile sim3_run2
+                save `sim3_run2'
+
+                ** Restore data
+                restore
+
+                ** Merge with run 1 and 2 results
+                merge m:1 taxsimid using `sim3_run1', nogen keep(master match)
+                merge m:1 taxsimid using `sim3_run2', nogen keep(master match)
+
+                ** Calculate ATR (Kleven 2023, Eq. 7)
+                ** ATR = ((fiitax - fiitax_0) + (siitax - siitax_0) + fica) / agi
+                gen double atr_st = .
+                replace atr_st = ((fiitax - fiitax_0) + (siitax - siitax_0) + fica) / agi ///
+                    if agi > 0 & !missing(agi)
+
+                ** Update main variable
+                replace taxsim_sim3_atr_st = atr_st if !missing(atr_st)
+
+                label var taxsim_sim3_atr_st "Average Tax Rate at CalEITC Max Inc, via TAXSIM"
+
+                ** Verification
+                dis "Simulation 3 verification for year `y':"
+                tab year qc_ct, sum(taxsim_sim3_atr_st)
+
+                ** Clean up sim3 temp variables
+                capture drop fiitax siitax fica agi fiitax_0 siitax_0 fica_0 agi_0 atr_st
+            }
+        }
+
+        ** Clean up temporary TAXSIM variables (keep state_soi and mstat for sim2)
+        capture drop depx page sage pwages swages psemp ssemp intrec otherprop primary_filer taxsimid state
+
+    } // END IF YEAR IN 2010-2019
 
     ** -------------------------------------------------------------------------
     ** Save processed file for year
@@ -706,8 +850,9 @@ forvalues y = $start_year_data(1)$end_year_data {
 
 }
 
+
 ** =============================================================================
-** (3) APPEND ALL YEARS INTO SINGLE FILE
+** (4) APPEND ALL YEARS INTO SINGLE FILE
 ** =============================================================================
 
 dis ""
@@ -725,6 +870,250 @@ forvalues y = $start_year_data(1)$end_year_data {
 
 ** Save combined file
 save "${data}final/acs_working_file.dta", replace
+
+** =============================================================================
+** (5) TAXSIM Calculations - Simulation 2 Only
+** =============================================================================
+** Note: Simulations 1 and 3 are now computed within the year loop above
+
+dis ""
+dis "=============================================="
+dis "Running Simulation 2 (cell-based instrument)"
+dis "=============================================="
+
+** -------------------------------------------------------------------------
+** Prepare TAXSIM Input Variables for Simulation 2
+** -------------------------------------------------------------------------
+
+** Create unique tax unit ID for the combined file
+sort hh_id unit_id pernum
+gegen double taxsimid = group(hh_id unit_id)
+label var taxsimid "TAXSIM tax unit ID"
+
+** Create TAXSIM state variable (state_soi already exists from year loop for 2010-2019)
+** For years outside 2010-2019, create state_soi if needed
+capture confirm variable state_soi
+if _rc != 0 {
+    recode state_fips ///
+        (1=1) (2=2) (4=3) (5=4) (6=5) (8=6) (9=7) (10=8) (11=9) ///
+        (12=10) (13=11) (15=12) (16=13) (17=14) (18=15) (19=16) (20=17) (21=18) ///
+        (22=19) (23=20) (24=21) (25=22) (26=23) (27=24) (28=25) (29=26) (30=27) ///
+        (31=28) (32=29) (33=30) (34=31) (35=32) (36=33) (37=34) (38=35) (39=36) ///
+        (40=37) (41=38) (42=39) (44=40) (45=41) (46=42) (47=43) (48=44) (49=45) ///
+        (50=46) (51=47) (53=48) (54=49) (55=50) (56=51), gen(state_soi)
+    label var state_soi "State SOI code (for TAXSIM)"
+}
+
+gen state = state_soi
+
+** Marital status for TAXSIM (mstat already exists from year loop for 2010-2019)
+capture confirm variable mstat
+if _rc != 0 {
+    gen byte mstat = 1
+    replace mstat = 2 if married == 1
+    replace mstat = 6 if mfs == 1
+    label var mstat "TAXSIM marital status"
+}
+
+** Dependent exemptions
+gen byte depx = qc_ct
+label var depx "TAXSIM dependent exemptions"
+
+** Primary taxpayer age
+gen page = age
+label var page "TAXSIM primary taxpayer age"
+
+** Spouse age
+gen sage = 0
+bysort hh_id unit_id (pernum): gen tmp_max_age = age[_N]
+bysort hh_id unit_id (pernum): gen tmp_min_age = age[1]
+replace sage = tmp_max_age if age == tmp_min_age & married == 1 & unit_ct > 1
+replace sage = tmp_min_age if age == tmp_max_age & married == 1 & unit_ct > 1
+drop tmp_max_age tmp_min_age
+label var sage "TAXSIM spouse age"
+
+** Primary wages
+gen double pwages = max(incwage_nom, 0)
+label var pwages "TAXSIM primary wages"
+
+** Spousal wages
+gen double swages = max(incwage_tax_nom - incwage_nom, 0)
+label var swages "TAXSIM spouse wages"
+
+** Primary self-employment income
+gen double psemp = incse_nom
+label var psemp "TAXSIM primary self-employment"
+
+** Spousal self-employment income
+gen double ssemp = incse_tax_nom - incse_nom
+label var ssemp "TAXSIM spouse self-employment"
+
+** Interest/dividend income
+gen double intrec = max(incinvst_tax_nom, 0)
+label var intrec "TAXSIM interest/dividend income"
+
+** Other property income
+gen double otherprop = inctot_tax_nom
+replace otherprop = otherprop - max(incwage_tax_nom, 0)
+replace otherprop = otherprop - incse_tax_nom
+replace otherprop = otherprop - incinvst_tax_nom
+replace otherprop = otherprop - incwel_nom
+replace otherprop = max(otherprop, 0)
+label var otherprop "TAXSIM other property income"
+
+** Primary filer flag
+gen byte primary_filer = (unit_id == pernum)
+label var primary_filer "Primary filer in tax unit"
+
+** -------------------------------------------------------------------------
+** Simulation 2 - Simulated Instrument (Sex-Specific Cells)
+** -------------------------------------------------------------------------
+
+** Initialize output variables
+gen double taxsim_sim2_fedeitc = .
+gen double taxsim_sim2_steitc = .
+gen double taxsim_sim2_wt = .
+label var taxsim_sim2_fedeitc "Federal EITC (Sim 2: simulated)"
+label var taxsim_sim2_steitc "State EITC (Sim 2: simulated)"
+label var taxsim_sim2_wt "Cell weight (Sim 2)"
+
+** Store CPI values
+forvalues y = 2010(1)2019 {
+    qui summ cpi99 if year == `y', meanonly
+    local cpi_`y' = r(mean)
+}
+
+** Preserve current data
+preserve
+
+** Create simulated CalEITC instrument using 2014 data
+keep if year == 2014
+
+** Keep primary filers only
+keep if primary_filer == 1
+
+** Keep required TAXSIM variables
+keep taxsimid state mstat depx page sage pwages swages psemp ssemp intrec otherprop ///
+    cpi99 education age_bracket female weight
+
+** Order variables
+order taxsimid state mstat depx page sage pwages swages psemp ssemp intrec otherprop ///
+    cpi99 education age_bracket female weight
+
+** Gen value to help with appending
+gen append = 0
+
+** Gen empty year variable
+gen year = .
+
+** Save as temporary file
+tempfile sim_caleitc_append
+save `sim_caleitc_append'
+clear
+
+** Loop over years
+forvalues y = 2010/2019 {
+
+    ** Append values
+    append using `sim_caleitc_append'
+
+    ** Adjust values for inflation
+    foreach var of varlist pwages swages psemp ssemp intrec otherprop {
+        replace `var' = `var' * (`cpi_`y'' / cpi99) if append == 0
+    }
+
+    ** Update year
+    replace year = `y' if append == 0
+
+    ** Adjust append helper
+    replace append = 1
+}
+
+** Generate new taxsim id
+rename taxsimid taxsimid_old
+gsort year taxsimid_old
+gen double taxsimid = _n
+drop taxsimid_old
+
+** Save as temporary file
+tempfile pretaxsim_sim2
+save `pretaxsim_sim2'
+
+** Keep TAXSIM input variables
+keep taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+order taxsimid year state mstat depx page sage pwages swages psemp ssemp intrec otherprop
+
+** Run TAXSIM
+cd "${data}taxsim"
+
+capture noisily taxsimlocal35, full
+if _rc != 0 {
+    di as error "TAXSIM Simulation 2 failed"
+    cd "${dir}"
+    restore
+}
+else {
+    ** Load results
+    clear
+    import delimited results.raw, clear
+
+    ** Return to main directory
+    cd "${dir}"
+
+    ** Clean results
+    destring taxsimid, replace force
+    drop if missing(taxsimid)
+
+    ** Keep EITC variables
+    keep taxsimid v25 v39
+    rename v25 sim2_fedeitc
+    rename v39 sim2_steitc
+
+    ** Merge with cell info
+    merge 1:1 taxsimid using `pretaxsim_sim2', nogen
+
+    ** Keep cell identifiers and results
+    keep year state depx mstat education age_bracket female ///
+         sim2_fedeitc sim2_steitc weight
+
+    ** Collapse to get cell-specific averages
+    gen sim2_cellwt = 1
+    collapse (sum) sim2_cellwt ///
+             (mean) sim2_fedeitc sim2_steitc ///
+        [aw = weight], by(year state female depx mstat education age_bracket)
+
+    ** Rename for merge
+    rename state state_soi
+    rename depx qc_ct
+
+    ** Save for merge back to main data
+    tempfile sim2_results
+    save `sim2_results'
+
+    ** Restore original data
+    restore
+
+    ** Merge simulation 2 results by cell dimensions
+    merge m:1 year state_soi female qc_ct mstat education age_bracket ///
+        using `sim2_results', nogen keep(master match)
+
+    ** Update main variables
+    replace taxsim_sim2_fedeitc = sim2_fedeitc if !missing(sim2_fedeitc)
+    replace taxsim_sim2_steitc = sim2_steitc if !missing(sim2_steitc)
+    replace taxsim_sim2_wt = sim2_cellwt if !missing(sim2_cellwt)
+    capture drop sim2_fedeitc sim2_steitc sim2_cellwt
+
+    ** Verification
+    dis "Simulation 2 verification:"
+    tab year female, sum(taxsim_sim2_steitc)
+}
+
+** Clean up temporary TAXSIM variables
+drop depx page sage pwages swages psemp ssemp intrec otherprop primary_filer taxsimid state
+
+** Save combined file
+save "${data}final/acs_working_file.dta", replace
+
 
 ** End log
 log close log_01

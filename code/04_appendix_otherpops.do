@@ -115,7 +115,7 @@ foreach spec in 1 4 {
                 if  `fem_cond' & ///
                     `mar_cond' & ///
                     in_school == 0 & ///
-                    inrange(age, 20, 50) & ///
+                    age_sample_20_49 == 1 & ///
                     citizen_test == 1 & ///
                     education < 4 & ///
                     state_status > 0 & ///
@@ -301,7 +301,7 @@ foreach pop of local pops {
         if  `fem_cond' & ///
             `mar_cond' & ///
             in_school == 0 & ///
-            inrange(age, 20, 50) & ///
+            age_sample_20_49 == 1 & ///
             citizen_test == 1 & ///
             education < 4 & ///
             state_status > 0 & ///

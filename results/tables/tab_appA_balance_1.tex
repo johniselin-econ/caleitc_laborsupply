@@ -1,0 +1,20 @@
+{
+\def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+\begin{tabular}{l*{9}{c}}
+\toprule
+                    &\multicolumn{1}{c}{(1)}         &\multicolumn{1}{c}{(2)}         &\multicolumn{1}{c}{(3)}         &\multicolumn{1}{c}{(4)}         &\multicolumn{1}{c}{(5)}         &\multicolumn{1}{c}{(6)}         &\multicolumn{1}{c}{(7)}         &\multicolumn{1}{c}{(8)}         &\multicolumn{1}{c}{(9)}         \\
+                    &    Hispanic         &    NH White         &    NH Black         &  Other race         &       No HS         &     HS Only         &Some College         & 3+ adult HH         &         Age         \\
+\midrule
+Treatment           &      -0.020\sym{***}&       0.019\sym{***}&      -0.006\sym{**} &       0.007\sym{***}&      -0.016\sym{***}&       0.004         &       0.012\sym{***}&      -0.001         &      -0.113         \\
+                    &     (0.003)         &     (0.005)         &     (0.003)         &     (0.002)         &     (0.003)         &     (0.004)         &     (0.004)         &     (0.004)         &     (0.071)         \\
+\midrule
+Unadjusted p-values &       0.000         &       0.000         &       0.045         &       0.000         &       0.000         &       0.264         &       0.003         &       0.780         &       0.125         \\
+Romano Wolf p-values&       0.069         &       0.158         &       0.723         &       0.149         &       0.149         &       0.851         &       0.327         &       0.921         &       0.802         \\
+BKY (2006) sharpened q-values&       0.001         &       0.001         &       0.031         &       0.001         &       0.001         &       0.110         &       0.004         &       0.210         &       0.073         \\
+Observations        &     461,616         &     461,616         &     461,616         &     461,616         &     461,616         &     461,616         &     461,616         &     461,616         &     461,616         \\
+R-Squared           &       0.176         &       0.111         &       0.110         &       0.036         &       0.010         &       0.008         &       0.008         &       0.080         &       0.017         \\
+\bottomrule
+\multicolumn{10}{l}{\footnotesize Standard errors in parentheses}\\
+\multicolumn{10}{l}{\footnotesize \sym{*} \(p<0.10\), \sym{**} \(p<0.05\), \sym{***} \(p<0.01\)}\\
+\end{tabular}
+}

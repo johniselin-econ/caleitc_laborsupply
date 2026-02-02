@@ -57,11 +57,11 @@ local mw_spec "c.`minwage'#i.qc_ct"
 
 ** Load ACS data
 use weight `outcomes' `controls' `unemp' `minwage' qc_* year weeks_worked_y ///
-    female married in_school age citizen_test state_fips state_status ///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status ///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///
@@ -125,7 +125,7 @@ foreach out of local outcomes {
 
     }
 
-    ** Create individual coefplot for this outcome
+    ** Create individual coefplot for this outcome (scheme-consistent)
     coefplot ///
         (est_`out'_1, aseq("1-13")) ///
         (est_`out'_2, aseq("14-26")) ///
@@ -136,9 +136,10 @@ foreach out of local outcomes {
         keep(treated) ///
         ytitle("Average Treatment Effect (pp)") ///
         xtitle("Weeks worked per year (bins)") ///
-        pstyle(p1) msize(medsmall) ///
-        yline(0, lcolor(black) lpattern(dash)) ///
-        ciopts(recast(rcap)) ylabel(-4(2)4) ///
+        pstyle(p1) msize(small) ///
+        yline(0, lcolor(gs8) lpattern(dash)) ///
+        ciopts(recast(rcap)) ylabel(-4(2)4, labsize(small)) ///
+        xlabel(, labsize(small)) ///
         vertical aseq swapnames legend(off)
 
     ** Save individual figure locally
@@ -204,24 +205,22 @@ preserve
     replace xpos = xpos       if outcome == "full_time_y"
     replace xpos = xpos + 0.2 if outcome == "part_time_y"
 
-    ** Plot combined figure
+    ** Plot combined figure (scheme-consistent)
     twoway ///
-        (rcap ci_lo ci_hi xpos if outcome == "employed_y", lcolor(navy)) ///
-        (scatter coef xpos if outcome == "employed_y", mcolor(navy) msymbol(O)) ///
-        (rcap ci_lo ci_hi xpos if outcome == "full_time_y", lcolor(forest_green)) ///
-        (scatter coef xpos if outcome == "full_time_y", mcolor(forest_green) msymbol(D)) ///
-        (rcap ci_lo ci_hi xpos if outcome == "part_time_y", lcolor(cranberry)) ///
-        (scatter coef xpos if outcome == "part_time_y", mcolor(cranberry) msymbol(T)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "employed_y", lcolor(stc1)) ///
+        (scatter coef xpos if outcome == "employed_y", mcolor(stc1) msymbol(O) msize(small)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "full_time_y", lcolor(stc2)) ///
+        (scatter coef xpos if outcome == "full_time_y", mcolor(stc2) msymbol(D) msize(small)) ///
+        (rcap ci_lo ci_hi xpos if outcome == "part_time_y", lcolor(stc3)) ///
+        (scatter coef xpos if outcome == "part_time_y", mcolor(stc3) msymbol(T) msize(small)) ///
         , ///
-        yline(0, lcolor(black) lpattern(dash)) ///
+        yline(0, lcolor(gs8) lpattern(dash)) ///
         ytitle("Average Treatment Effect (pp)") ///
-        xtitle("") ///
-        xlabel(1 "1-13" 2 "14-26" 3 "27-39" 4 "40-47" 5 "48-49" 6 "50-52", nogrid) ///
-        ylabel(-4(2)4, angle(0)) ///
+        xtitle("Weeks worked per year (bins)") ///
+        xlabel(1 "1-13" 2 "14-26" 3 "27-39" 4 "40-47" 5 "48-49" 6 "50-52", nogrid labsize(small)) ///
+        ylabel(-4(2)4, angle(0) labsize(small)) ///
         legend(order(2 "Any Employment" 4 "Full-Time" 6 "Part-Time") ///
-               rows(1) position(6) region(lcolor(white))) ///
-        graphregion(color(white)) ///
-        plotregion(margin(b=0))
+               rows(1) position(6) size(small))
 
     ** Save combined figure
     graph export "${results}figures/fig_weeks.jpg", as(jpg) name("Graph") quality(100) replace

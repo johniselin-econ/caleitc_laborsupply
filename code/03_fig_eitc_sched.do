@@ -81,23 +81,23 @@ export delimited "${results}tables/eitc_benefit_schedule.csv", replace
 ** Create Figure 1: EITC Schedule by Number of QC
 ** =============================================================================
 
-** Panel A: Federal and CA EITC 
+** Panel A: Federal and CA EITC (use scheme colors)
 twoway ///
-    (line fed_eitc_0 earnings, lcolor(gs10) lpattern(solid))			///
-    (line fed_eitc_1 earnings, lcolor(navy) lpattern(solid))			///
-    (line fed_eitc_2 earnings, lcolor(maroon) lpattern(solid))			///
-    (line fed_eitc_3 earnings, lcolor(forest_green) lpattern(solid))	///
-	(line cal_eitc_0 earnings, lcolor(gs10) lpattern(dash)) 			///
-	(line cal_eitc_1 earnings, lcolor(navy) lpattern(dash)) 			///
-	(line cal_eitc_2 earnings, lcolor(maroon) lpattern(dash)) 			///
-	(line cal_eitc_3 earnings, lcolor(forest_green) lpattern(dash)),	///
-    legend(order(	1 "Fed, 0 QC" 2 "Fed, 1 QC" 3 "Fed, 2 QC" 4 "Fed, 3+ QC"	///
-					5 "CA, 0 QC" 6 "CA, 1 QC" 7 "CA, 2 QC" 8 "CA, 3+ QC")		///
-		pos(6) row(2)) ///
+    (line fed_eitc_0 earnings, lcolor(gs10) lpattern(solid))	///
+    (line fed_eitc_1 earnings, lcolor(stc1) lpattern(solid))	///
+    (line fed_eitc_2 earnings, lcolor(stc2) lpattern(solid))	///
+    (line fed_eitc_3 earnings, lcolor(stc3) lpattern(solid))	///
+    (line cal_eitc_0 earnings, lcolor(gs10) lpattern(dash)) 	///
+    (line cal_eitc_1 earnings, lcolor(stc1) lpattern(dash)) 	///
+    (line cal_eitc_2 earnings, lcolor(stc2) lpattern(dash)) 	///
+    (line cal_eitc_3 earnings, lcolor(stc3) lpattern(dash)),	///
+    legend(order(1 "Fed, 0 QC" 2 "Fed, 1 QC" 3 "Fed, 2 QC" 4 "Fed, 3+ QC"	///
+                 5 "CA, 0 QC" 6 "CA, 1 QC" 7 "CA, 2 QC" 8 "CA, 3+ QC")		///
+        pos(6) row(2) size(small)) ///
     xtitle("Earned Income ($)") ///
     ytitle("EITC Benefit ($), Federal vs. California") ///
-    xlabel(0(10000)50000, format(%9.0fc)) ///
-    ylabel(0(1000)7000, format(%9.0fc))
+    xlabel(0(10000)50000, format(%9.0fc) labsize(small)) ///
+    ylabel(0(1000)7000, format(%9.0fc) labsize(small))
 
 ** Save locally
 graph export "${results}figures/fig_eitc_sched_a.jpg", ///
@@ -108,22 +108,22 @@ if ${overleaf} == 1 {
     graph export "${ol_fig}fig_eitc_sched_a.jpg", as(jpg) name("Graph") quality(100) replace
 }	
 	
-** Panel B: Combined Federal + CalEITC
+** Panel B: Combined Federal + CalEITC (use scheme colors)
 twoway ///
-    (line fed_eitc_1 earnings, lcolor(navy) lpattern(solid)) ///
-    (line tot_eitc_1 earnings, lcolor(navy) lpattern(dash)) ///
-    (line fed_eitc_2 earnings, lcolor(maroon) lpattern(solid)) ///
-    (line tot_eitc_2 earnings, lcolor(maroon) lpattern(dash)) ///
-    (line fed_eitc_3 earnings, lcolor(forest_green) lpattern(solid)) ///
-    (line tot_eitc_3 earnings, lcolor(forest_green) lpattern(dash)), ///
+    (line fed_eitc_1 earnings, lcolor(stc1) lpattern(solid)) ///
+    (line tot_eitc_1 earnings, lcolor(stc1) lpattern(dash)) ///
+    (line fed_eitc_2 earnings, lcolor(stc2) lpattern(solid)) ///
+    (line tot_eitc_2 earnings, lcolor(stc2) lpattern(dash)) ///
+    (line fed_eitc_3 earnings, lcolor(stc3) lpattern(solid)) ///
+    (line tot_eitc_3 earnings, lcolor(stc3) lpattern(dash)), ///
     legend(order(1 "1 QC (Fed)" 2 "1 QC (Fed+Cal)" ///
                  3 "2 QC (Fed)" 4 "2 QC (Fed+Cal)" ///
                  5 "3+ QC (Fed)" 6 "3+ QC (Fed+Cal)") ///
            pos(6) row(2) size(small)) ///
     xtitle("Earned Income ($)") ///
     ytitle("Total EITC Benefit ($), Federal vs. Combined") ///
-    xlabel(0(10000)50000, format(%9.0fc)) ///
-    ylabel(0(1000)8000, format(%9.0fc))
+    xlabel(0(10000)50000, format(%9.0fc) labsize(small)) ///
+    ylabel(0(1000)8000, format(%9.0fc) labsize(small))
 
 ** Save locally
 graph export "${results}figures/fig_eitc_sched_b.jpg", ///

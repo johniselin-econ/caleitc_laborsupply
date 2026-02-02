@@ -372,7 +372,7 @@ program define make_event_plot
         }
     }
 
-    ** Build coefplot command
+    ** Build coefplot command (let scheme handle colors)
     local plotcmd "coefplot"
     local i = 1
     foreach m of local namelist {
@@ -380,16 +380,16 @@ program define make_event_plot
         local i = `i' + 1
     }
 
-    ** Add options
-    local plotcmd `"`plotcmd', keep(`keep') coeflabels(`coef') msize(medsmall)"'
-    local plotcmd `"`plotcmd' ytitle("Average Treatment Effect")"'
-    local plotcmd `"`plotcmd' xlabel(, angle(45))"'
-    local plotcmd `"`plotcmd' xline(`xline_val', lcolor(red))"'
+    ** Add options (scheme-consistent formatting)
+    local plotcmd `"`plotcmd', keep(`keep') coeflabels(`coef') msize(small)"'
+    local plotcmd `"`plotcmd' ytitle("Average Treatment Effect (pp)")"'
+    local plotcmd `"`plotcmd' xlabel(, labsize(small) angle(45))"'
+    local plotcmd `"`plotcmd' xline(`xline_val', lcolor(gs6) lwidth(medium))"'
     local plotcmd `"`plotcmd' omitted baselevels"'
-    local plotcmd `"`plotcmd' yline(0, lcolor(black) lpattern(dash))"'
+    local plotcmd `"`plotcmd' yline(0, lcolor(gs8) lpattern(dash))"'
     local plotcmd `"`plotcmd' vertical ciopts(recast(rcap))"'
-    local plotcmd `"`plotcmd' ysc(r(0)) legend(row(1) pos(6))"'
-    local plotcmd `"`plotcmd' ylabel(-`ymax'(`ycut')`ymax')"'
+    local plotcmd `"`plotcmd' legend(row(1) pos(6) size(small))"'
+    local plotcmd `"`plotcmd' ylabel(-`ymax'(`ycut')`ymax', labsize(small))"'
 
     ** Execute
     `plotcmd'
@@ -863,12 +863,7 @@ program define make_table_coefplot
         }
     }
 
-    ** Define colors and markers for specifications
-    local color1 "black"
-    local color2 "gs10"
-    local color3 "ltblue"
-    local color4 "forest_green"
-
+    ** Define markers for specifications (let scheme handle colors)
     local msym1 "O"
     local msym2 "S"
     local msym3 "T"
@@ -902,19 +897,19 @@ program define make_table_coefplot
             ** Build estimate name
             local estname "`specprefix'`out'_`s'"
 
-            ** Add to command
-            local plotcmd `"`plotcmd' (`estname', `lbl_opt' mcolor(`color`s'') msymbol(`msym`s'') ciopts(lcolor(`color`s'')))"'
+            ** Add to command (let scheme handle colors via pstyle)
+            local plotcmd `"`plotcmd' (`estname', `lbl_opt' msymbol(`msym`s'') pstyle(p`s'))"'
         }
     }
 
     ** Build ylabel string
     local ylab_str "`ymin'(`ycut')`ymax'"
 
-    ** Add coefplot options
+    ** Add coefplot options (scheme-consistent formatting)
     local plotcmd `"`plotcmd', keep(`coefvar')"'
-    local plotcmd `"`plotcmd' ytitle("`ytitle'")"'
-    local plotcmd `"`plotcmd' yline(0, lcolor(black) lpattern(dash))"'
-    local plotcmd `"`plotcmd' ylabel(`ylab_str')"'
+    local plotcmd `"`plotcmd' ytitle("`ytitle'") msize(small)"'
+    local plotcmd `"`plotcmd' yline(0, lcolor(gs8) lpattern(dash))"'
+    local plotcmd `"`plotcmd' ylabel(`ylab_str', labsize(small))"'
     local plotcmd `"`plotcmd' vertical"'
     local plotcmd `"`plotcmd' ciopts(recast(rcap))"'
     local plotcmd `"`plotcmd' legend(rows(1) pos(6) size(small))"'

@@ -19,11 +19,11 @@ log using "${logs}02_log_descriptives_${date}", name(log_02_desc) replace text
 ** Load cleaned ACS data
 use "${data}final/acs_working_file.dta", clear
 
-** Define analysis sample: single women aged 20-50 without college degree
+** Define analysis sample: single women aged 20-49 without college degree
 keep if female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///

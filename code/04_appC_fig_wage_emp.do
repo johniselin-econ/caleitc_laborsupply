@@ -52,11 +52,11 @@ local did "`did' year#qc_ct"
 
 ** Load ACS data
 use weight `outcomes' `controls' `unemp' `minwage' qc_* year incwage_real ///
-    female married in_school age citizen_test state_fips state_status ///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status ///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///

@@ -64,11 +64,11 @@ local mw_spec "c.`minwage'#i.qc_ct"
 
 ** Load ACS data
 use weight `outcomes' `controls' `unemp' `minwage' qc_* year `earn' ///
-    female married in_school age citizen_test state_fips state_status cpi99 ///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status cpi99 ///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 & ///
@@ -163,7 +163,7 @@ foreach out of local outcomes {
     ** CA minimum wage line position (bin 4-5 boundary)
     local minwage_ca = 4.3
 
-    ** Plot results
+    ** Plot results (scheme-consistent)
     coefplot ///
         (`out'_1, aseq("$3K")) ///
         (`out'_2, aseq("$9K")) ///
@@ -179,23 +179,24 @@ foreach out of local outcomes {
         keep(treated) ///
         ytitle("Average Treatment Effect (pp)") ///
         xtitle("Mean Value of $6,000 Earnings Bins") ///
-        pstyle(p1) msize(medsmall) ///
-        yline(0, lcolor(black) lpattern(dash)) ///
-        ylabel(-`yaxis_max'(`yaxis_cut')`yaxis_max') ///
+        pstyle(p1) msize(small) ///
+        yline(0, lcolor(gs8) lpattern(dash)) ///
+        ylabel(-`yaxis_max'(`yaxis_cut')`yaxis_max', labsize(small)) ///
+        xlabel(, labsize(small)) ///
         ciopts(recast(rcap)) ///
         vertical aseq swapnames legend(off) ///
-        xline(`minwage_ca') ///
-        text(3 `minwage_ca' "CA Minimum Wage (2017)", place(e)) ///
+        xline(`minwage_ca', lcolor(gs6)) ///
+        text(3 `minwage_ca' "CA Minimum Wage (2017)", place(e) size(small)) ///
         addplot( ///
             function y = x * 0.338, ///
                 range(0 7300) yaxis(2) xaxis(2) ///
-                lcolor(black) lpattern(dot) || ///
+                lcolor(gs7) lpattern(dot) || ///
             function y = 2467 - (x - 7300) * 0.339, ///
                 range(7300 13850) yaxis(2) xaxis(2) ///
-                lcolor(black) lpattern(dot) || ///
+                lcolor(gs7) lpattern(dot) || ///
             function y = 246.55 - (x - 13850) * 0.030, ///
                 range(13850 22300) yaxis(2) xaxis(2) ///
-                lcolor(black) lpattern(dot) || ///
+                lcolor(gs7) lpattern(dot) || ///
             function y = 0, ///
                 range(0 60000) yaxis(2) xaxis(2) ///
                 lcolor(none) lpattern(dash)) ///

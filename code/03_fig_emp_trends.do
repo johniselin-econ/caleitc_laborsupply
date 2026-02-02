@@ -15,12 +15,12 @@ log using "${logs}03_fig_emp_trends_log_${date}", name(log_03_fig_emp_trends) re
 
 ** Load ACS data
 use weight part_time_y full_time_y qc_present year education ///
-    female married in_school age citizen_test state_fips state_status ///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status ///
     if  female == 1 & ///
 		year >= 2010 & 	///
         married == 0 & ///
         in_school == 0 & ///
-        inrange(age, 20, 50) & ///
+        age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 ///

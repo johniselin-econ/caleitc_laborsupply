@@ -119,7 +119,10 @@ if (!file.exists(rds_file_monthly) || overwrite_bls == 1) {
   # Also save CSV for Stata
   write.csv(state_unemp_annual, file.path(dir_data_int, "bls_state_unemployment_annual.csv"),
             row.names = FALSE)
-
+  
+  write.csv(state_unemp_monthly, file.path(dir_data_int, "bls_state_unemployment_monthly.csv"),
+            row.names = FALSE)
+  
   rm(state_unemp_monthly, state_unemp_annual, data_all_states, series_ids)
   message("  State unemployment data downloaded and saved.")
 

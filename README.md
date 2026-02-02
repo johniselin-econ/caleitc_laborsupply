@@ -18,15 +18,20 @@ caleitc_laborsupply/
 │   ├── 01_clean_data.do           # Data cleaning and preparation
 │   ├── 02_descriptives.do         # Descriptive statistics
 │   ├── 02_eitc_param_prep.do      # EITC benefit schedule preparation
+│   ├── 02b_caleitc_param_gen.do   # CalEITC parameters generation
 │   ├── 03_fig_eitc_sched.do       # Figure: EITC benefit schedules
 │   ├── 03_fig_earn_hist.do        # Figure: Earnings histogram by employment type
+│   ├── 03_fig_earn_bins.do        # Figure: Earnings distribution by bins
+│   ├── 03_fig_treat_by_earn.do    # Figure: Treatment effects by earnings
 │   ├── 03_fig_budget.do           # Figure: Budget constraint
+│   ├── 03_tab_desc.do             # Table: Descriptive statistics
 │   ├── 03_fig_emp_trends.do       # Figure: Employment trends
 │   ├── 03_fig_event_emp.do        # Figure: Event-study estimates (employment)
 │   ├── 03_fig_weeks.do            # Figure: Effect by weeks worked
 │   ├── 03_fig_event_earn.do       # Figure: Event-study estimates (earnings, PPML)
 │   ├── 03_fig_spec_curve.do       # Figure: Specification curves
 │   ├── 03_tab_main.do             # Table: Main triple-difference estimates
+│   ├── 03_tab_sim_inst.do         # Table: Simulated instrument results
 │   ├── 03_tab_intensive.do        # Table: Intensive margin (hours, weeks, weekly emp)
 │   ├── 03_tab_het_qc.do           # Table: Heterogeneity by QC count
 │   ├── 03_tab_het_adults.do       # Table: Heterogeneity by adult count
@@ -36,6 +41,11 @@ caleitc_laborsupply/
 │   ├── 03_sdid_state.do           # SDID Table 1: State panel SDID (with event study)
 │   ├── 03_sdid_county.do          # SDID Table 2: County panel weighted SDID
 │   ├── 04_appA_tab1.do            # Appendix A Table 1: Descriptive statistics
+│   ├── 04_appA_fig2.do            # Appendix A Fig 2: EITC/CTC/CalEITC schedules (2016)
+│   ├── 04_appA_fig3.do            # Appendix A Fig 3: State unemployment trends
+│   ├── 04_appA_fig4.do            # Appendix A Fig 4: State minimum wages
+│   ├── 04_appA_fig5.do            # Appendix A Fig 5: 2018-2019 schedules with TCJA
+│   ├── 04_appA_fig6.do            # Appendix A Fig 6: CalEITC effect on ATR
 │   ├── 04_appA_fig_event_ny_placebo.do      # Appendix A: NY placebo event study
 │   ├── 04_appA_tab_ny_placebo.do            # Appendix A: NY placebo table
 │   ├── 04_appA_fig_event_col_placebo.do     # Appendix A: College sample event study
@@ -60,7 +70,10 @@ caleitc_laborsupply/
 │   ├── raw/                       # Raw data files (not tracked)
 │   ├── interim/                   # Intermediate processed data
 │   ├── final/                     # Final analysis datasets
-│   └── acs/                       # ACS data from IPUMS
+│   ├── acs/                       # ACS data from IPUMS
+│   ├── eitc_parameters/           # EITC benefit schedule parameters
+│   │   └── caleitc_params.txt     # CalEITC kink point parameters by year/QC
+│   └── taxsim/                    # TAXSIM working directory
 ├── results/
 │   ├── figures/                   # Output figures (PNG, JPG)
 │   ├── tables/                    # Output tables (LaTeX, CSV)
@@ -83,6 +96,15 @@ caleitc_laborsupply/
 - **Minimum Wage Data:** Vaghul & Zipperer (2022)
   - State-level binding minimum wage
   - Downloaded from GitHub repository
+
+### EITC Parameters
+- **CalEITC Parameters:** `data/eitc_parameters/caleitc_params.txt`
+  - CalEITC kink point parameters (income that maximizes credit) by tax year and QC count
+  - `pwages`: Kink point for years >= 2015
+  - `pwages_unadj`: Values for CPI adjustment for years < 2015
+- **TAXSIM:** NBER's tax simulation model
+  - Used for computing federal and state tax liabilities, EITC benefits, and average tax rates
+  - Requires `taxsimlocal35` Stata package
 
 ## API Keys Required
 
@@ -114,10 +136,16 @@ ssc install coefplot
 ssc install estout
 ssc install gtools
 ssc install balancetable
+ssc install ivreghdfe
+ssc install ivreg2
+ssc install ranktest
 
 * Install rcall for R integration
 net install github, from("https://haghish.github.io/github/")
 github install haghish/rcall, stable
+
+* Install TAXSIM for tax simulations
+net install taxsimlocal35, from("https://taxsim.nber.org/stata")
 ```
 
 ### R Packages
@@ -198,6 +226,32 @@ Where:
 - Not in armed services
 - Not currently in school
 
+### TAXSIM Simulations
+
+The data pipeline (`01_clean_data.do`) includes three TAXSIM simulations for elasticity and instrumental variable analyses. All simulations are restricted to years 2010-2019 (TAXSIM-compatible range).
+
+1. **Simulation 1 - Observed Characteristics (All States)**
+   - Runs TAXSIM on actual data with observed income for all states
+   - One observation per tax unit (primary filer only)
+   - Creates `taxsim_sim1_fedeitc` (federal EITC) and `taxsim_sim1_steitc` (state EITC)
+   - Used for descriptive analysis of actual EITC receipt
+
+2. **Simulation 2 - Simulated Instrument (All States, Sex-Specific)**
+   - Uses 2014 observations as base year, projects to all years via CPI adjustment
+   - Append-based approach: 2014 data is duplicated for each year with income scaled by CPI ratio
+   - Runs TAXSIM on projected data, then collapses to cell-level weighted means
+   - Cells: year × state × QC count × marital status × education × age bracket × sex
+   - Creates `taxsim_sim2_fedeitc`, `taxsim_sim2_steitc`, `taxsim_sim2_wt`
+   - Used as instrument in IV/2SLS estimation (Gruber & Saez 2002 approach)
+
+3. **Simulation 3 - ATR at CalEITC Kink (Individual-Level)**
+   - Computes average tax rate at CalEITC-maximizing income for each tax unit
+   - Runs TAXSIM twice: (1) at CalEITC kink point, (2) at zero wages
+   - For years < 2015: kink point is CPI-adjusted from 2015 values
+   - Creates `taxsim_sim3_atr_st` using Kleven (2023) formula
+   - Merged back at individual level (not cell-collapsed)
+   - Used for elasticity calculations in Appendix D
+
 ### Control States
 
 States are classified based on their EITC policies during the study period:
@@ -238,6 +292,8 @@ The `code/04_appE_inference.do` file contains inference programs:
 
 ### Tables
 - **tab_main:** Triple-difference estimates on employment (main results)
+- **tab_sim_inst_rf:** Reduced form estimates using simulated EITC instrument
+- **tab_sim_inst_iv:** IV/2SLS estimates using simulated EITC as instrument
 - **tab_intensive:** Triple-difference estimates on intensive margin (hours, weeks, weekly employment)
 - **tab_het_qc:** Heterogeneity by qualifying children count
 - **tab_het_adults:** Heterogeneity by adults in household
@@ -259,6 +315,12 @@ The `code/04_appE_inference.do` file contains inference programs:
 
 ### Appendix A
 - **Appendix Table 1:** Descriptive statistics
+- **fig_appA_fig2a-d:** Federal EITC, CTC, and CalEITC benefit schedules for TY 2016 (by QC count)
+- **fig_appA_fig3:** State-level unemployment trends (2006-2019), CA vs control states
+- **fig_appA_fig4:** Binding state minimum wages in control pool (2010-2017)
+- **fig_appA_fig5a:** CTC comparison 2017 vs 2018 (TCJA)
+- **fig_appA_fig5b:** Benefit schedules for 2019 with YCTC
+- **fig_appA_fig6:** Triple-diff estimate of CalEITC effect on after-tax rates (event study)
 - **fig_event_ny_placebo:** NY placebo event study (NY as treatment, CA excluded)
 - **tab_ny_placebo:** NY placebo triple-diff table
 - **fig_event_col_placebo:** College-educated sample event study (falsification test)
@@ -293,6 +355,10 @@ The `code/04_appE_inference.do` file contains inference programs:
 - The analysis excludes individuals assigned as qualifying children (age < 18 or QC flag)
 - County-level unemployment rates are imputed for suppressed counties using state-year averages
 - PPML estimates include average marginal effects (AME) for interpretation in levels
+- TAXSIM simulations are restricted to years 2010-2019 and use SOI state codes (converted from FIPS via inline crosswalk)
+- TAXSIM output variables: `v25` = federal EITC, `v39` = state EITC, `v10` = AGI
+- Simulated instrument (Sim 2) uses 2014 as base year with CPI projection to other years
+- ATR calculations (Sim 3) follow Kleven (2023): ATR = ((fiitax - fiitax_0) + (siitax - siitax_0) + fica) / agi
 
 ## Citation
 
@@ -308,6 +374,23 @@ Working Paper, Yale University.
 This project is for academic research purposes. Please contact the author for permissions.
 
 ## Changelog
+
+### February 2026
+- Added TAXSIM simulations to data cleaning pipeline (`01_clean_data.do`)
+  - Simulation 1: Observed characteristics (all states) for actual EITC receipt
+  - Simulation 2: Simulated instrument using 2014 base year with CPI projection (Gruber & Saez approach)
+  - Simulation 3: ATR at CalEITC kink (individual-level) for elasticity calculations
+  - All simulations restricted to years 2010-2019 (TAXSIM-compatible range)
+- Added FIPS-to-SOI crosswalk for TAXSIM state codes
+- Created `03_tab_sim_inst.do` for simulated instrument results (reduced form and IV/2SLS)
+- Added CalEITC parameters file (`data/eitc_parameters/caleitc_params.txt`)
+- Updated package requirements: added `ivreghdfe`, `ivreg2`, `ranktest`, `taxsimlocal35`
+- Added Appendix A figures:
+  - `04_appA_fig2.do`: EITC/CTC/CalEITC benefit schedules for TY 2016
+  - `04_appA_fig3.do`: State-level unemployment trends (2006-2019)
+  - `04_appA_fig4.do`: Binding state minimum wages in control pool
+  - `04_appA_fig5.do`: 2018-2019 benefit schedules with TCJA CTC and YCTC
+  - `04_appA_fig6.do`: Triple-diff effect of CalEITC on after-tax rates
 
 ### January 2026
 - Initial repository setup

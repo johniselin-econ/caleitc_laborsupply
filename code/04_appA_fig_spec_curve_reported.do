@@ -322,16 +322,16 @@ foreach out in employed_y full_time_y part_time_y {
     gen ci_upper_insig = ci_upper if significant == 0
 
     ** Create upper panel: Coefficient plot with CIs colored by significance
-    ** Dark blue (navy) for significant, light blue (ltblue) for insignificant
-    twoway (rcap ci_lower_sig ci_upper_sig spec_rank, lc(navy) lw(thin)) ///
-           (rcap ci_lower_insig ci_upper_insig spec_rank, lc(ltblue) lw(thin)) ///
-           (scatter tau_sig spec_rank, mc(navy) ms(O) msize(vsmall)) ///
-           (scatter tau_insig spec_rank, mc(ltblue) ms(O) msize(vsmall)), ///
+    ** (scheme-consistent: stc1 for significant, gs10 for insignificant)
+    twoway (rcap ci_lower_sig ci_upper_sig spec_rank, lc(stc1) lw(thin)) ///
+           (rcap ci_lower_insig ci_upper_insig spec_rank, lc(gs10) lw(thin)) ///
+           (scatter tau_sig spec_rank, mc(stc1) ms(O) msize(vsmall)) ///
+           (scatter tau_insig spec_rank, mc(gs10) ms(O) msize(vsmall)), ///
         legend(order(3 "Significant (p<0.05)" 4 "Insignificant") ///
                rows(1) pos(6) size(vsmall)) ///
         ytitle("Treatment Effect (pp), `out_lbl'") ///
         xtitle("") ///
-        yline(0, lc(red) lp(dash)) ///
+        yline(0, lc(gs8) lp(dash)) ///
         xlabel(none) ///
         name(coef_`out', replace)
 
@@ -354,18 +354,19 @@ foreach out in employed_y full_time_y part_time_y {
     gen y_unemp = -11 if ctrl_unemp == 1
     gen y_mw = -12 if ctrl_mw == 1
 
-    twoway (scatter y_default spec_rank, mc(navy) ms(O) msize(tiny)) ///
-           (scatter y_noeitc spec_rank, mc(navy) ms(O) msize(tiny)) ///
-           (scatter y_medicaid spec_rank, mc(navy) ms(O) msize(tiny)) ///
-           (scatter y_lowed spec_rank, mc(maroon) ms(O) msize(tiny)) ///
-           (scatter y_alled spec_rank, mc(maroon) ms(O) msize(tiny)) ///
-           (scatter y_age49 spec_rank, mc(forest_green) ms(O) msize(tiny)) ///
-           (scatter y_age64 spec_rank, mc(forest_green) ms(O) msize(tiny)) ///
-           (scatter y_pre_excl spec_rank, mc(purple) ms(O) msize(tiny)) ///
-           (scatter y_pre_incl spec_rank, mc(purple) ms(O) msize(tiny)) ///
-           (scatter y_demo spec_rank, mc(orange) ms(O) msize(tiny)) ///
-           (scatter y_unemp spec_rank, mc(orange) ms(O) msize(tiny)) ///
-           (scatter y_mw spec_rank, mc(orange) ms(O) msize(tiny)), ///
+    ** Lower panel: specification indicators (scheme-consistent colors)
+    twoway (scatter y_default spec_rank, mc(stc1) ms(O) msize(tiny)) ///
+           (scatter y_noeitc spec_rank, mc(stc1) ms(O) msize(tiny)) ///
+           (scatter y_medicaid spec_rank, mc(stc1) ms(O) msize(tiny)) ///
+           (scatter y_lowed spec_rank, mc(stc2) ms(O) msize(tiny)) ///
+           (scatter y_alled spec_rank, mc(stc2) ms(O) msize(tiny)) ///
+           (scatter y_age49 spec_rank, mc(stc3) ms(O) msize(tiny)) ///
+           (scatter y_age64 spec_rank, mc(stc3) ms(O) msize(tiny)) ///
+           (scatter y_pre_excl spec_rank, mc(stc4) ms(O) msize(tiny)) ///
+           (scatter y_pre_incl spec_rank, mc(stc4) ms(O) msize(tiny)) ///
+           (scatter y_demo spec_rank, mc(stc5) ms(O) msize(tiny)) ///
+           (scatter y_unemp spec_rank, mc(stc5) ms(O) msize(tiny)) ///
+           (scatter y_mw spec_rank, mc(stc5) ms(O) msize(tiny)), ///
         legend(off) ///
         ytitle("") ///
         xtitle("Specification (ranked by effect size)") ///

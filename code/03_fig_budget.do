@@ -84,39 +84,39 @@ local minwage = `r(mean)'
 local a_x = `max_cal' + (1 - `max_cal') / 2
 local b_x = `max_fed' + (`max_cal' - `max_fed') / 2
 
-** PLOT
+** PLOT (scheme-consistent)
 twoway  (line income income_fed income_tot norm_hours, ///
-            lc(black `cl_`qc'' `cl_`qc'') ///
+            lc(gs6 `cl_`qc'' `cl_`qc'') ///
             lp(dash solid dash)) ///
         (pcarrowi 32000 `max_cal' 32000 1, ///
-            color(orange) mlwidth(thin)) ///
+            color(stc4) mlwidth(thin)) ///
         (pcarrowi 32000 1 32000 `max_cal', ///
-            color(orange) mlwidth(thin)) ///
+            color(stc4) mlwidth(thin)) ///
         (pcarrowi 34000 `max_fed' 34000 `max_cal', ///
-            color(orange) mlwidth(thin)) ///
+            color(stc4) mlwidth(thin)) ///
         (pcarrowi 34000 `max_cal' 34000 `max_fed', ///
-            color(orange) mlwidth(thin)) ///
+            color(stc4) mlwidth(thin)) ///
         (pcarrowi 36000 `max_fed' 36000 0.4, ///
-            color(orange) mlwidth(thin)), ///
+            color(stc4) mlwidth(thin)), ///
         ytitle("Income + Tax Benefits") ///
         xtitle("Normalized hours of leisure") ///
         legend(order(1 2 3) col(1) ring(0) ///
-               position(7) bmargin(large)) ///
-        ylabel(,format(%12.0fc)) ///
-        xlabel(,format(%9.1fc)) ///
-        text(34000 `a_x' "A", color(orange)) ///
-        text(36000 `b_x' "B", color(orange)) ///
-        text(38000 0.5 "C", color(orange)) ///
-        xline(1, lp(dash_dot)) ///
+               position(7) bmargin(large) size(small)) ///
+        ylabel(,format(%12.0fc) labsize(small)) ///
+        xlabel(,format(%9.1fc) labsize(small)) ///
+        text(34000 `a_x' "A", color(stc4)) ///
+        text(36000 `b_x' "B", color(stc4)) ///
+        text(38000 0.5 "C", color(stc4)) ///
+        xline(1, lp(dash_dot) lcolor(gs7)) ///
         text(49000 1 "Not Working " "(nw)", ///
             place(west) size(vsmall)) ///
-        xline(`max_fed', lp(dash_dot) lcolor(black%30)) ///
+        xline(`max_fed', lp(dash_dot) lcolor(gs9)) ///
         text(49000 `max_fed' "Federal EITC " "Max ", ///
             place(west) size(vsmall)) ///
-        xline(`max_cal', lp(dash_dot)) ///
+        xline(`max_cal', lp(dash_dot) lcolor(gs7)) ///
         text(49000 `max_cal' "CalEITC " "Max " "(pt)", ///
             place(west) size(vsmall)) ///
-        xline(`minwage', lp(dash_dot)) ///
+        xline(`minwage', lp(dash_dot) lcolor(gs7)) ///
         text(49000 `minwage' "At Full-time " "Minimum Wage " "(ft)", ///
             place(west) size(vsmall))
 
