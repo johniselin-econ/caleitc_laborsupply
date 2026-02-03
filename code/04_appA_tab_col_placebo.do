@@ -77,25 +77,26 @@ foreach out of global outcomes {
         clustervar($clustervar) ///
         qcvar(qc_ct)
 
-    ** Define statistics labels
-    local stats_labels `" "  Observations" "  Adj. R-Square" "  Treated group mean in pre-period" "  Implied employment effect" "'
-
     ** Export table using utility
     export_results est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4, ///
         filename("tab_col_placebo_`ct'.tex") ///
         statslist($stats_list) ///
         statsfmt($stats_fmt) ///
-        statslabels(`stats_labels')
+        label1("  Observations") ///
+        label2("  Adj. R-Square") ///
+        label3("  Treated group mean in pre-period") ///
+        label4("  Implied employment effect")
 
     ** For first outcome, create spec indicators table
     if `ct' == 1 {
-        local spec_labels `" "  Triple-Difference" "  Add Demographic Controls" "  Add Unemployment Controls" "  Add Minimum Wage Controls" "'
-
         export_results est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4, ///
             filename("tab_col_placebo_end.tex") ///
             statslist("s1 s2 s3 s4") ///
             statsfmt("%9s %9s %9s %9s") ///
-            statslabels(`spec_labels') ///
+            label1("  Triple-Difference") ///
+            label2("  Add Demographic Controls") ///
+            label3("  Add Unemployment Controls") ///
+            label4("  Add Minimum Wage Controls") ///
             cellsnone
     }
 

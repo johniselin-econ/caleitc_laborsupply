@@ -1,5 +1,5 @@
 /*******************************************************************************
-File Name:      05_fig_mvpf_spillovers.do
+File Name:      03_fig_mvpf_spillovers.do
 Creator:        John Iselin
 Date Update:    February 2026
 
@@ -14,8 +14,8 @@ Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
 ** Start log file
-capture log close log_05_fig_mvpf_spillovers
-log using "${logs}05_fig_mvpf_spillovers_log_${date}", name(log_05_fig_mvpf_spillovers) replace text
+capture log close log_03_fig_mvpf_spillovers
+log using "${logs}03_fig_mvpf_spillovers_log_${date}", name(log_03_fig_mvpf_spillovers) replace text
 
 ** =============================================================================
 ** Define baseline parameters
@@ -30,7 +30,7 @@ local sample = 1    // Low education sample
 local ft_pt_cf = 2  // $27,000 counterfactual FT income
 
 ** =============================================================================
-** Load and prepare data (created by 05_mvpf.do)
+** Load and prepare data (created by 03_mvpf.do)
 ** =============================================================================
 
 use "${data}interim/acs_fiscal_cost_collapse.dta", clear
@@ -202,4 +202,4 @@ list mod effect_fed_liab_real effect_pay_liab_real effect_st_nocal_liab_real ///
 ** =============================================================================
 
 clear
-log close log_05_fig_mvpf_spillovers
+log close log_03_fig_mvpf_spillovers

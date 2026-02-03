@@ -170,13 +170,19 @@ forvalues m = 1/3 {
         local stats_list "N r2_a ymean"
         local stats_fmt "%9.0fc %9.3fc %9.0fc"
         local dig = 1
-        local stats_labels `" "  Observations" "  Adj. R-Square" "  Treated group mean in pre-period" "'
+        local lb1 "  Observations"
+        local lb2 "  Adj. R-Square"
+        local lb3 "  Treated group mean in pre-period"
+        local lb4 ""
     }
     else {
         local stats_list "N r2_p ymean AME"
         local stats_fmt "%9.0fc %9.3fc %9.0fc %9.0fc"
         local dig = 2
-        local stats_labels `" "  Observations" "  Pseudo R-squared" "  Treated group mean in pre-period" "  Effect in USD" "'
+        local lb1 "  Observations"
+        local lb2 "  Pseudo R-squared"
+        local lb3 "  Treated group mean in pre-period"
+        local lb4 "  Effect in USD"
     }
 
     ** Export table using utility
@@ -184,18 +190,19 @@ forvalues m = 1/3 {
         filename("tab_hh_earn_`m'.tex") ///
         statslist(`stats_list') ///
         statsfmt(`stats_fmt') ///
-        statslabels(`stats_labels') ///
+        label1("`lb1'") label2("`lb2'") label3("`lb3'") label4("`lb4'") ///
         bdigits(`dig') sedigits(`dig')
 
     ** For first model, create spec indicators table
     if `m' == 1 {
-        local spec_labels `" "  Triple-Difference" "  Add Demographic Controls" "  Add Unemployment Controls" "  Add Minimum Wage Controls" "'
-
         export_results est_`m'_1 est_`m'_2 est_`m'_3 est_`m'_4, ///
             filename("tab_hh_earn_end.tex") ///
             statslist("s1 s2 s3 s4") ///
             statsfmt("%9s %9s %9s %9s") ///
-            statslabels(`spec_labels') ///
+            label1("  Triple-Difference") ///
+            label2("  Add Demographic Controls") ///
+            label3("  Add Unemployment Controls") ///
+            label4("  Add Minimum Wage Controls") ///
             cellsnone
     }
 

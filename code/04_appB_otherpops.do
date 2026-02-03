@@ -1,9 +1,9 @@
 /*******************************************************************************
-File Name:      04_appendix_otherpops.do
+File Name:      04_appB_otherpops.do
 Creator:        John Iselin
-Date Update:    January 2026
+Date Update:    February 2026
 
-Purpose:        Creates appendix tables and figures for alternative populations
+Purpose:        Creates Appendix B tables and figures for alternative populations
 
                 (1) Triple-difference estimates across different samples:
                     - Single women (main sample)
@@ -23,8 +23,8 @@ Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
 ** Start log file
-capture log close log_04_appendix_otherpops
-log using "${logs}04_appendix_otherpops_log_${date}", name(log_04_appendix_otherpops) replace text
+capture log close log_04_appB_otherpops
+log using "${logs}04_appB_otherpops_log_${date}", name(log_04_appB_otherpops) replace text
 
 ** =============================================================================
 ** Define population conditions
@@ -71,7 +71,7 @@ foreach spec in 1 4 {
     local ct = 1
     foreach out of global outcomes {
 
-        dis ""
+        dis "----------------------------------------------"
         dis "Outcome: `out'"
         dis "----------------------------------------------"
 
@@ -140,25 +140,25 @@ foreach spec in 1 4 {
 
         }
 
-        ** Define statistics labels
-        local stats_labels `" "  Observations" "  Adj. R-Square" "  Treated group mean in pre-period" "'
-
         ** Export table using utility
         export_results est_`out'_sw est_`out'_sm est_`out'_mw est_`out'_mm, ///
-            filename("tab_otherpops_`spec_lbl'_`ct'.tex") ///
+            filename("tab_appB_otherpops_`spec_lbl'_`ct'.tex") ///
             statslist("N r2_a ymean") ///
             statsfmt("%9.0fc %9.3fc %9.1fc") ///
-            statslabels(`stats_labels')
+            label1("  Observations") ///
+            label2("  Adj. R-Square") ///
+            label3("  Treated group mean in pre-period")
 
         ** For first outcome, create population indicators table
         if `ct' == 1 {
-            local pop_labels `" "  Single Women" "  Single Men" "  Married Women" "  Married Men" "'
-
             export_results est_`out'_sw est_`out'_sm est_`out'_mw est_`out'_mm, ///
-                filename("tab_otherpops_`spec_lbl'_end.tex") ///
+                filename("tab_appB_otherpops_`spec_lbl'_end.tex") ///
                 statslist("pop_1 pop_2 pop_3 pop_4") ///
                 statsfmt("%9s %9s %9s %9s") ///
-                statslabels(`pop_labels') ///
+                label1("  Single Women") ///
+                label2("  Single Men") ///
+                label3("  Married Women") ///
+                label4("  Married Men") ///
                 cellsnone
         }
 
@@ -238,11 +238,11 @@ foreach pop of local pops {
         baseyear(2014) ///
         ymax(6) ///
         ycut(2) ///
-        savepath("${results}figures/fig_event_emp_`pop'.jpg") ///
+        savepath("${results}figures/fig_appB_event_`pop'.jpg") ///
         labels(Employed|Employed full-time|Employed part-time)
 
-    ** Export graph using utility
-    export_graph, filename("fig_event_emp_`pop'")
+    ** Export graph using utility (saves to both local and Overleaf)
+    export_graph, filename("fig_appB_event_`pop'")
 
     ** Export coefficients for reference
     export_event_coefficients est_employed_y est_full_time_y est_part_time_y, ///
@@ -250,7 +250,7 @@ foreach pop of local pops {
         startyear(${start_year}) ///
         endyear(${end_year}) ///
         baseyear(2014) ///
-        outfile("${results}tables/fig_event_emp_`pop'_coefficients.csv")
+        outfile("${results}tables/fig_appB_event_`pop'_coefficients.csv")
 
 }
 
@@ -259,4 +259,4 @@ foreach pop of local pops {
 ** =============================================================================
 
 clear
-log close log_04_appendix_otherpops
+log close log_04_appB_otherpops

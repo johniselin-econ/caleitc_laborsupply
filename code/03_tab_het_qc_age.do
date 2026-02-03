@@ -1,5 +1,5 @@
 /*******************************************************************************
-File Name:      04_appA_tab_het_qc_age.do
+File Name:    	03_tab_het_qc_age.do
 Creator:        John Iselin
 Date Update:    February 2026
 
@@ -14,8 +14,8 @@ Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
 ** Start log file
-capture log close log_04_appA_tab_het_qc_age
-log using "${logs}04_appA_tab_het_qc_age_log_${date}", name(log_04_appA_tab_het_qc_age) replace text
+capture log close log_03_tab_het_qc_age
+log using "${logs}03_tab_het_qc_age_log_${date}", name(log_03_tab_het_qc_age) replace text
 
 ** =============================================================================
 ** Define specifications
@@ -227,4 +227,4 @@ if ${overleaf} == 1 {
 ** =============================================================================
 
 clear
-log close log_04_appA_tab_het_qc_age
+log close log_03_tab_het_qc_age

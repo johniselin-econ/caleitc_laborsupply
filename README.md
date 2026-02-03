@@ -17,6 +17,8 @@ caleitc_laborsupply/
 │   ├── 00_caleitc.do              # Master script (runs all analyses)
 │   ├── 01_clean_data.do           # Data cleaning and preparation
 │   ├── 02_descriptives.do         # Descriptive statistics
+│   ├── 02_elasticities.do         # Elasticity calculations (moved from 04_appD)
+│   ├── 02_mvpf.do                 # MVPF calculations (moved from 05_mvpf)
 │   ├── 02_eitc_param_prep.do      # EITC benefit schedule preparation
 │   ├── 02b_caleitc_param_gen.do   # CalEITC parameters generation
 │   ├── 03_fig_eitc_sched.do       # Figure: EITC benefit schedules
@@ -28,6 +30,7 @@ caleitc_laborsupply/
 │   ├── 03_fig_emp_trends.do       # Figure: Employment trends
 │   ├── 03_fig_event_emp.do        # Figure: Event-study estimates (employment)
 │   ├── 03_fig_weeks.do            # Figure: Effect by weeks worked
+│   ├── 03_fig_hours_bins.do       # Figure: Effect by hours worked per week (bins)
 │   ├── 03_fig_event_earn.do       # Figure: Event-study estimates (earnings, PPML)
 │   ├── 03_fig_spec_curve.do       # Figure: Specification curves
 │   ├── 03_tab_main.do             # Table: Main triple-difference estimates
@@ -40,6 +43,9 @@ caleitc_laborsupply/
 │   ├── 03_tab_hh_earn.do          # Table: Household earnings effects (OLS & PPML)
 │   ├── 03_sdid_state.do           # SDID Table 1: State panel SDID (with event study)
 │   ├── 03_sdid_county.do          # SDID Table 2: County panel weighted SDID
+│   ├── 03_fig_mvpf_dist.do        # Figure: MVPF distribution (moved from 05_)
+│   ├── 03_fig_mvpf_spillovers.do  # Figure: MVPF fiscal spillovers (moved from 05_)
+│   ├── 03_tab_het_qc_age.do       # Table: Heterogeneity by youngest QC age
 │   ├── 04_appA_tab1.do            # Appendix A Table 1: Descriptive statistics
 │   ├── 04_appA_tab_balance.do     # Appendix A: Balance test for pre-treatment covariates
 │   ├── 04_appA_tab_het_qc_age.do  # Appendix A: Heterogeneity by youngest QC age
@@ -54,20 +60,18 @@ caleitc_laborsupply/
 │   ├── 04_appA_fig_event_col_placebo.do    # Appendix A: College sample event study
 │   ├── 04_appA_tab_col_placebo.do          # Appendix A: College sample table
 │   ├── 04_appA_fig_spec_curve_reported.do  # Appendix A: Spec curves (reported hours/weeks)
+│   ├── 04_appA_fig_emp_trends_alt.do       # Appendix A: Alt FT/PT thresholds (31hr, 39hr)
+│   ├── 04_appA_tab_alt_threshold.do        # Appendix A: Main tables with alt thresholds
 │   ├── 04_appendix.do             # Additional appendix tables and figures
-│   ├── 04_appendix_otherpops.do   # Appendix: Alternative populations analysis
+│   ├── 04_appB_otherpops.do       # Appendix B: Alternative populations analysis
 │   ├── 04_appC_fig_wage_emp.do    # Appendix C Fig 1: Event study (wage workers)
 │   ├── 04_appC_fig_self_emp.do    # Appendix C Fig 2: Event study (self-employment)
 │   ├── 04_appC_tab_wage_emp.do    # Appendix C Tab 1: Triple-diff (wage workers)
 │   ├── 04_appC_tab_self_emp.do    # Appendix C Tab 2: Triple-diff (self-employment)
-│   ├── 04_appD_elasticity.do      # Appendix D: Elasticity calculations
-│   ├── 04_appE_inference.do       # Appendix E: Alternative inference procedures
-│   ├── 04_appE_inference_parallel.do       # Appendix E: Parallelized inference
-│   ├── 04_appE_inference_programs.do       # Appendix E: Inference helper programs
-│   ├── 04_appE_inference_worker.do         # Appendix E: Worker program for parallel
-│   ├── 05_mvpf.do                 # MVPF calculations
-│   ├── 05_fig_mvpf_dist.do        # Figure: MVPF distribution
-│   ├── 05_fig_mvpf_spillovers.do  # Figure: MVPF fiscal spillovers
+│   ├── 04_appE_inference.do       # Appendix D: Alternative inference procedures
+│   ├── 04_appE_inference_parallel.do       # Appendix D: Parallelized inference
+│   ├── 04_appE_inference_programs.do       # Appendix D: Inference helper programs
+│   ├── 04_appE_inference_worker.do         # Appendix D: Worker program for parallel
 │   ├── R/
 │   │   ├── api_code.R             # IPUMS API data download
 │   │   └── 01_data_prep_other.R   # BLS and minimum wage data prep
@@ -274,10 +278,23 @@ The data pipeline (`01_clean_data.do`) includes three TAXSIM simulations for ela
 ### Control States
 
 States are classified based on their EITC policies during the study period:
-- `state_status = 2`: California (treated)
+- `state_status = 2`: California (treated) - FIPS 6
 - `state_status = 1`: Control states (no state EITC changes)
 - `state_status = 0`: Excluded (states with EITC policy changes)
-- `state_status = -1`: Excluded (Alaska, DC)
+- `state_status = -1`: Excluded (Alaska, DC) - FIPS 2, 11
+
+**States with EITC policy changes (excluded, FIPS codes):**
+8 (CO), 9 (CT), 15 (HI), 17 (IL), 19 (IA), 20 (KS), 22 (LA), 23 (ME), 24 (MD), 25 (MA), 26 (MI), 27 (MN), 30 (MT), 34 (NJ), 35 (NM), 39 (OH), 41 (OR), 44 (RI), 45 (SC), 50 (VT), 55 (WI)
+
+### Alternative Control State Pools
+
+For robustness checks, two alternative control pools are used:
+
+**States with a state EITC (excluded from "no-EITC" control pool, FIPS codes):**
+2 (AK), 8 (CO), 9 (CT), 10 (DE), 11 (DC), 15 (HI), 17 (IL), 18 (IN), 19 (IA), 23 (ME), 24 (MD), 25 (MA), 26 (MI), 27 (MN), 30 (MT), 31 (NE), 34 (NJ), 35 (NM), 39 (OH), 40 (OK), 41 (OR), 44 (RI), 45 (SC), 49 (UT), 50 (VT), 51 (VA), 55 (WI)
+
+**Medicaid expansion states (2014, for robustness, FIPS codes):**
+4 (AZ), 5 (AR), 6 (CA), 8 (CO), 9 (CT), 10 (DE), 11 (DC), 15 (HI), 17 (IL), 19 (IA), 21 (KY), 24 (MD), 25 (MA), 26 (MI), 27 (MN), 32 (NV), 33 (NH), 34 (NJ), 35 (NM), 36 (NY), 38 (ND), 39 (OH), 41 (OR), 44 (RI), 50 (VT), 53 (WA), 54 (WV)
 
 ## Key Programs
 
@@ -334,6 +351,7 @@ Reusable Stata programs for analysis:
 - **fig_emp_trends:** Employment trends by treatment group
 - **fig_event_emp:** Event-study estimates (employment)
 - **fig_weeks:** Effect by annual weeks of work
+- **fig_hours_bins:** Effect by hours worked per week (bins)
 - **fig_event_earn:** Event-study estimates (earnings, PPML)
 - **fig_spec_curve:** Specification curve analysis
 - **fig_tab_main:** Coefficient plot for main results table
@@ -422,7 +440,133 @@ Working Paper, Yale University.
 
 This project is for academic research purposes. Please contact the author for permissions.
 
+## To-Do List
+
+### Part 1: Paper → Code (Items to run/update in repo)
+
+#### Figure Naming Inconsistencies
+- [ ] **MVPF distribution figure**: Paper references `fig13.jpg`, code produces `fig_mvpf_dist.jpg` → Update paper reference or rename output
+- [ ] **Earnings bins figure**: Paper references `fig_earn_binsa.jpg`/`fig_earn_binsb.jpg`, code produces `fig_earn_bins_a.jpg`/`fig_earn_bins_b.jpg` → Standardize naming
+- [ ] **Appendix A figures use old numeric naming**: Paper still references `fig_appA_fig3.jpg`, `fig_appA_fig4.jpg`, `fig_appA_fig5a.jpg`, `fig_appA_fig5b.jpg`, `fig_appA_fig6.jpg` → Either:
+  - Update code to produce both old and new names, OR
+  - Update paper to use new descriptive names (`fig_appA_unemp_trends.jpg`, `fig_appA_minwage.jpg`, etc.)
+- [x] **Other populations figures**: Renamed to `fig_appB_event_mw.jpg`, `fig_appB_event_sm.jpg` (code: `04_appB_otherpops.do`)
+
+#### Missing/Incomplete Code
+- [ ] **Household income event study figure**: Paper references `fig_event_earn_hh.jpg` → Verify `03_fig_event_earn.do` produces this or create new code
+- [ ] **State table**: Paper references `tables/fig_appA_fig1.tex` (confusing name for a table) → Rename to `tab_state_sample.tex`
+- [ ] **NY placebo analysis**: Code exists (`04_appA_fig_event_ny_placebo.do`, `04_appA_tab_ny_placebo.do`) but commented out in `00_caleitc.do` → Uncomment if needed for paper
+
+#### Code Updates Needed
+- [ ] Verify all SDID event study figures are being exported with correct names
+- [ ] Ensure MVPF spillovers figure exports to `fig_mvpf_spillovers.jpg` (check `05_fig_mvpf_spillovers.do`)
+- [x] Run `04_appB_otherpops.do` to generate Appendix B figures for married women and men (renamed and updated)
+
+---
+
+### Part 2: Code → Paper (Items to add/reference in paper)
+
+#### Analyses in Repo Not Yet in Paper
+- [ ] **Simulated instrument analysis** (`03_tab_sim_inst.do`): Reduced form and IV/2SLS estimates using TAXSIM-based instrument
+  - Add as robustness check or main specification
+  - Tables: `tab_sim_inst_rf_*.tex`, `tab_sim_inst_iv_*.tex`
+- [ ] **Intensive margin table** (`03_tab_intensive.do`): Hours, weeks, weekly employment effects
+  - Could strengthen hours-per-week discussion in paper
+  - Tables: `tab_intensive_*.tex`
+  - Figure: `fig_tab_intensive.jpg`
+- [ ] **State-level SDID** (`03_sdid_state.do`): Paper only shows county SDID
+  - Event study figures: `fig_sdid_event_*.jpg`
+  - Tables: `tab_sdid_state_*.tex`
+- [ ] **Earnings by household composition** (`03_tab_earn_hhcomp.do`):
+  - Could support heterogeneity discussion
+  - Tables: `tab_earn_hhcomp_*.tex`
+
+#### Appendix Items to Add/Reference
+- [ ] **NY Placebo Test**: Code exists but not in paper
+  - Figure: `fig_event_emp_ny_placebo.jpg`
+  - Table: `tab_ny_placebo_*.tex`
+  - Add to Appendix A as falsification test
+- [ ] **Specification curves for reported hours/weeks** (`04_appA_fig_spec_curve_reported.do`):
+  - Figures: `fig_appA_spec_curve_reported_*.jpg`
+  - Add note in paper about robustness to excluding imputed values
+- [ ] **Descriptive statistics table** (`04_appA_tab1.do`):
+  - Table: `tab_appA_tab1.tex`
+  - Reference in Appendix A
+- [ ] **MVPF by sample/specification** (`05_mvpf.do`):
+  - CSVs: `mvpf_by_sample.csv`, `mvpf_by_contrs.csv`, `mvpf_by_hetero.csv`
+  - Could add sensitivity table to MVPF section
+
+#### Cross-Reference Updates
+- [ ] Update paper's Appendix D (Elasticity) to reference `04_appD_elasticity.do` methodology
+- [ ] Update paper's Appendix E (Inference) section to reference `04_appE_inference.do` programs
+- [ ] Add data availability statement referencing IPUMS API and BLS data sources
+- [ ] Add software citation for TAXSIM (Feenberg & Coutts)
+
+---
+
+### Part 3: Synchronization Tasks
+
+#### File Organization
+- [ ] Ensure Overleaf `figures/` folder matches repo `results/figures/` output
+- [ ] Ensure Overleaf `tables/` folder matches repo `results/tables/` output
+- [ ] Create mapping document: paper figure/table number ↔ code file ↔ output filename
+
+#### Documentation
+- [ ] Add paper figure numbers to code file headers (e.g., "Creates Figure 3")
+- [ ] Update code comments to reference paper sections
+- [ ] Add Overleaf sync instructions to README
+
+#### Quality Checks
+- [ ] Run full pipeline (`00_caleitc.do`) and verify all outputs generate without errors
+- [ ] Compare Overleaf figure files against repo output files for any discrepancies
+- [ ] Verify all table `.tex` files have matching column counts with paper table environments
+
+---
+
+### Priority Items (for next revision)
+
+**High Priority:**
+1. Fix figure naming inconsistencies (especially MVPF and Appendix A figures)
+2. Add simulated instrument results to paper (strengthens identification)
+3. Uncomment and run NY placebo test
+4. Verify household income event study figure exists
+
+**Medium Priority:**
+1. Add state-level SDID to paper (currently only county)
+2. Add intensive margin table to appendix
+3. Reference specification curves for reported values
+
+**Low Priority:**
+1. Rename state table from `fig_appA_fig1.tex` to `tab_state_sample.tex`
+2. Standardize all Appendix A figure names to descriptive format
+3. Add full data/code availability statement
+
 ## Changelog
+
+### February 2026 (File Reorganization)
+- **Reorganized `00_caleitc.do` to match paper structure:**
+  - Section 2 (Policy Background): `03_fig_eitc_sched.do`, `03_fig_earn_hist.do`, `03_fig_budget.do`
+  - Section 5 (Main Results): Employment trends, event studies, main tables, SDID
+  - Section 6 (Earnings): Earnings event studies and tables
+  - Section 8 (Heterogeneity): QC count, adult count, QC age, household income tables
+  - Section 9 (MVPF): MVPF figures and intensive margin figures
+  - Appendix A-D: Organized by appendix section
+- **File movements and renames:**
+  - `04_appendix_otherpops.do` → `04_appB_otherpops.do` (now exports to `fig_appB_event_*.jpg`)
+  - `05_mvpf.do` → `02_mvpf.do` (moved to analysis section)
+  - `05_fig_mvpf_dist.do` → `03_fig_mvpf_dist.do` (moved to paper figures section)
+  - `05_fig_mvpf_spillovers.do` → `03_fig_mvpf_spillovers.do` (moved to paper figures section)
+  - `04_appD_elasticity.do` → `02_elasticities.do` (moved to analysis section)
+- **New files:**
+  - `04_appA_fig_emp_trends_alt.do`: Employment trends with alternative FT/PT thresholds (31hr, 39hr)
+  - `04_appA_tab_alt_threshold.do`: Main tables with alternative FT/PT thresholds
+- **Added alternative full-time/part-time measures to `01_clean_data.do`:**
+  - `full_time_y_31` / `part_time_y_31`: 31-hour threshold (baseline - 4 hours)
+  - `full_time_y_39` / `part_time_y_39`: 39-hour threshold (baseline + 4 hours)
+- **README updates:**
+  - Added FIPS codes for all state classifications
+  - Added no-EITC state pool codes
+  - Added Medicaid expansion state (2014) codes
 
 ### February 2026 (Code Refactoring)
 - **Major code refactoring for improved maintainability:**

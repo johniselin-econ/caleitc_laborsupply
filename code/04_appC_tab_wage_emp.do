@@ -72,15 +72,15 @@ foreach out of global outcomes {
         clustervar($clustervar) ///
         qcvar(qc_ct)
 
-    ** Define statistics labels
-    local stats_labels `" "  Observations" "  Adj. R-Square" "  Treated group mean in pre-period" "  Implied employment effect" "'
-
     ** Export table using utility
     export_results est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4, ///
         filename("tab_appC_tab1_`ct'.tex") ///
         statslist($stats_list) ///
         statsfmt($stats_fmt) ///
-        statslabels(`stats_labels')
+        label1("  Observations") ///
+        label2("  Adj. R-Square") ///
+        label3("  Treated group mean in pre-period") ///
+        label4("  Implied employment effect")
 
     ** For first outcome, create spec indicators table
     if `ct' == 1 {

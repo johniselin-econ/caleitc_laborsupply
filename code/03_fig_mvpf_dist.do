@@ -1,5 +1,5 @@
 /*******************************************************************************
-File Name:      05_fig_mvpf_dist.do
+File Name:      03_fig_mvpf_dist.do
 Creator:        John Iselin
 Date Update:    February 2026
 
@@ -14,11 +14,11 @@ Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
 ** Start log file
-capture log close log_05_fig_mvpf_dist
-log using "${logs}05_fig_mvpf_dist_log_${date}", name(log_05_fig_mvpf_dist) replace text
+capture log close log_03_fig_mvpf_dist
+log using "${logs}03_fig_mvpf_dist_log_${date}", name(log_03_fig_mvpf_dist) replace text
 
 ** =============================================================================
-** Load data (created by 05_mvpf.do)
+** Load data (created by 03_mvpf.do)
 ** =============================================================================
 
 use if p_end == ${end_year} using "${data}interim/acs_fiscal_cost_collapse.dta", clear
@@ -188,4 +188,4 @@ dis "Overall MVPF: Mean = `r(mean)', SD = `r(sd)', Min = `r(min)', Max = `r(max)
 ** =============================================================================
 
 clear
-log close log_05_fig_mvpf_dist
+log close log_03_fig_mvpf_dist

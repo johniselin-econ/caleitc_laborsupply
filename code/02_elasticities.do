@@ -1,9 +1,9 @@
 /*******************************************************************************
-File Name:      04_appD_elasticity.do
+File Name:      02_elasticities.do
 Creator:        John Iselin
 Date Update:    January 2026
 
-Purpose:        Calculate participation and mobility elasticities for Appendix D
+Purpose:        Calculate participation and mobility elasticities.
                 Based on CalEITC treatment effects from triple-difference design.
 
 ELASTICITY FORMULAS:
@@ -44,8 +44,8 @@ Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
 ** Start log file
-capture log close log_04
-log using "${logs}04_appD_elasticity_${date}", name(log_04) replace text
+capture log close log_02
+log using "${logs}02_elasticities_${date}", name(log_02) replace text
 
 ** =============================================================================
 ** SECTION 1: Configuration
@@ -354,13 +354,13 @@ di _n "Step 6.3: Creating TAXSIM scenarios"
 
 clear
 
-** 4 QC levels x 2 years x 3 work scenarios = 24 observations
-set obs 24
+** 4 QC levels x 2 years x 4 work scenarios = 24 observations
+set obs 32
 
 ** Generate identifiers
 gen depx = floor(mod(_n - 1, 12) / 3)  // 0, 1, 2, 3
 gen year = 2014 + (mod(_n - 1, 2) == 1) * 3  // 2014 or 2017
-gen work = mod(_n - 1, 3) + 1  // 1, 2, 3
+gen work = mod(_n - 1, 4) + 1  // 1, 2, 3, 4
 
 ** Adjust: create proper structure
 drop _all
@@ -372,7 +372,7 @@ expand 2
 bysort depx: gen year = 2014 + (_n - 1) * 3
 
 ** Expand for 3 work scenarios
-expand 3
+expand 4
 bysort depx year: gen work = _n
 
 ** TAXSIM input variables
@@ -400,8 +400,11 @@ replace pwages_scenario = pwages if work == 1 & year == 2017
 local ft_minwage = 10.50 * 40 * 52  // $21,840
 replace pwages_scenario = `ft_minwage' if work == 2
 
-** Scenario 3: Full-time at $27K (observed spike)
-replace pwages_scenario = 27000 if work == 3
+** Scenario 3: Median income of a full-time single mother in 2014
+replace pwages_scenario = 30655 if work == 3
+
+** Scenario 4: Mean income of a full-time single mother in 2014
+replace pwages_scenario = 36413 if work == 4
 
 ** Generate TAXSIM ID
 gen taxsimid = _n
@@ -482,20 +485,26 @@ merge 1:1 depx using `qc_shares', nogen
 gen diff_kink_ft_2017 = abs(net_earnings20171 - net_earnings20172)
 gen diff_kink_ft_2014 = abs(net_earnings20141 - net_earnings20142)
 
-** Scenario 2: Kink vs $27K
-gen diff_kink_27k_2017 = abs(net_earnings20171 - net_earnings20173)
-gen diff_kink_27k_2014 = abs(net_earnings20141 - net_earnings20143)
+** Scenario 2: Kink vs Median
+gen diff_kink_med_2017 = abs(net_earnings20171 - net_earnings20173)
+gen diff_kink_med_2014 = abs(net_earnings20141 - net_earnings20143)
+
+** Scenario 3: Kink vs Mean
+gen diff_kink_mean_2017 = abs(net_earnings20171 - net_earnings20174)
+gen diff_kink_mean_2014 = abs(net_earnings20141 - net_earnings20144)
 
 ** Log differentials (denominator for mobility elasticity)
 gen log_denom_ft = ln(diff_kink_ft_2017) - ln(diff_kink_ft_2014)
-gen log_denom_27k = ln(diff_kink_27k_2017) - ln(diff_kink_27k_2014)
+gen log_denom_median = ln(diff_kink_med_2017) - ln(diff_kink_med_2014)
+gen log_denom_mean = ln(diff_kink_mean_2017) - ln(diff_kink_mean_2014)
 
 ** Numerator: ln(P + beta) - ln(P)
 gen log_numer_full = ln(`P_base' + `beta_pt') - ln(`P_base')
 
 ** Mobility elasticities
 gen e_mob_ft_full = log_numer_full / log_denom_ft
-gen e_mob_27k_full = log_numer_full / log_denom_27k
+gen e_mob_med_full = log_numer_full / log_denom_median
+gen e_mob_mean_full = log_numer_full / log_denom_mean
 
 ** -----------------------------------------------------------------------------
 ** Step 6.6: Display mobility elasticity results
@@ -507,19 +516,21 @@ di _dup(70)"="
 
 di _n "By QC count (weighted by sample distribution):"
 table depx [aw = share], ///
-    stat(mean e_mob_ft_full e_mob_27k_full)
+    stat(mean e_mob_*)
 
+** Loop over variables 
+foreach var of varlist e_mob_* {
+	qui summ `var' [aw = share]
+	local `var'_avg = r(mean)
+}	
+	
 ** Weighted average
-qui summ e_mob_ft_full [aw = share]
-local e_mob_ft_full_avg = r(mean)
-
-qui summ e_mob_27k_full [aw = share]
-local e_mob_27k_full_avg = r(mean)
 
 
 di _n "Weighted average mobility elasticities:"
 di "  vs FT minwage (full effect): " %6.3f `e_mob_ft_full_avg'
-di "  vs $27K (full effect): " %6.3f `e_mob_27k_full_avg'
+di "  vs Median Income (full effect): " %6.3f `e_mob_med_full_avg'
+di "  vs Mean Income (full effect): " %6.3f `e_mob_mean_full_avg'
 
 
 ** =============================================================================
@@ -538,6 +549,8 @@ di "  $27K bin adjustment: " %6.3f `e_part_27k'
 di _n "MOBILITY ELASTICITIES:"
 di "  vs FT minwage (full): " %6.3f `e_mob_ft_full_avg'
 di "  vs $27K (full): " %6.3f `e_mob_27k_full_avg'
+di "  vs Median Income (full): " %6.3f `e_mob_med_full_avg'
+di "  vs Mean Income (full): " %6.3f `e_mob_mean_full_avg'
 
 di _n _dup(70)"="
 
@@ -546,4 +559,4 @@ di _n _dup(70)"="
 ** =============================================================================
 
 clear
-log close log_04
+log close log_02

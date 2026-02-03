@@ -137,14 +137,18 @@ rcall script "${code}R/01_data_prep_other.R", 	///
 ** 	(c) County-level unemployment via BLS LAUS
 ** 	(d) State minimum wages via Vaghul & Zipperer (2022)
 
-*do ${code}01_clean_data.do
+do ${code}01_clean_data.do
 
 ** =============================================================================
 ** (02) ANALYSIS
 ** =============================================================================
 
-** Descriptive Statistics
-*do ${code}02_descriptives.do
+** Participation and mobility elasticity calculations
+do ${code}02_elasticities.do
+
+** Calculate Marginal Value of Public Funds for the CalEITC
+** Estimates fiscal externalities from labor supply behavioral responses
+do ${code}02_mvpf.do
 
 ** =============================================================================
 ** (03) PAPER TABLES AND FIGURES
@@ -168,11 +172,14 @@ do ${code}03_fig_event_emp.do
 ** Figure: Effect by annual weeks of work
 do ${code}03_fig_weeks.do
 
+** Figure: Effect by hours worked per week (bins)
+do ${code}03_fig_hours_bins.do
+
 ** Figure: Event-study estimates of CalEITC on earnings (PPML)
 do ${code}03_fig_event_earn.do
 
 ** Figure: Specification curves over sample and controls
-*do ${code}03_fig_spec_curve.do
+do ${code}03_fig_spec_curve.do
 
 ** Figure: Distributional estimates of the CalEITC on earnings 
 do ${code}03_fig_treat_by_earn.do
@@ -198,9 +205,11 @@ do ${code}03_tab_hh_earn.do
 ** Table: Simulated Instrument 
 do ${code}03_tab_sim_inst.do
 
-** =============================================================================
-** (03B) SYNTHETIC DID ANALYSIS
-** =============================================================================
+** Figure: Distribution of MVPF estimates across specifications
+do ${code}03_fig_mvpf_dist.do
+
+** Figure: Fiscal spillovers by labor supply assumption
+do ${code}03_fig_mvpf_spillovers.do
 
 ** SDID Table 1: State Panel Synthetic DID Estimates (with event study)
 do ${code}03_sdid_state.do
@@ -208,8 +217,15 @@ do ${code}03_sdid_state.do
 ** SDID Table 2: County Panel Weighted SDID Estimates
 do ${code}03_sdid_county.do
 
+** Appendix A: Heterogeneity by age of youngest qualifying child
+do ${code}03_tab_het_qc_age.do
+
 ** =============================================================================
 ** (04) APPENDIX MATERIAL
+** =============================================================================
+
+** =============================================================================
+** APPENDIX A - TABLES AND FIGURES
 ** =============================================================================
 
 ** Appendix A: Descriptive statistics
@@ -236,25 +252,23 @@ do ${code}04_appA_fig_tcja_yctc.do
 ** Appendix A: Triple-diff estimate of CalEITC effect on after-tax rates
 do ${code}04_appA_fig_atr_event.do
 
-** Appendix A: NY Placebo Test (falsification)
-*do ${code}04_appA_fig_event_ny_placebo.do
-*do ${code}04_appA_tab_ny_placebo.do
-
 ** Appendix A: College-Educated Sample (falsification)
 do ${code}04_appA_fig_event_col_placebo.do
 do ${code}04_appA_tab_col_placebo.do
 
 ** Appendix A: Specification curves (reported hours/weeks only)
-*do ${code}04_appA_fig_spec_curve_reported.do
+do ${code}04_appA_fig_spec_curve_reported.do
 
-** Additional appendix figures and tables
-*do ${code}04_appendix.do
+** Appendix A: Alternative full-time and part-time thresholds 
+do ${code}04_appA_fig_emp_trends_alt.do
+do ${code}04_appA_tab_alt_threshold.do
 
-** Appendix: Alternative populations (single/married men/women)
-do ${code}04_appendix_otherpops.do
+** =============================================================================
+** APPENDIX A - TABLES AND FIGURES
+** =============================================================================
 
-** Appendix A: Heterogeneity by age of youngest qualifying child
-do ${code}04_appA_tab_het_qc_age.do
+** Appendix B: Alternative populations (single/married men/women)
+do ${code}04_appB_otherpops.do
 
 ** -----------------------------------------------------------------------------
 ** Appendix C: Wage Workers and Self-Employment
@@ -273,35 +287,15 @@ do ${code}04_appC_tab_wage_emp.do
 do ${code}04_appC_tab_self_emp.do
 
 ** -----------------------------------------------------------------------------
-** Appendix D: Elasticity Calculations
-** -----------------------------------------------------------------------------
-
-** Appendix D: Participation and mobility elasticity calculations
-do ${code}04_appD_elasticity.do
-
-** -----------------------------------------------------------------------------
-** Appendix E: Alternative Inference
+** Appendix D: Alternative Inference
 ** -----------------------------------------------------------------------------
 
 ** Appendix E: Alternative inference procedures (CRVE, Wild Bootstrap, etc.)
-*do ${code}04_appE_inference.do
+do ${code}04_appE_inference.do
 
 *do ${code}04_appE_inference_programs.do  // Load programs first
 *do ${code}04_appE_inference_parallel.do
 
-** -----------------------------------------------------------------------------
-** (05) MVPF Analysis
-** -----------------------------------------------------------------------------
-
-** Calculate Marginal Value of Public Funds for the CalEITC
-** Estimates fiscal externalities from labor supply behavioral responses
-do ${code}05_mvpf.do
-
-** Figure: Distribution of MVPF estimates across specifications
-do ${code}05_fig_mvpf_dist.do
-
-** Figure: Fiscal spillovers by labor supply assumption
-do ${code}05_fig_mvpf_spillovers.do
 
 ** End log file
 capture log close

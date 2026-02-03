@@ -1039,7 +1039,11 @@ program define export_results
         FILEname(string)             /// Base filename (without path)
         [STATSlist(string)]          /// Statistics to include
         [STATSfmt(string)]           /// Statistics formats
-        [STATSlabels(string)]        /// Statistics labels (compound quoted)
+        [STATSlabels(string)]        /// Labels: pipe-delimited (e.g., "Obs|R2|Mean")
+        [LABEL1(string)]             /// Label for stat 1 (alternative to statslabels)
+        [LABEL2(string)]             /// Label for stat 2
+        [LABEL3(string)]             /// Label for stat 3
+        [LABEL4(string)]             /// Label for stat 4
         [KEEPvars(string)]           /// Variables to keep
         [ORDERvars(string)]          /// Variable order
         [BDIGITS(integer 1)]         /// Decimal places for coefficients
@@ -1064,43 +1068,72 @@ program define export_results
         local cells_opt "b(`bdigits') se(`sedigits')"
     }
 
+    ** Build labels - check for individual label options first
+    local has_labels = 0
+    if "`label1'" != "" | "`label2'" != "" | "`label3'" != "" | "`label4'" != "" {
+        local has_labels = 1
+    }
+
+    ** If statslabels provided (pipe-delimited), parse it
+    if "`statslabels'" != "" & `has_labels' == 0 {
+        local has_labels = 1
+        ** Parse pipe-delimited labels
+        local nlabels : word count `statslist'
+        tokenize "`statslabels'", parse("|")
+        local label1 "`1'"
+        local label2 "`3'"
+        local label3 "`5'"
+        local label4 "`7'"
+    }
+
+    ** Build the labels string for esttab
+    if `has_labels' {
+        local labels_str ""
+        if "`label1'" != "" local labels_str `""`label1'""'
+        if "`label2'" != "" local labels_str `"`labels_str' "`label2'""'
+        if "`label3'" != "" local labels_str `"`labels_str' "`label3'""'
+        if "`label4'" != "" local labels_str `"`labels_str' "`label4'""'
+    }
+
     ** Export to local results folder
-    if "`statslabels'" != "" {
-        esttab `namelist' using "${results}`subfolder'/`filename'", ///
+    if `has_labels' {
+        quietly esttab `namelist' using "${results}`subfolder'/`filename'", ///
             booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
-            stats(`statslist', fmt(`statsfmt') labels(`statslabels')) ///
-            `cells_opt' label order(`ordervars') keep(`keepvars') ///
+            stats(`statslist', fmt(`statsfmt') labels(`labels_str')) ///
+            `cells_opt' label order(`ordervars') keep(`keepvars', relax) ///
             star(* 0.10 ** 0.05 *** 0.01) ///
             prehead("`prehead'")
     }
     else {
-        esttab `namelist' using "${results}`subfolder'/`filename'", ///
+        quietly esttab `namelist' using "${results}`subfolder'/`filename'", ///
             booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
             stats(`statslist', fmt(`statsfmt')) ///
-            `cells_opt' label order(`ordervars') keep(`keepvars') ///
+            `cells_opt' label order(`ordervars') keep(`keepvars', relax) ///
             star(* 0.10 ** 0.05 *** 0.01) ///
             prehead("`prehead'")
     }
 
     ** Export to Overleaf if enabled
     if ${overleaf} == 1 {
-        if "`statslabels'" != "" {
-            esttab `namelist' using "${ol_tab}`filename'", ///
+        if `has_labels' {
+            quietly esttab `namelist' using "${ol_tab}`filename'", ///
                 booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
-                stats(`statslist', fmt(`statsfmt') labels(`statslabels')) ///
-                `cells_opt' label order(`ordervars') keep(`keepvars') ///
+                stats(`statslist', fmt(`statsfmt') labels(`labels_str')) ///
+                `cells_opt' label order(`ordervars') keep(`keepvars', relax) ///
                 star(* 0.10 ** 0.05 *** 0.01) ///
                 prehead("`prehead'")
         }
         else {
-            esttab `namelist' using "${ol_tab}`filename'", ///
+            quietly esttab `namelist' using "${ol_tab}`filename'", ///
                 booktabs fragment nobaselevels replace nomtitles nonumbers nolines ///
                 stats(`statslist', fmt(`statsfmt')) ///
-                `cells_opt' label order(`ordervars') keep(`keepvars') ///
+                `cells_opt' label order(`ordervars') keep(`keepvars', relax) ///
                 star(* 0.10 ** 0.05 *** 0.01) ///
                 prehead("`prehead'")
         }
     }
+
+    di "Table exported: `filename'"
 
 end
 

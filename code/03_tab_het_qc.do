@@ -76,25 +76,26 @@ foreach out of global outcomes {
 
     }
 
-    ** Define statistics labels
-    local stats_labels `" "  Observations" "  Adj. R-Square" "  Treated group mean in pre-period" "  Implied employment effect" "'
-
     ** Export table using utility
     export_results est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4, ///
         filename("tab_het_qc_`ct'.tex") ///
         statslist($stats_list) ///
         statsfmt($stats_fmt) ///
-        statslabels(`stats_labels')
+        label1("  Observations") ///
+        label2("  Adj. R-Square") ///
+        label3("  Treated group mean in pre-period") ///
+        label4("  Implied employment effect")
 
     ** For first outcome, create column indicators table
     if `ct' == 1 {
-        local col_labels `" "  0 QC" "  1 QC" "  2 QC" "  3+ QC" "'
-
         export_results est_`out'_1 est_`out'_2 est_`out'_3 est_`out'_4, ///
             filename("tab_het_qc_end.tex") ///
             statslist("s1 s2 s3 s4") ///
             statsfmt("%9s %9s %9s %9s") ///
-            statslabels(`col_labels') ///
+            label1("  0 QC") ///
+            label2("  1 QC") ///
+            label3("  2 QC") ///
+            label4("  3+ QC") ///
             cellsnone
     }
 

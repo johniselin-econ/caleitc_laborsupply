@@ -349,6 +349,7 @@ foreach out of local outcomes {
         esttab est_1 est_2 est_3 est_4 using ///
             "${results}tables/tab_sdid_county_end.tex", ///
             booktabs fragment replace nonumbers nolines nomtitles ///
+			mlabels(,none) collabels(,none) ///
             stats(`stats_list', ///
                 fmt("`stats_fmt'") ///
                 labels(`stats_labels')) ///
@@ -358,6 +359,7 @@ foreach out of local outcomes {
             esttab est_1 est_2 est_3 est_4 using ///
                 "${ol_tab}tab_sdid_county_end.tex", ///
                 booktabs fragment replace nonumbers nolines nomtitles ///
+				mlabels(,none) collabels(,none) ///
                 stats(`stats_list', ///
                     fmt("`stats_fmt'") ///
                     labels(`stats_labels')) ///

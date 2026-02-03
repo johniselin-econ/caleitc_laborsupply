@@ -418,6 +418,7 @@ program define ri_bs, rclass
     ** Return results
     return scalar p_t = `p_t'
     return scalar p_beta = `p_beta'
+**# Bookmark #1
 
 end
 

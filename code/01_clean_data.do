@@ -362,6 +362,18 @@ forvalues y = $end_year_data(-1)$start_year_data {
     label var part_time_y "Employed part-time last year"
     label var full_time_y "Employed full-time last year"
 
+    ** Alternative full-time/part-time measures (31-hour threshold)
+    gen byte part_time_y_31 = (employed_y == 1) & !missing(hours_worked_y) & (hours_worked_y < 31)
+    gen byte full_time_y_31 = (employed_y == 1) & !part_time_y_31
+    label var part_time_y_31 "Employed part-time last year (31hr threshold)"
+    label var full_time_y_31 "Employed full-time last year (31hr threshold)"
+
+    ** Alternative full-time/part-time measures (39-hour threshold)
+    gen byte part_time_y_39 = (employed_y == 1) & !missing(hours_worked_y) & (hours_worked_y < 39)
+    gen byte full_time_y_39 = (employed_y == 1) & !part_time_y_39
+    label var part_time_y_39 "Employed part-time last year (39hr threshold)"
+    label var full_time_y_39 "Employed full-time last year (39hr threshold)"
+
     ** Self-employment
     gen byte self_employed_w = (classwkr == 1)
     label var self_employed_w "Self-employed last week"
