@@ -228,7 +228,7 @@ dir.create(outdir, showWarnings = FALSE)
 unzip(dest_state, exdir = outdir, overwrite = TRUE)
 unzip(dest_substate, exdir = outdir, overwrite = TRUE)
 
-# Get state-level minimum wage information
+# Get state-level minimum wage information (annual)
 state_minwage <- read_excel(file.path(outdir, "mw_state_annual.xlsx")) %>%
   select(
     state_fips    = `State FIPS Code`,
@@ -253,16 +253,46 @@ write.csv(state_minwage, file.path(dir_data_int, "VKZ_state_minwage_annual.csv")
           row.names = FALSE)
 
 rm(state_minwage)
-message("  State minimum wage data processed and saved.")
+message("  State minimum wage data (annual) processed and saved.")
+
+# Get state-level minimum wage information (monthly)
+rds_file_monthly <- file.path(dir_data_int, "VKZ_state_minwage_monthly.rds")
+
+state_minwage_monthly <- read_excel(file.path(outdir, "mw_state_monthly.xlsx")) %>%
+  select(
+    state_fips    = `State FIPS Code`,
+    year          = Year,
+    month         = Month,
+    state_minwage = `Monthly State Average`
+  ) %>%
+  mutate(
+    state_fips = if_else(
+      str_length(as.character(state_fips)) == 2,
+      as.character(state_fips),
+      paste0("0", as.character(state_fips))
+    )
+  ) %>%
+  left_join(state_info, by = "state_fips") %>%
+  select(year, month, state_fips, state_name, state_abb, state_minwage)
+
+# Save as RDS file
+saveRDS(state_minwage_monthly, rds_file_monthly)
+
+# Also save CSV for Stata
+write.csv(state_minwage_monthly, file.path(dir_data_int, "VKZ_state_minwage_monthly.csv"),
+          row.names = FALSE)
+
+rm(state_minwage_monthly)
+message("  State minimum wage data (monthly) processed and saved.")
 
 
-# Get substate-level minimum wage information
+# Get substate-level minimum wage information (annual)
 substate_minwage <- read_excel(file.path(outdir, "mw_substate_annual.xlsx")) %>%
   select(
     state_fips    = `State FIPS Code`,
     substate_name = `City/County`,
     year          = Year,
-    substate_minwage = `Annual Average`, 
+    substate_minwage = `Annual Average`,
     substate_gr_state = `Local > State min wage`
   ) %>%
   mutate(
@@ -283,7 +313,38 @@ write.csv(substate_minwage, file.path(dir_data_int, "VKZ_substate_minwage_annual
           row.names = FALSE)
 
 rm(substate_minwage)
-message("  Sub-State minimum wage data processed and saved.")
+message("  Sub-State minimum wage data (annual) processed and saved.")
+
+# Get substate-level minimum wage information (monthly)
+rds_file_submonthly <- file.path(dir_data_int, "VKZ_substate_minwage_monthly.rds")
+
+substate_minwage_monthly <- read_excel(file.path(outdir, "mw_substate_monthly.xlsx")) %>%
+  select(
+    state_fips    = `State FIPS Code`,
+    substate_name = `City/County`,
+    year          = Year,
+    month         = Month,
+    substate_minwage = `Monthly Average`
+  ) %>%
+  mutate(
+    state_fips = if_else(
+      str_length(as.character(state_fips)) == 2,
+      as.character(state_fips),
+      paste0("0", as.character(state_fips))
+    )
+  ) %>%
+  left_join(state_info, by = "state_fips") %>%
+  select(year, month, state_fips, state_name, state_abb, substate_name, substate_minwage)
+
+# Save as RDS file
+saveRDS(substate_minwage_monthly, rds_file_submonthly)
+
+# Also save CSV for Stata
+write.csv(substate_minwage_monthly, file.path(dir_data_int, "VKZ_substate_minwage_monthly.csv"),
+          row.names = FALSE)
+
+rm(substate_minwage_monthly)
+message("  Sub-State minimum wage data (monthly) processed and saved.")
 
 # =============================================================================
 # Clean up

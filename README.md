@@ -11,76 +11,105 @@ This paper examines the labor supply effects of the CalEITC, introduced in 2015 
 
 ## Repository Structure
 
+The code is organized to match the paper structure. Files are numbered by section:
+- `00_` - Main orchestration script
+- `01_` - Data cleaning
+- `02_` - Analysis (elasticities, MVPF)
+- `03_` - Main text figures and tables (organized by paper section)
+- `04_` - Appendix material
+
 ```
 caleitc_laborsupply/
 ├── code/
-│   ├── 00_caleitc.do              # Master script (runs all analyses)
+│   │
+│   │   ## (00-02) DATA AND ANALYSIS
+│   ├── 00_caleitc.do              # Main script (runs all analyses)
 │   ├── 01_clean_data.do           # Data cleaning and preparation
-│   ├── 02_descriptives.do         # Descriptive statistics
-│   ├── 02_elasticities.do         # Elasticity calculations (moved from 04_appD)
-│   ├── 02_mvpf.do                 # MVPF calculations (moved from 05_mvpf)
+│   ├── 02_elasticities.do         # Elasticity calculations
+│   ├── 02_mvpf.do                 # MVPF calculations
 │   ├── 02_eitc_param_prep.do      # EITC benefit schedule preparation
 │   ├── 02b_caleitc_param_gen.do   # CalEITC parameters generation
-│   ├── 03_fig_eitc_sched.do       # Figure: EITC benefit schedules
-│   ├── 03_fig_earn_hist.do        # Figure: Earnings histogram by employment type
-│   ├── 03_fig_earn_bins.do        # Figure: Earnings distribution by bins
-│   ├── 03_fig_treat_by_earn.do    # Figure: Treatment effects by earnings
-│   ├── 03_fig_budget.do           # Figure: Budget constraint
-│   ├── 03_tab_desc.do             # Table: Descriptive statistics (deprecated)
-│   ├── 03_fig_emp_trends.do       # Figure: Employment trends
-│   ├── 03_fig_event_emp.do        # Figure: Event-study estimates (employment)
-│   ├── 03_fig_weeks.do            # Figure: Effect by weeks worked
-│   ├── 03_fig_hours_bins.do       # Figure: Effect by hours worked per week (bins)
-│   ├── 03_fig_event_earn.do       # Figure: Event-study estimates (earnings, PPML)
-│   ├── 03_fig_spec_curve.do       # Figure: Specification curves
-│   ├── 03_tab_main.do             # Table: Main triple-difference estimates
-│   ├── 03_tab_sim_inst.do         # Table: Simulated instrument results
-│   ├── 03_tab_intensive.do        # Table: Intensive margin (hours, weeks, weekly emp)
-│   ├── 03_tab_het_qc.do           # Table: Heterogeneity by QC count
-│   ├── 03_tab_het_adults.do       # Table: Heterogeneity by adult count
-│   ├── 03_tab_earnings.do         # Table: Earnings effects (OLS & PPML)
-│   ├── 03_tab_earn_hhcomp.do      # Table: Earnings by HH composition
-│   ├── 03_tab_hh_earn.do          # Table: Household earnings effects (OLS & PPML)
-│   ├── 03_sdid_state.do           # SDID Table 1: State panel SDID (with event study)
-│   ├── 03_sdid_county.do          # SDID Table 2: County panel weighted SDID
-│   ├── 03_fig_mvpf_dist.do        # Figure: MVPF distribution (moved from 05_)
-│   ├── 03_fig_mvpf_spillovers.do  # Figure: MVPF fiscal spillovers (moved from 05_)
-│   ├── 03_tab_het_qc_age.do       # Table: Heterogeneity by youngest QC age
-│   ├── 04_appA_tab1.do            # Appendix A Table 1: Descriptive statistics
-│   ├── 04_appA_tab_balance.do     # Appendix A: Balance test for pre-treatment covariates
-│   ├── 04_appA_tab_het_qc_age.do  # Appendix A: Heterogeneity by youngest QC age
-│   ├── 04_appA_fig_eitc_sched_15_17.do     # Appendix A: EITC schedules 2015 vs 2017
-│   ├── 04_appA_fig_eitc_ctc_sched.do       # Appendix A: EITC/CTC/CalEITC schedules (2016)
-│   ├── 04_appA_fig_unemp_trends.do         # Appendix A: State unemployment trends
-│   ├── 04_appA_fig_minwage.do              # Appendix A: State minimum wages
-│   ├── 04_appA_fig_tcja_yctc.do            # Appendix A: 2018-2019 schedules with TCJA
-│   ├── 04_appA_fig_atr_event.do            # Appendix A: CalEITC effect on ATR
-│   ├── 04_appA_fig_event_ny_placebo.do     # Appendix A: NY placebo event study
-│   ├── 04_appA_tab_ny_placebo.do           # Appendix A: NY placebo table
-│   ├── 04_appA_fig_event_col_placebo.do    # Appendix A: College sample event study
-│   ├── 04_appA_tab_col_placebo.do          # Appendix A: College sample table
-│   ├── 04_appA_fig_spec_curve_reported.do  # Appendix A: Spec curves (reported hours/weeks)
-│   ├── 04_appA_fig_emp_trends_alt.do       # Appendix A: Alt FT/PT thresholds (31hr, 39hr)
-│   ├── 04_appA_tab_alt_threshold.do        # Appendix A: Main tables with alt thresholds
-│   ├── 04_appendix.do             # Additional appendix tables and figures
-│   ├── 04_appB_otherpops.do       # Appendix B: Alternative populations analysis
-│   ├── 04_appC_fig_wage_emp.do    # Appendix C Fig 1: Event study (wage workers)
-│   ├── 04_appC_fig_self_emp.do    # Appendix C Fig 2: Event study (self-employment)
-│   ├── 04_appC_tab_wage_emp.do    # Appendix C Tab 1: Triple-diff (wage workers)
-│   ├── 04_appC_tab_self_emp.do    # Appendix C Tab 2: Triple-diff (self-employment)
-│   ├── 04_appE_inference.do       # Appendix D: Alternative inference procedures
-│   ├── 04_appE_inference_parallel.do       # Appendix D: Parallelized inference
-│   ├── 04_appE_inference_programs.do       # Appendix D: Inference helper programs
-│   ├── 04_appE_inference_worker.do         # Appendix D: Worker program for parallel
+│   │
+│   │   ## (03) MAIN TEXT - BY PAPER SECTION
+│   │   # Section 2.1: Federal and California EITC Structure
+│   ├── 03_fig_eitc_sched.do       # Figure 1: EITC benefit schedules (TY 2016)
+│   ├── 03_fig_earn_hist.do        # Figure 2: Histograms of CA workers
+│   │   # Section 3: Conceptual Framework
+│   ├── 03_fig_budget.do           # Figure 3: Budget constraint (2 QC, 2016)
+│   │   # Section 5.1: Trends
+│   ├── 03_fig_emp_trends.do       # Figure 4: FT/PT employment trends
+│   │   # Section 5.2: Primary Triple-Difference Results
+│   ├── 03_tab_main.do             # Table 1: Main triple-diff estimates
+│   ├── 03_fig_event_emp.do        # Figure 5: Event-study (employment)
+│   ├── 03_fig_hours_bins.do       # Figure 6: Effect by weekly hours
+│   ├── 03_fig_weeks.do            # Figure 7: Effect by annual weeks
+│   │   # Section 5.4: Robustness
+│   ├── 03_sdid_state.do           # Table 2: Synthetic DID estimates
+│   ├── 03_fig_event_col_placebo.do # Figure 8: College placebo (falsification)
+│   ├── 03_fig_spec_curve.do       # Figure 9: Specification curves
+│   │   # Section 6: Annual Earnings
+│   ├── 03_tab_earnings.do         # Table 3: Earnings effects (OLS & PPML)
+│   ├── 03_fig_earn_bins.do        # Figure 10: Earnings distribution changes
+│   │   # Section 7: Heterogeneity
+│   ├── 03_tab_het_qc.do           # Figure 11: By number of QC
+│   ├── 03_tab_het_adults.do       # Figure 12: By number of adults
+│   ├── 03_tab_het_qc_age.do       # Figure 13: By age of youngest QC
+│   ├── 03_fig_event_earn.do       # Figure 14: Own vs HH income event-study
+│   │   # Section 8: MVPF and Fiscal Externalities
+│   ├── 03_fig_mvpf_dist.do        # Figure 15: MVPF distribution
+│   ├── 03_fig_mvpf_spillovers.do  # Figure 16: Fiscal spillovers
+│   │   # ** FUTURE WORK ** (not currently in paper)
+│   ├── 03_fig_treat_by_earn.do    # Treatment effects by earnings bins
+│   ├── 03_tab_earn_hhcomp.do      # Earnings by HH composition
+│   ├── 03_tab_intensive.do        # Intensive margin (hours, weeks)
+│   ├── 03_tab_sim_inst.do         # Simulated instrument results
+│   ├── 03_tab_hh_earn.do          # Household earnings (OLS & PPML)
+│   ├── 03_sdid_county.do          # County panel weighted SDID
+│   ├── 03_tab_desc.do             # Deprecated - see 04_appA_tab1.do
+│   ├── 02_descriptives.do         # Summary statistics (standalone)
+│   │
+│   │   ## (04) APPENDICES
+│   │   # Appendix A: Additional Tables and Figures
+│   ├── 04_appA_tab1.do            # Table A.1: Sample states and statistics
+│   ├── 04_appA_fig_eitc_sched_15_17.do     # Figure A.1: EITC schedules 2015/2017
+│   ├── 04_appA_fig_eitc_ctc_sched.do       # Figure A.2: EITC/CTC schedules (2016)
+│   ├── 04_appA_fig_tcja_yctc.do            # Figure A.3: Post-2017 tax credit changes
+│   ├── 04_appA_fig_unemp_trends.do         # Figure A.4: Unemployment trends
+│   ├── 04_appA_fig_minwage.do              # Figure A.5: Minimum wages
+│   ├── 04_appA_fig_atr_event.do            # Figure A.6: After-tax rate effect
+│   ├── 04_appA_tab_balance.do              # Tables A.2-A.3: Balance tests
+│   ├── 04_appA_tab_col_placebo.do          # Table A.4: College placebo table
+│   │   # Appendix A: ** FUTURE WORK **
+│   ├── 04_appA_fig_spec_curve_reported.do  # Spec curves (reported hours/weeks)
+│   ├── 04_appA_fig_emp_trends_alt.do       # Alt FT/PT thresholds
+│   ├── 04_appA_tab_alt_threshold.do        # Alt threshold estimates
+│   ├── 04_appA_tab_het_qc_age.do           # Heterogeneity by youngest QC age
+│   ├── 04_appendix.do                      # Placeholder (unused)
+│   │   # Appendix B: Other Populations
+│   ├── 04_appB_otherpops.do       # Figures B.1-B.3: Married women, single/married men
+│   │   # Appendix C: Self-Employment
+│   ├── 04_appC_tab_wage_emp.do    # Table C.1: Wage workers
+│   ├── 04_appC_tab_self_emp.do    # Table C.2: Self-employment
+│   ├── 04_appC_fig_wage_emp.do    # Figure C.1: Wage workers event-study
+│   ├── 04_appC_fig_self_emp.do    # Figure C.2: Self-employment event-study
+│   │   # Appendix D: Inference
+│   ├── 04_appE_inference.do       # Table D.1: Alternative inference procedures
+│   │   # Appendix D: Helper files (not directly called)
+│   ├── 04_appE_inference_programs.do       # Inference helper programs
+│   ├── 04_appE_inference_parallel.do       # Parallelized inference
+│   ├── 04_appE_inference_worker.do         # Worker program for parallel
+│   │
+│   │   ## SUBDIRECTORIES
 │   ├── R/
 │   │   ├── api_code.R             # IPUMS API data download
 │   │   └── 01_data_prep_other.R   # BLS and minimum wage data prep
 │   ├── utils/
-│   │   ├── globals.do             # Global macro definitions (NEW)
+│   │   ├── globals.do             # Global macro definitions
 │   │   ├── programs.do            # Reusable Stata programs
 │   │   └── sdid_wt.do             # Weighted SDID estimation program
 │   ├── archive/                   # Archived/backup files
 │   └── logs/                      # Log files
+│
 ├── data/
 │   ├── raw/                       # Raw data files (not tracked)
 │   ├── interim/                   # Intermediate processed data
@@ -89,10 +118,12 @@ caleitc_laborsupply/
 │   ├── eitc_parameters/           # EITC benefit schedule parameters
 │   │   └── caleitc_params.txt     # CalEITC kink point parameters by year/QC
 │   └── taxsim/                    # TAXSIM working directory
+│
 ├── results/
 │   ├── figures/                   # Output figures (PNG, JPG)
 │   ├── tables/                    # Output tables (LaTeX, CSV)
 │   └── paper/                     # Paper-ready outputs
+│
 ├── api_codes.txt                  # API keys (not tracked)
 └── README.md
 ```
@@ -111,6 +142,11 @@ caleitc_laborsupply/
 - **Minimum Wage Data:** Vaghul & Zipperer (2022)
   - State-level binding minimum wage
   - Downloaded from GitHub repository
+- **NBER Recession Indicators:** FRED Series USREC
+  - Monthly recession indicator (1 = recession, 0 = expansion)
+  - Source: https://fred.stlouisfed.org/series/USREC
+  - Downloaded January 2026
+  - Stored in `data/raw/USREC.csv`
 
 ### EITC Parameters
 - **CalEITC Parameters:** `data/eitc_parameters/caleitc_params.txt`
@@ -188,7 +224,7 @@ install.packages("ipumsr")
 
 1. **Set up API keys:** Create `api_codes.txt` with your IPUMS and BLS API keys
 
-2. **Run master script:**
+2. **Run main script:**
    ```stata
    * Open Stata and run
    do "code/00_caleitc.do"
@@ -344,79 +380,76 @@ Reusable Stata programs for analysis:
 
 ## Output
 
-### Figures
-- **fig_eitc_sched:** Federal and California EITC benefit schedules
-- **fig_earn_hist:** Distribution of earnings by full-time/part-time status
-- **fig_budget:** Budget constraint with EITC
-- **fig_emp_trends:** Employment trends by treatment group
-- **fig_event_emp:** Event-study estimates (employment)
-- **fig_weeks:** Effect by annual weeks of work
-- **fig_hours_bins:** Effect by hours worked per week (bins)
-- **fig_event_earn:** Event-study estimates (earnings, PPML)
-- **fig_spec_curve:** Specification curve analysis
-- **fig_tab_main:** Coefficient plot for main results table
-- **fig_tab_het_qc:** Coefficient plot for QC heterogeneity table
-- **fig_tab_het_adults:** Coefficient plot for adult count heterogeneity table
+Outputs are organized to match the paper structure.
 
-### Tables
-- **tab_main:** Triple-difference estimates on employment (main results)
-- **tab_sim_inst_rf:** Reduced form estimates using simulated EITC instrument
-- **tab_sim_inst_iv:** IV/2SLS estimates using simulated EITC as instrument
-- **tab_intensive:** Triple-difference estimates on intensive margin (hours, weeks, weekly employment)
-- **tab_het_qc:** Heterogeneity by qualifying children count
-- **tab_het_adults:** Heterogeneity by adults in household
-- **tab_earnings:** Effect on annual earnings (OLS and PPML)
-- **tab_earn_hhcomp:** Earnings by household composition
-- **tab_hh_earn:** Effect on household earnings (OLS and PPML)
+### Main Text Figures and Tables
 
-### SDID Tables
-- **tab_sdid_state:** State panel SDID estimates (Basic and Triple, with/without covariates)
-- **tab_sdid_state_combined:** Combined state panel results across all outcomes
-- **tab_sdid_county:** County panel weighted SDID estimates
-- **tab_sdid_county_combined:** Combined county panel results across all outcomes
+| Paper Ref | Output File | Description |
+|-----------|-------------|-------------|
+| **Section 2.1: Federal and California EITC Structure** |||
+| Figure 1 (p.10) | `fig_eitc_sched.*` | Federal and CA EITC benefits schedule, TY 2016 |
+| Figure 2 (p.11) | `fig_earn_hist.*` | Histograms of California workers |
+| **Section 3: Conceptual Framework** |||
+| Figure 3 (p.13) | `fig_budget.*` | Budget constraint for parent with 2 QC (2016) |
+| **Section 5.1: Trends** |||
+| Figure 4 (p.22) | `fig_emp_trends.*` | Full-time and part-time employment in the ACS |
+| **Section 5.2: Primary Triple-Difference Results** |||
+| Table 1 (p.24) | `tab_main*.tex` | Triple-diff estimates on annual employment |
+| Figure 5 (p.25) | `fig_event_emp.*` | Event-study estimates on annual employment |
+| Figure 6 (p.27) | `fig_hours_bins.*` | Effect by weekly hours worked |
+| Figure 7 (p.28) | `fig_weeks.*` | Effect by annual weeks of work |
+| **Section 5.4: Robustness** |||
+| Table 2 (p.30) | `tab_sdid_state*.tex` | Synthetic DID estimates |
+| Figure 8 (p.31) | `fig_event_col_placebo.*` | College-educated sample (falsification) |
+| Figure 9 (p.34) | `fig_spec_curve.*` | Specification curves |
+| **Section 6: Annual Earnings** |||
+| Table 3 (p.38) | `tab_earnings*.tex` | Triple-diff estimates on annual earnings |
+| Figure 10 (p.39) | `fig_earn_bins.*` | Changes in earnings distribution over time |
+| **Section 7: Heterogeneity** |||
+| Figure 11 (p.45) | `fig_tab_het_qc.*` | Employment effects by number of QC |
+| Figure 12 (p.47) | `fig_tab_het_adults.*` | Employment effects by number of adults |
+| Figure 13 (p.48) | `fig_tab_het_qc_age.*` | Employment effects by age of youngest QC |
+| Figure 14 (p.50) | `fig_event_earn.*` | Mother's earnings vs household income |
+| **Section 8: MVPF and Fiscal Externalities** |||
+| Figure 15 (p.53) | `fig_mvpf_dist.*` | Distribution of MVPF estimates |
+| Figure 16 (p.55) | `fig_mvpf_spillovers.*` | Implied fiscal spillovers |
 
-### SDID Figures
-- **fig_sdid_event_employed_y:** SDID event study for employment
-- **fig_sdid_event_full_time_y:** SDID event study for full-time employment
-- **fig_sdid_event_part_time_y:** SDID event study for part-time employment
-- **fig_sdid_event_incearn_real:** SDID event study for earnings
+### Appendix Outputs
 
-### Appendix A
-- **Appendix Table 1:** Descriptive statistics
-- **tab_balance:** Balance test for pre-treatment covariate balance
-- **fig_appA_eitc_ctc_sched:** Federal EITC, CTC, and CalEITC benefit schedules for TY 2016 (by QC count)
-- **fig_appA_unemp_trends:** State-level unemployment trends (2006-2019), CA vs control states
-- **fig_appA_minwage:** Binding state minimum wages in control pool (2010-2017)
-- **fig_appA_tcja_yctc:** CTC comparison 2017 vs 2018 (TCJA) and 2019 with YCTC
-- **fig_appA_atr_event:** Triple-diff estimate of CalEITC effect on after-tax rates (event study)
-- **fig_event_ny_placebo:** NY placebo event study (NY as treatment, CA excluded)
-- **tab_ny_placebo:** NY placebo triple-diff table
-- **fig_event_col_placebo:** College-educated sample event study (falsification test)
-- **tab_col_placebo:** College-educated sample triple-diff table
-- **fig_appA_spec_curve_reported_*:** Specification curves restricted to individuals with reported (non-imputed) hours and weeks worked
-- **tab_otherpops_nocov:** Triple-diff by population (no covariates)
-- **tab_otherpops_allcov:** Triple-diff by population (all covariates)
-- **fig_event_emp_sw/sm/mw/mm:** Event study by population
+| Paper Ref | Output File | Description |
+|-----------|-------------|-------------|
+| **Appendix A: Additional Tables and Figures** |||
+| Table A.1 (p.68) | `tab_appA_tab1.tex` | Sample states and population statistics |
+| Figure A.1 (p.69) | `fig_appA_eitc_sched_15_17.*` | EITC schedules, TY 2015 and 2017 |
+| Figure A.2 (p.70) | `fig_appA_eitc_ctc_sched.*` | EITC and CTC schedule by QC (2016) |
+| Figure A.3 (p.71) | `fig_appA_tcja_yctc.*` | Post-2017 changes to tax credits |
+| Figure A.4 (p.72) | `fig_appA_unemp_trends.*` | State-level unemployment trends |
+| Figure A.5 (p.73) | `fig_appA_minwage.*` | Binding state minimum wages |
+| Figure A.6 (p.74) | `fig_appA_atr_event.*` | Triple-diff effect on after-tax rate |
+| Tables A.2-A.3 (p.75) | `tab_balance*.tex` | Triple-diff balance tests |
+| Table A.4 (p.76) | `tab_col_placebo*.tex` | College placebo test |
+| **Appendix B: Other Populations** |||
+| Figures B.1-B.3 (p.78-80) | `fig_appB_event_*.jpg` | Married women, single men, married men |
+| **Appendix C: Self-Employment** |||
+| Table C.1 (p.83) | `tab_appC_tab1*.tex` | Employment effects (wage workers) |
+| Table C.2 (p.84) | `tab_appC_tab2*.tex` | Effects on self-employment |
+| Figure C.1 (p.85) | `fig_appC_fig1.*` | Event-study (wage workers) |
+| Figure C.2 (p.86) | `fig_appC_fig2.*` | Event-study (self-employment) |
+| **Appendix D: Inference** |||
+| Table D.1 (p.93) | `tab_appE_tab1*.tex` | Alternative inference procedures |
 
-### Appendix C: Wage Workers and Self-Employment
-- **fig_appC_fig1:** Event-study estimates for wage workers only
-- **fig_appC_fig2:** Event-study estimates for self-employment
-- **tab_appC_tab1:** Triple-diff estimates for wage workers
-- **tab_appC_tab2:** Triple-diff estimates for self-employment
+### Additional Outputs (Not in Current Paper)
 
-### Appendix D: Elasticity Calculations
-- **Participation elasticity:** Calculated using ATR changes at CalEITC kink point
-- **Mobility elasticity:** Calculated using TAXSIM simulations for different wage scenarios
-
-### Appendix E: Alternative Inference
-- **tab_appE_tab1:** Alternative inference procedures for main results
-  - Cluster-robust variance estimator (CRVE)
-  - Wild cluster bootstrap (WCBS)
-  - Randomization inference wild bootstrap (RIWB-t, RIWB-b)
-  - Block bootstrap with Ferman-Pinto (2019) correction
+- `tab_sim_inst_*.tex` - Simulated instrument (RF and IV/2SLS)
+- `tab_intensive_*.tex` - Intensive margin (hours, weeks, weekly employment)
+- `tab_earn_hhcomp_*.tex` - Earnings by household composition
+- `tab_hh_earn_*.tex` - Household earnings (OLS and PPML)
+- `tab_sdid_county_*.tex` - County panel weighted SDID
+- `fig_appA_spec_curve_reported_*` - Specification curves (reported hours/weeks only)
 
 ## Notes
 
+- **NY Placebo Test Removed:** The New York placebo test was removed from the analysis because the pre-trends were ill-fitting, making it unsuitable as a falsification test.
 - All monetary values are adjusted to 2019 dollars using CPI99
 - Standard errors are clustered at the state level
 - The analysis excludes individuals assigned as qualifying children (age < 18 or QC flag)
@@ -455,7 +488,6 @@ This project is for academic research purposes. Please contact the author for pe
 #### Missing/Incomplete Code
 - [ ] **Household income event study figure**: Paper references `fig_event_earn_hh.jpg` → Verify `03_fig_event_earn.do` produces this or create new code
 - [ ] **State table**: Paper references `tables/fig_appA_fig1.tex` (confusing name for a table) → Rename to `tab_state_sample.tex`
-- [ ] **NY placebo analysis**: Code exists (`04_appA_fig_event_ny_placebo.do`, `04_appA_tab_ny_placebo.do`) but commented out in `00_caleitc.do` → Uncomment if needed for paper
 
 #### Code Updates Needed
 - [ ] Verify all SDID event study figures are being exported with correct names
@@ -482,10 +514,6 @@ This project is for academic research purposes. Please contact the author for pe
   - Tables: `tab_earn_hhcomp_*.tex`
 
 #### Appendix Items to Add/Reference
-- [ ] **NY Placebo Test**: Code exists but not in paper
-  - Figure: `fig_event_emp_ny_placebo.jpg`
-  - Table: `tab_ny_placebo_*.tex`
-  - Add to Appendix A as falsification test
 - [ ] **Specification curves for reported hours/weeks** (`04_appA_fig_spec_curve_reported.do`):
   - Figures: `fig_appA_spec_curve_reported_*.jpg`
   - Add note in paper about robustness to excluding imputed values
@@ -528,7 +556,6 @@ This project is for academic research purposes. Please contact the author for pe
 **High Priority:**
 1. Fix figure naming inconsistencies (especially MVPF and Appendix A figures)
 2. Add simulated instrument results to paper (strengthens identification)
-3. Uncomment and run NY placebo test
 4. Verify household income event study figure exists
 
 **Medium Priority:**
@@ -542,6 +569,22 @@ This project is for academic research purposes. Please contact the author for pe
 3. Add full data/code availability statement
 
 ## Changelog
+
+### February 2026 (Data and Analysis Updates)
+- **Added monthly minimum wage data processing:**
+  - Updated `code/R/01_data_prep_other.R` to process monthly minimum wage data from Vaghul & Zipperer
+  - New output files: `VKZ_state_minwage_monthly.csv`, `VKZ_substate_minwage_monthly.csv`
+- **Updated minimum wage figure to use monthly data:**
+  - `04_appA_fig_minwage.do` now uses monthly data for consistency with unemployment trends figure
+  - Both `fig_appA_unemp_trends.jpg` and `fig_appA_minwage.jpg` now show monthly trends
+- **Added NBER recession shading to figures:**
+  - `04_appA_fig_unemp_trends.do` and `04_appA_fig_minwage.do` now include recession shading
+  - Uses NBER recession indicator from FRED (USREC series, downloaded January 2026)
+  - Great Recession (Dec 2007 - Jun 2009) visible in study period
+- **Removed NY placebo test:**
+  - Deleted `04_appA_fig_event_ny_placebo.do` and `04_appA_tab_ny_placebo.do`
+  - Removed associated output files
+  - Reason: Pre-trends were ill-fitting, making the test unsuitable as a falsification exercise
 
 ### February 2026 (File Reorganization)
 - **Reorganized `00_caleitc.do` to match paper structure:**
@@ -623,7 +666,7 @@ This project is for academic research purposes. Please contact the author for pe
 - Moved descriptive statistics to appendix
 - Added Synthetic DID (SDID) analysis: state panel with event studies, county panel with population weights
 - Created `sdid_wt` program for weighted SDID estimation
-- Added Appendix A: NY placebo test and college-educated sample falsification tests
+- Added Appendix A: College-educated sample falsification test
 - Added Appendix C: Wage workers and self-employment analysis
 - Added Appendix D: Participation and mobility elasticity calculations (with TAXSIM)
 - Added Appendix E: Alternative inference procedures (CRVE, Wild Bootstrap, Ferman-Pinto correction)

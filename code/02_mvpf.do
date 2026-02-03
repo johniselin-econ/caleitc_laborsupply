@@ -378,12 +378,15 @@ program define fiscal_cost
     gen ssemp_cf_opt2 = 0
     gen psemp_cf_opt2 = 0
 
-    ** Counterfactual FT income: binding minimum wage or $27,000
+    ** Counterfactual FT income: binding minimum wage, median, or mean
     if `ft_pt_cf_inc' == 1 {
         gen pwages_cf_opt2 = mean_st_mw * 40 * 52  // FT at min wage
     }
     else if `ft_pt_cf_inc' == 2 {
-        gen pwages_cf_opt2 = 27000                  // FT at $27K
+        gen pwages_cf_opt2 = 30655                  // Median
+    }
+    else if `ft_pt_cf_inc' == 3 {
+        gen pwages_cf_opt2 = 36413                  // Mean
     }
 
     gen swages_tr_opt2 = 0
@@ -608,8 +611,8 @@ forvalues m = 0/1 {
 ** Loop over heterogeneity (0=none, 1=year, 2=qc_ct)
 forvalues h = 0/2 {
 
-** Loop over FT-PT counterfactual income (1=min wage, 2=$27K)
-forvalues i = 1/2 {
+** Loop over FT-PT counterfactual income (1=min wage, 2=median, 3=mean)
+forvalues i = 1/3 {
 
 ** Loop over full effect option (0=entire, 1=discrete only)
 forvalues f = 0/1 {

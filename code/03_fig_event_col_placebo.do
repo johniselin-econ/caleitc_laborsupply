@@ -1,14 +1,15 @@
 /*******************************************************************************
-File Name:      04_appA_fig_event_emp_ny_placebo.do
+File Name:      03_fig_event_col_placebo.do
 Creator:        John Iselin
-Date Update:    January 2026
+Date Update:    February 2026
 
-Purpose:        Creates Appendix Figure: NY Placebo Test
-                Event-study estimates using New York as placebo treatment state.
-                California is excluded from the sample.
+Purpose:        Creates Figure 8 (p.31): College-Educated Sample Event-Study
+                Event-study estimates of the effect of the CalEITC on annual
+                employment, restricted to women WITH a college degree.
 
-                This is a falsification test - NY did not implement a state EITC
-                change in 2015, so we should expect null effects.
+                This is a falsification test - college-educated women are less
+                likely to be eligible for the CalEITC due to higher earnings,
+                so we should expect smaller or null effects.
 
                 Uses utility programs: run_event_study, make_event_plot
 
@@ -16,9 +17,9 @@ Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
 ** Start log file
-capture log close log_04_appA_fig_event_ny_pl
-log using "${logs}04_appA_fig_event_ny_pl_log_${date}", ///
-    name(log_04_appA_fig_event_ny_pl) replace text
+capture log close log_03_fig_event_col_placebo
+log using "${logs}03_fig_event_col_placebo_log_${date}", ///
+    name(log_03_fig_event_col_placebo) replace text
 
 ** =============================================================================
 ** Define specifications
@@ -27,8 +28,8 @@ log using "${logs}04_appA_fig_event_ny_pl_log_${date}", ///
 ** Define outcome variables
 local outcomes "employed_y full_time_y part_time_y"
 
-** Define control variables
-local controls "education age_bracket minage_qc race_group hispanic hh_adult_ct"
+** Define control variables (exclude education since sample is homogeneous)
+local controls "age_bracket minage_qc race_group hispanic hh_adult_ct"
 
 ** Define unemployment control variable
 local unemp "state_unemp"
@@ -53,24 +54,23 @@ local did "`did' year#qc_ct"
 ** Load data and define sample
 ** =============================================================================
 
-** Load ACS data - EXCLUDING California (state_fips != 6)
+** Load ACS data - COLLEGE EDUCATED ONLY (education == 4)
 use weight `outcomes' `controls' `unemp' `minwage' qc_* year ///
-    female married in_school age_sample_20_49 citizen_test state_fips state_status ///
+    female married in_school age_sample_20_49 citizen_test state_fips state_status education ///
     if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
         age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
-        education < 4 & ///
+        education == 4 & ///
         state_status > 0 & ///
-        state_fips != 6 & ///
         inrange(year, `start', `end') ///
     using "${data}final/acs_working_file.dta", clear
 
 ** Create event-study interaction variable
-** Using NY (state_fips == 36) as placebo treatment state
-gen ny = (state_fips == 36)
-gen childXyearXny = cond(qc_present == 1 & ny == 1, year, 2014)
+** This creates year-specific treatment indicators for CA + QC
+gen ca = (state_fips == 6)
+gen childXyearXca = cond(qc_present == 1 & ca == 1, year, 2014)
 
 ** Update adults per HH (cap at 3)
 replace hh_adult_ct = 3 if hh_adult_ct > 3
@@ -93,7 +93,7 @@ foreach out of local outcomes {
     ** Run event-study regression using utility program
     eststo est_`out': ///
         run_event_study `out', ///
-            eventvar(childXyearXny) ///
+            eventvar(childXyearXca) ///
             baseyear(2014) ///
             controls(`controls') ///
             unempvar(`unemp') ///
@@ -110,22 +110,22 @@ foreach out of local outcomes {
 
 ** Create coefficient plot using utility program
 make_event_plot est_employed_y est_full_time_y est_part_time_y, ///
-    eventvar(childXyearXny) ///
+    eventvar(childXyearXca) ///
     startyear(`start') ///
     endyear(`end') ///
     baseyear(2014) ///
     ymax(6) ///
     ycut(2) ///
-    savepath("${results}figures/fig_event_emp_ny_placebo.jpg") ///
+    savepath("${results}figures/fig_event_emp_college.jpg") ///
     labels(Employed|Employed full-time|Employed part-time)
 
 ** Also save as PNG
-graph export "${results}figures/fig_event_emp_ny_placebo.png", ///
+graph export "${results}figures/fig_event_emp_college.png", ///
     as(png) name("Graph") width(2400) height(1600) replace
 
 ** Save to Overleaf if enabled
 if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_event_emp_ny_placebo.jpg", as(jpg) quality(100) replace
+    graph export "${ol_fig}fig_event_emp_college.jpg", as(jpg) quality(100) replace
 }
 
 ** =============================================================================
@@ -147,8 +147,8 @@ preserve
         forvalues y = `start'(1)`end' {
             if `y' != 2014 {
                 qui est restore est_`out'
-                local b = _b[`y'.childXyearXny]
-                local s = _se[`y'.childXyearXny]
+                local b = _b[`y'.childXyearXca]
+                local s = _se[`y'.childXyearXca]
 
                 set obs `row'
                 qui replace outcome = "`out'" in `row'
@@ -163,11 +163,11 @@ preserve
         }
     }
 
-    export delimited "${results}tables/fig_event_emp_ny_placebo_coefficients.csv", replace
+    export delimited "${results}tables/fig_event_emp_college_coefficients.csv", replace
 restore
 
 ** =============================================================================
 ** End
 ** =============================================================================
 
-log close log_04_appA_fig_event_ny_pl
+log close log_03_fig_event_col_placebo

@@ -67,6 +67,7 @@ log using "${logs}00_log_${pr_name}_${date}", replace text
 
 ** Set Seed
 set seed 56403
+global seed 56403
 
 ** Set scheme
 set scheme plotplainblind
@@ -151,150 +152,202 @@ do ${code}02_elasticities.do
 do ${code}02_mvpf.do
 
 ** =============================================================================
-** (03) PAPER TABLES AND FIGURES
+** (03) MAIN TEXT - TABLES AND FIGURES
 ** =============================================================================
+** Organized by paper section to match manuscript structure
 
-** Figure: Federal and California EITC benefits schedule
+** -----------------------------------------------------------------------------
+** Section 2.1: Federal and California EITC Structure
+** -----------------------------------------------------------------------------
+
+** Figure 1 (p.10): Federal and California EITC benefits schedule, TY 2016
 do ${code}03_fig_eitc_sched.do
 
-** Figure: Histogram of workers by full/part-time status
+** Figure 2 (p.11): Histograms of California workers
 do ${code}03_fig_earn_hist.do
 
-** Figure: Budget constraint for parent with 2 QC
+** -----------------------------------------------------------------------------
+** Section 3: Conceptual Framework
+** -----------------------------------------------------------------------------
+
+** Figure 3 (p.13): Budget constraint for parent with 2 qualifying children (QC) in 2016
 do ${code}03_fig_budget.do
 
-** Figure: Full-time and part-time employment trends
+** -----------------------------------------------------------------------------
+** Section 5.1: Trends
+** -----------------------------------------------------------------------------
+
+** Figure 4 (p.22): Full-time and part-time employment in the ACS
 do ${code}03_fig_emp_trends.do
 
-** Figure: Event-study estimates of CalEITC on employment
-do ${code}03_fig_event_emp.do
+** -----------------------------------------------------------------------------
+** Section 5.2: Primary Triple-Difference Results
+** -----------------------------------------------------------------------------
 
-** Figure: Effect by annual weeks of work
-do ${code}03_fig_weeks.do
-
-** Figure: Effect by hours worked per week (bins)
-do ${code}03_fig_hours_bins.do
-
-** Figure: Event-study estimates of CalEITC on earnings (PPML)
-do ${code}03_fig_event_earn.do
-
-** Figure: Specification curves over sample and controls
-do ${code}03_fig_spec_curve.do
-
-** Figure: Distributional estimates of the CalEITC on earnings 
-do ${code}03_fig_treat_by_earn.do
-
-** Figure: Distributional estimates of the CalEITC on earnings 
-do ${code}03_fig_earn_bins.do
-
-** Table: Triple-difference estimates on annual employment (main results)
+** Table 1 (p.24): Triple-difference estimates of the effect of the CalEITC on annual employment
 do ${code}03_tab_main.do
 
-** Table: Triple-difference by count of qualifying children
-do ${code}03_tab_het_qc.do
+** Figure 5 (p.25): Event-study estimates of the effect of the CalEITC on annual employment
+do ${code}03_fig_event_emp.do
 
-** Table: Triple-difference by count of adults in HH
-do ${code}03_tab_het_adults.do
+** Figure 6 (p.27): Effect of the CalEITC on employment, by weekly hours worked
+do ${code}03_fig_hours_bins.do
 
-** Table: Triple-difference estimates on annual earnings (OLS and PPML)
-do ${code}03_tab_earnings.do
+** Figure 7 (p.28): Effect of the CalEITC on employment, by annual weeks of work
+do ${code}03_fig_weeks.do
 
-** Table: Triple-difference estimates on household income (OLS and PPML)
-do ${code}03_tab_hh_earn.do
+** -----------------------------------------------------------------------------
+** Section 5.4: Robustness
+** -----------------------------------------------------------------------------
 
-** Table: Simulated Instrument 
-do ${code}03_tab_sim_inst.do
-
-** Figure: Distribution of MVPF estimates across specifications
-do ${code}03_fig_mvpf_dist.do
-
-** Figure: Fiscal spillovers by labor supply assumption
-do ${code}03_fig_mvpf_spillovers.do
-
-** SDID Table 1: State Panel Synthetic DID Estimates (with event study)
+** Table 2 (p.30): Synthetic Difference-in-Differences estimates
 do ${code}03_sdid_state.do
 
-** SDID Table 2: County Panel Weighted SDID Estimates
-do ${code}03_sdid_county.do
+** Figure 8 (p.31): College-educated sample event-study (falsification test)
+do ${code}03_fig_event_col_placebo.do
 
-** Appendix A: Heterogeneity by age of youngest qualifying child
+** Figure 9 (p.34): Specification curves
+do ${code}03_fig_spec_curve.do
+
+** -----------------------------------------------------------------------------
+** Section 6: Annual Earnings
+** -----------------------------------------------------------------------------
+
+** Table 3 (p.38): Triple-difference estimates, effect of the CalEITC on annual earnings
+do ${code}03_tab_earnings.do
+
+** Figure 10 (p.39): Changes in the earnings distribution over time, CA vs control states
+do ${code}03_fig_earn_bins.do
+
+** -----------------------------------------------------------------------------
+** Section 7.1: Heterogeneity by Number of Qualifying Children
+** -----------------------------------------------------------------------------
+
+** Figure 11 (p.45): Triple-difference employment effects, by number of qualifying children
+do ${code}03_tab_het_qc.do
+
+** -----------------------------------------------------------------------------
+** Section 7.2: Heterogeneity by Number of Adults in Household
+** -----------------------------------------------------------------------------
+
+** Figure 12 (p.47): Triple-difference employment effects, by number of adults in household
+do ${code}03_tab_het_adults.do
+
+** -----------------------------------------------------------------------------
+** Section 7.3: Heterogeneity by Age of Youngest Qualifying Child
+** -----------------------------------------------------------------------------
+
+** Figure 13 (p.48): Triple-difference employment effects, by age of youngest qualifying child
 do ${code}03_tab_het_qc_age.do
+
+** -----------------------------------------------------------------------------
+** Section 7.4: Individual versus Household Income
+** -----------------------------------------------------------------------------
+
+** Figure 14 (p.50): Event-study estimates—mother's earnings vs household income
+do ${code}03_fig_event_earn.do
+
+** -----------------------------------------------------------------------------
+** Section 8: MVPF and Fiscal Externalities
+** -----------------------------------------------------------------------------
+
+** Figure 15 (p.53): Distribution of Marginal Value of Public Funds estimates
+do ${code}03_fig_mvpf_dist.do
+
+** Figure 16 (p.55): Implied fiscal spillovers under different assumptions
+do ${code}03_fig_mvpf_spillovers.do
+
+** -----------------------------------------------------------------------------
+** ** FUTURE WORK ** (Main text files not currently used in paper)
+** -----------------------------------------------------------------------------
+*do ${code}03_fig_treat_by_earn.do     // Treatment effects by earnings bins
+*do ${code}03_tab_earn_hhcomp.do       // Earnings by household composition
+*do ${code}03_tab_intensive.do         // Intensive margin (hours, weeks)
+*do ${code}03_tab_sim_inst.do          // Simulated instrument results
+*do ${code}03_tab_hh_earn.do           // Household income (OLS and PPML)
+*do ${code}03_sdid_county.do           // County panel weighted SDID
+*do ${code}03_tab_desc.do              // Deprecated - see 04_appA_tab1.do
+*do ${code}02_descriptives.do          // Summary statistics (standalone)
 
 ** =============================================================================
 ** (04) APPENDIX MATERIAL
 ** =============================================================================
 
 ** =============================================================================
-** APPENDIX A - TABLES AND FIGURES
+** APPENDIX A: Additional Tables and Figures
 ** =============================================================================
 
-** Appendix A: Descriptive statistics
+** Appendix Table A.1 (p.68): Sample states and population statistics
 do ${code}04_appA_tab1.do
 
-** Appendix A: Benefit schedules for federal EITC + CalEITC, 2015 and 2017 
+** Appendix Figure A.1 (p.69): Federal & CA EITC benefits schedule, TY 2015 and 2017
 do ${code}04_appA_fig_eitc_sched_15_17.do
 
-** Appendix A: Benefit schedules for federal EITC, CTC, and CalEITC (TY 2016)
+** Appendix Figure A.2 (p.70): EITC and CTC schedule by qualifying children (2016)
 do ${code}04_appA_fig_eitc_ctc_sched.do
 
-** Appendix A: Balance test for pre-treatment covariate balance
-do ${code}04_appA_tab_balance.do
-
-** Appendix A: State-level trends in unemployment (2006-2019)
-do ${code}04_appA_fig_unemp_trends.do
-
-** Appendix A: Binding state minimum wages in control pool (2010-2017)
-do ${code}04_appA_fig_minwage.do
-
-** Appendix A: Benefit schedules for 2018-2019 with TCJA CTC and YCTC
+** Appendix Figure A.3 (p.71): Post-2017 changes to federal and state tax credits
 do ${code}04_appA_fig_tcja_yctc.do
 
-** Appendix A: Triple-diff estimate of CalEITC effect on after-tax rates
+** Appendix Figure A.4 (p.72): State-level unemployment trends, 2005–2019
+do ${code}04_appA_fig_unemp_trends.do
+
+** Appendix Figure A.5 (p.73): Binding state minimum wages in control pool, 2010–2017
+do ${code}04_appA_fig_minwage.do
+
+** Appendix Figure A.6 (p.74): Triple-difference effect on the after-tax rate
 do ${code}04_appA_fig_atr_event.do
 
-** Appendix A: College-Educated Sample (falsification)
-do ${code}04_appA_fig_event_col_placebo.do
+** Appendix Table A.2-A.3 (p.75): Triple-difference balance test
+do ${code}04_appA_tab_balance.do
+
+** Appendix Table A.4 (p.76): Triple-difference estimates—college placebo test
 do ${code}04_appA_tab_col_placebo.do
 
-** Appendix A: Specification curves (reported hours/weeks only)
-do ${code}04_appA_fig_spec_curve_reported.do
-
-** Appendix A: Alternative full-time and part-time thresholds 
-do ${code}04_appA_fig_emp_trends_alt.do
-do ${code}04_appA_tab_alt_threshold.do
+** -----------------------------------------------------------------------------
+** ** FUTURE WORK ** (Appendix A files not currently used in paper)
+** -----------------------------------------------------------------------------
+*do ${code}04_appA_fig_spec_curve_reported.do  // Specification curves (reported hours/weeks)
+*do ${code}04_appA_fig_emp_trends_alt.do       // Alternative employment trend thresholds
+*do ${code}04_appA_tab_alt_threshold.do        // Alternative FT/PT threshold estimates
 
 ** =============================================================================
-** APPENDIX A - TABLES AND FIGURES
+** APPENDIX B: Labor Supply Effects Among Other Populations
 ** =============================================================================
 
-** Appendix B: Alternative populations (single/married men/women)
+** Appendix Figures B.1-B.3 (p.78-80): Married women, Single men, Married men
 do ${code}04_appB_otherpops.do
 
-** -----------------------------------------------------------------------------
-** Appendix C: Wage Workers and Self-Employment
-** -----------------------------------------------------------------------------
+** =============================================================================
+** APPENDIX C: Self-Employment
+** =============================================================================
 
-** Appendix C Figure 1: Event study for wage workers
-do ${code}04_appC_fig_wage_emp.do
-
-** Appendix C Figure 2: Event study for self-employment
-do ${code}04_appC_fig_self_emp.do
-
-** Appendix C Table 1: Triple-diff for wage workers
+** Appendix Table C.1 (p.83): Employment effects conditional on reporting wage income
 do ${code}04_appC_tab_wage_emp.do
 
-** Appendix C Table 2: Triple-diff for self-employment
+** Appendix Table C.2 (p.84): Effects on self-employment
 do ${code}04_appC_tab_self_emp.do
 
-** -----------------------------------------------------------------------------
-** Appendix D: Alternative Inference
-** -----------------------------------------------------------------------------
+** Appendix Figure C.1 (p.85): Event-study (employment restricted to wage workers)
+do ${code}04_appC_fig_wage_emp.do
 
-** Appendix E: Alternative inference procedures (CRVE, Wild Bootstrap, etc.)
+** Appendix Figure C.2 (p.86): Event-study (annual self-employment)
+do ${code}04_appC_fig_self_emp.do
+
+** =============================================================================
+** APPENDIX D: Inference
+** =============================================================================
+
+** Appendix Table D.1 (p.93): Triple-difference estimates with different inference procedures
 do ${code}04_appE_inference.do
 
-*do ${code}04_appE_inference_programs.do  // Load programs first
-*do ${code}04_appE_inference_parallel.do
+** -----------------------------------------------------------------------------
+** ** FUTURE WORK ** (Appendix D/E helper files not directly called)
+** -----------------------------------------------------------------------------
+*do ${code}04_appE_inference_programs.do   // Programs for inference procedures
+*do ${code}04_appE_inference_parallel.do   // Parallel bootstrap implementation
+*do ${code}04_appE_inference_worker.do     // Worker file for parallel jobs
+*do ${code}04_appendix.do                  // Empty appendix placeholder
 
 
 ** End log file
