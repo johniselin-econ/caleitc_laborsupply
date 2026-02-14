@@ -33,6 +33,7 @@ For more information, contact john.iselin@yale.edu
 * ssc install ivreghdfe
 * ssc install _gwtmean
 * ssc install rwolf2 
+
 ** Preliminaries
 capture log close
 clear matrix
@@ -46,7 +47,9 @@ global pr_name "caleitc"
 global date "`: di %tdCY-N-D daily("$S_DATE", "DMY")'"
 
 ** Set Directories
-global dir "C:/Users/ji252/Documents/GitHub/caleitc_laborsupply/"
+** NOTE: Update this path to match your local setup
+** Example: global dir "C:/Users/yourname/Documents/GitHub/caleitc_laborsupply/"
+global dir "`c(pwd)'/"
 global code 	"${dir}code/"				// CODE FILEPATH
 global data 	"${dir}data/"				// DATA FILEPATH
 global results 	"${dir}results/"			// RESULTS FILEPATH
@@ -55,10 +58,9 @@ global logs 	"${code}logs/"				// LOG FILE SUB-FILEPATH
 ** Set WD
 cd ${dir}
 
-** OVERLEAF FILE PATH (Update as needed)
-
-global oth_path		///
-	"C:/Users/ji252/Dropbox/Apps/Overleaf/CalEITC/"
+** OVERLEAF FILE PATH (Optional — update if using Overleaf sync)
+** Set overleaf = 1 below and update this path to your Overleaf Dropbox folder
+global oth_path		""
 global ol_fig 		"${oth_path}figures/"
 global ol_tab		"${oth_path}tables/"
 
@@ -88,7 +90,7 @@ global start_year_data = 2006
 global end_year_data = 2019
 
 ** OVERLEAF OPTION (1=Save to overleaf, 0=save only locally)
-global overleaf = 1
+global overleaf = 0
 
 ** DEBUG OPTION (1=debug on, 0=debug off)
 global debug = 0
@@ -309,7 +311,7 @@ do ${code}04_appA_tab_col_placebo.do
 ** -----------------------------------------------------------------------------
 *do ${code}04_appA_fig_spec_curve_reported.do  // Specification curves (reported hours/weeks)
 *do ${code}04_appA_fig_emp_trends_alt.do       // Alternative employment trend thresholds
-*do ${code}04_appA_tab_alt_threshold.do        // Alternative FT/PT threshold estimates
+do ${code}04_appA_tab_alt_threshold.do        // Alternative FT/PT threshold estimates
 
 ** =============================================================================
 ** APPENDIX B: Labor Supply Effects Among Other Populations
@@ -347,7 +349,6 @@ do ${code}04_appE_inference.do
 *do ${code}04_appE_inference_programs.do   // Programs for inference procedures
 *do ${code}04_appE_inference_parallel.do   // Parallel bootstrap implementation
 *do ${code}04_appE_inference_worker.do     // Worker file for parallel jobs
-*do ${code}04_appendix.do                  // Empty appendix placeholder
 
 
 ** End log file

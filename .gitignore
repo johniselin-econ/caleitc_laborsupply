@@ -13,9 +13,11 @@ credentials.*
 # -------------------------------------------
 # Large Data Files
 # -------------------------------------------
-# ACS microdata (CSV and Stata formats)
+# ACS microdata (all formats — raw data from IPUMS)
 data/acs/*.csv
 data/acs/*.csv.gz
+data/acs/*.dat.gz
+data/acs/*.xml
 
 # Final processed datasets (large .dta files)
 data/final/*.dta
@@ -23,9 +25,15 @@ data/final/*.dta
 # Interim/working datasets
 data/interim/*.dta
 data/interim/*.csv
+data/interim/*.rds
+data/interim/minwage_data/
+
+# Temporary working files
+data/tmp/
 
 # TAXSIM outputs
 data/taxsim/*
+code/taxsim/
 
 # Raw data files
 data/raw/*
@@ -81,3 +89,28 @@ $RECYCLE.BIN/
 *.tmp
 *.temp
 *.bak
+
+# -------------------------------------------
+# Binary/Large Output Files
+# -------------------------------------------
+*.pdf
+results/tables/*.dta
+
+# -------------------------------------------
+# Development Artifacts
+# -------------------------------------------
+code/archive/
+
+# -------------------------------------------
+# Root-Level Working Files
+# -------------------------------------------
+results.raw
+txpydata.raw
+taxsim_out.dta
+
+# -------------------------------------------
+# Claude Code Configuration
+# -------------------------------------------
+.claude/
+CLAUDE.md
+quality_reports/

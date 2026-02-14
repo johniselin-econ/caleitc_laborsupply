@@ -34,12 +34,15 @@ local contrs = 0    // Control pool (all states without EITC changes)
 local hetero = 2    // Heterogeneity by count of QC
 local sample = 1    // Low education sample
 
+label define lb_ft_pt_cf 1 "Binding minimum wage" 2 "Median income" 3 "Mean income", modify
+label values ft_pt_cf lb_ft_pt_cf
+
 ** =============================================================================
 ** Calculate MVPF for specific specification combinations
 ** =============================================================================
 
 ** Loop over FT-PT counterfactual income (1=min wage, 2=$27K)
-forvalues i = 1/2 {
+forvalues i = 1/3 {
 
     ** Loop over full-time effect specification (0=entire, 1=discrete only)
     forvalues j = 0/1 {
@@ -76,15 +79,19 @@ twoway  (hist mvpf_4, percent color(gs7%40) bin(20)) ///
         (scatteri 0 `mvpf_1_0' 30 `mvpf_1_0', c(l) m(i) lp(solid) lc(stc1)) ///
         (scatteri 0 `mvpf_1_1' 30 `mvpf_1_1', c(l) m(i) lp(dash) lc(stc1)) ///
         (scatteri 0 `mvpf_2_0' 30 `mvpf_2_0', c(l) m(i) lp(solid) lc(stc2)) ///
-        (scatteri 0 `mvpf_2_1' 30 `mvpf_2_1', c(l) m(i) lp(dash) lc(stc2)), ///
+        (scatteri 0 `mvpf_2_1' 30 `mvpf_2_1', c(l) m(i) lp(dash) lc(stc2)) ///
+        (scatteri 0 `mvpf_3_0' 30 `mvpf_3_0', c(l) m(i) lp(solid) lc(stc3)) ///
+        (scatteri 0 `mvpf_3_1' 30 `mvpf_3_1', c(l) m(i) lp(dash) lc(stc3)), ///
         xlab(`xmin'(0.05)`xmax', format(%9.2fc)) ///
         ytitle("Percent of estimates (%)") ///
         xtitle("Marginal Value of Public Funds (MVPF)") ///
-        legend( label(2 "Entire FT Effect, Min Wage CF") ///
-                label(3 "Discrete FT Effect, Min Wage CF") ///
-                label(4 "Entire FT Effect, $27K CF") ///
-                label(5 "Discrete FT Effect, $27K CF") ///
-                order(2 3 4 5) row(2) pos(6) size(small))
+        legend( label(2 "Entire FT, Min Wage CF") ///
+                label(3 "Discrete FT, Min Wage CF") ///
+                label(4 "Entire FT, Median CF") ///
+                label(5 "Discrete FT, Median CF") ///
+				label(6 "Entire FT, Mean CF") ///
+                label(7 "Discrete FT, Mean CF") ///
+                order(2 4 6 3 5 7) row(2) pos(6) size(small))
 
 ** Save figures
 graph export "${results}paper/fiscal/fig_mvpf_distribution.jpg", ///
@@ -175,12 +182,14 @@ dis "MVPF Summary for Preferred Specification"
 dis _dup(70)"="
 dis "FT CF = Min Wage, Entire Effect:   `mvpf_1_0'"
 dis "FT CF = Min Wage, Discrete Effect: `mvpf_1_1'"
-dis "FT CF = $27K, Entire Effect:       `mvpf_2_0'"
-dis "FT CF = $27K, Discrete Effect:     `mvpf_2_1'"
+dis "FT CF = Median Income, Entire Effect:       `mvpf_2_0'"
+dis "FT CF = Median Income, Discrete Effect:     `mvpf_2_1'"
+dis "FT CF = Mean Income, Entire Effect:       `mvpf_2_0'"
+dis "FT CF = Mean Income, Discrete Effect:     `mvpf_2_1'"
 dis _dup(70)"="
 
 ** Overall summary
-summ mvpf_4
+summ mvpf_4, de 
 dis "Overall MVPF: Mean = `r(mean)', SD = `r(sd)', Min = `r(min)', Max = `r(max)'"
 
 ** =============================================================================
