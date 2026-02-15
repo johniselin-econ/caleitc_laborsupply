@@ -71,7 +71,7 @@ append using `taxsim_2018'
 append using `taxsim_2019'
 
 ** Move back to dir
-cd $dir
+cd "${dir}"
 
 ** Replace 0s with missings for cleaner plotting
 replace fed_eitc = . if fed_eitc == 0 & earnings != 0

@@ -104,7 +104,7 @@ twoway (area recession_band date, color(gs14) base(0)) ///
        ylab(none, nolab notick axis(2)) ///
        yscale(lstyle(none) axis(2)) ///
        xtitle("") ytitle("", axis(2)) ///
-       xline(660) ///
+       xline(`=ym(2015,1)') /// CalEITC start date
        note("Shaded areas indicate NBER recession periods.")
 
 ** Save locally

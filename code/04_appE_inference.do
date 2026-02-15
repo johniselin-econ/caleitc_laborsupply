@@ -32,14 +32,14 @@ cap mkdir "${data}tmp"
 ** =============================================================================
 
 ** Sample period
-local start = 2012
-local end = 2017
+local start = ${start_year}
+local end = ${end_year}
 
 ** Define outcomes
-local outcomes "full_time_y part_time_y"
+local outcomes "employed_y full_time_y part_time_y"
 
 ** Bootstrap parameters (adjust for debug mode)
-if ${debug} == 1 {
+if "${debug}" == "1" {
     local B = 10
     local B_ri = 4
     local debug_text "_debug"
@@ -418,7 +418,6 @@ program define ri_bs, rclass
     ** Return results
     return scalar p_t = `p_t'
     return scalar p_beta = `p_beta'
-**# Bookmark #1
 
 end
 
@@ -433,9 +432,9 @@ use if  female == 1 & ///
         age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         state_status > 0 & ///
-        education <= 3 & ///
+        education < 4 & ///
         inrange(year, `start', `end') ///
-    using "${data}final/acs_working_file.dta", replace
+    using "${data}final/acs_working_file.dta", clear
 
 ** Rescale outcome variables to percentage points
 foreach out of local outcomes {

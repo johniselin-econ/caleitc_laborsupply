@@ -8,8 +8,6 @@ Purpose:        Creates Figure: Implied Fiscal Spillovers of the CalEITC
                 Shows bar chart of fiscal externalities (federal IIT, payroll,
                 state IIT) under different labor supply assumptions.
 
-                Based on template 03_fig13.do
-
 Project: CalEITC Labor Supply Effects
 *******************************************************************************/
 
@@ -117,17 +115,7 @@ graph bar (asis)    effect_fed_liab_real ///
     ytitle("Change in government revenue (Mil, 2017 USD)")
 
 ** Save figures
-graph export "${results}paper/fiscal/fig_mvpf_spillovers_revenue.jpg", ///
-    as(jpg) quality(100) replace
-
-graph export "${results}paper/fiscal/fig_mvpf_spillovers_revenue.png", ///
-    as(png) width(2400) height(1600) replace
-
-** Save to overleaf if enabled
-if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_mvpf_spillovers_revenue.jpg", ///
-        as(jpg) quality(100) replace
-}
+export_graph, filename("fig_mvpf_spillovers_revenue")
 
 ** =============================================================================
 ** Figure 2: Change in Tax Credits
@@ -143,17 +131,7 @@ graph bar (asis)    effect_ctc_real ///
     ytitle("Change in government expenditure (Mil, 2017 USD)")
 
 ** Save figures
-graph export "${results}paper/fiscal/fig_mvpf_spillovers_credits.jpg", ///
-    as(jpg) quality(100) replace
-
-graph export "${results}paper/fiscal/fig_mvpf_spillovers_credits.png", ///
-    as(png) width(2400) height(1600) replace
-
-** Save to overleaf if enabled
-if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_mvpf_spillovers_credits.jpg", ///
-        as(jpg) quality(100) replace
-}
+export_graph, filename("fig_mvpf_spillovers_credits")
 
 ** =============================================================================
 ** Figure 3: All Fiscal Components Combined
@@ -175,17 +153,7 @@ graph bar (asis)    effect_fed_liab_real ///
     ytitle("Change in fiscal position (Mil, 2017 USD)")
 
 ** Save figures
-graph export "${results}paper/fiscal/fig_mvpf_spillovers_all.jpg", ///
-    as(jpg) quality(100) replace
-
-graph export "${results}paper/fiscal/fig_mvpf_spillovers_all.png", ///
-    as(png) width(2400) height(1600) replace
-
-** Save to overleaf if enabled
-if ${overleaf} == 1 {
-    graph export "${ol_fig}fig_mvpf_spillovers_all.jpg", ///
-        as(jpg) quality(100) replace
-}
+export_graph, filename("fig_mvpf_spillovers_all")
 
 ** =============================================================================
 ** Display summary statistics

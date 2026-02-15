@@ -30,7 +30,7 @@ use weight part_time_y_31 full_time_y_31 qc_present year education ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 ///
-    using ${data}final/acs_working_file, clear
+    using "${data}final/acs_working_file.dta", clear
 
 ** Generate indicator for Rest of Country vs. California
 gen us = (state_fips != 6)
@@ -135,7 +135,7 @@ use weight part_time_y_39 full_time_y_39 qc_present year education ///
         citizen_test == 1 & ///
         education < 4 & ///
         state_status > 0 ///
-    using ${data}final/acs_working_file, clear
+    using "${data}final/acs_working_file.dta", clear
 
 ** Generate indicator for Rest of Country vs. California
 gen us = (state_fips != 6)

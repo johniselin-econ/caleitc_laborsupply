@@ -14,6 +14,8 @@ capture log close log_04_appA_fig_atr_event
 log using "${logs}04_appA_fig_atr_event_log_${date}", name(log_04_appA_fig_atr_event) replace text
 
 ** Load data
+** Note: Includes all education levels (not restricted to education < 4)
+** because ATR at CalEITC kink is defined for all workers
 use if female == 1 & ///
        married == 0 & ///
        in_school == 0 & ///
@@ -80,7 +82,7 @@ local xline_val = 2015 - ${start_year} + 0.5
 local coef `""'
 local keep ""
 local start = ${start_year}
-local end = ${end_year_data}
+local end = ${end_year}
 
 ** Loop over years in model
 forvalues y = `start'(1)`end' {
@@ -98,8 +100,8 @@ coefplot (est_3D_s1, label("No EITC Changes")) ///
     ytitle("Effect of the CalEITC on After-Tax Rates") ///
     title("") subtitle("") ///
     legend(pos(6) rows(1) size(small)) ///
-    xline(`xline_val', lcolor(red)) omitted baselevels ///
-    yline(0, lcolor(black) lpattern(dash)) ///
+    xline(`xline_val', lcolor(gs6)) omitted baselevels ///
+    yline(0, lcolor(gs8) lpattern(dash)) ///
     vertical ciopts(recast(rcap)) ///
     ysc(r(0)) ylabel(-0.05(0.05)0.20)
 

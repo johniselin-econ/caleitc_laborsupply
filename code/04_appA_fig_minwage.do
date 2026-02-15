@@ -104,7 +104,7 @@ twoway (area recession_band date, color(gs14) base(`ymin')) ///
        ytitle("Binding State Minimum Wage (USD)") ///
        ylab(, format(%9.2f)) ///
        xtitle("") ///
-       xline(660) ///
+       xline(`=ym(2015,1)') /// CalEITC start date
        note("Shaded areas indicate NBER recession periods.")
 
 ** Save locally

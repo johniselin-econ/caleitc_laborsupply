@@ -1,5 +1,5 @@
 /*******************************************************************************
-File Name:      05_mvpf.do
+File Name:      02_mvpf.do
 Creator:        John Iselin
 Date Update:    February 2026
 
@@ -88,9 +88,9 @@ program define fiscal_cost
         gen sample = (education < 4) & inrange(age, 20, 49)
     }
     else if `sample' == 2 {
-        dis "Sample: All, 20-49"
-		gen sample = inrange(age, 20, 64)    
-	}
+        dis "Sample: All, 20-64"
+        gen sample = inrange(age, 20, 64)
+    }
     else if `sample' == 3 {
         dis "Sample: Low-ed, 20-64"
         gen sample = (education < 4) & inrange(age, 20, 64)
@@ -676,7 +676,7 @@ use "${data}interim/acs_fiscal_cost.dta", clear
 ** -------------------------------------------------------------------------
 
 label var sample "Sample"
-label define lb_sample 0 "All, 20-49" 1 "Low-ed, 20-40" 2 "All, 20-49" 3 "Low-ed, 20-64", modify
+label define lb_sample 0 "All, 20-49" 1 "Low-ed, 20-49" 2 "All, 20-64" 3 "Low-ed, 20-64", modify
 label values sample lb_sample
 
 label var p_end "End year of analysis period"
@@ -699,7 +699,7 @@ label define lb_hetero  0 "No heterogeneity"    ///
 label values hetero lb_hetero
 
 label var ft_pt_cf "FT-to-PT counterfactual income"
-label define lb_ft_pt_cf 1 "Binding minimum wage" 2 "$27,000", modify
+label define lb_ft_pt_cf 1 "Binding minimum wage" 2 "Median income" 3 "Mean income", modify
 label values ft_pt_cf lb_ft_pt_cf
 
 label var full "Full-time effect specification"
