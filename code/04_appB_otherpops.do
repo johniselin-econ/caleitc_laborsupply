@@ -238,7 +238,6 @@ foreach pop of local pops {
         baseyear(2014) ///
         ymax(6) ///
         ycut(2) ///
-        savepath("${results}figures/fig_appB_event_`pop'.jpg") ///
         labels(Employed|Employed full-time|Employed part-time)
 
     ** Export graph using utility (saves to both local and Overleaf)

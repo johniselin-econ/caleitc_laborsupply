@@ -143,7 +143,7 @@ forvalues s = 1/3 {
 			(`nhs_regtext') (`ohs_regtext') (`sco_regtext') ///
 			(`hh3_regtext') (`age_regtext'), ///
 			indepvars(treated, treated, treated, treated, treated, ///
-					  treated, treated, treated, treated) reps(100)
+					  treated, treated, treated, treated) reps(500)
 
 	** Loop over balance variables to store RW p-values
 	foreach var of local balvar {

@@ -194,6 +194,13 @@ preserve
     ** Calculate xline position (after 2014, before 2015)
     local xline_pos = 2014 - ${start_year} + 1.5
 
+    ** Build xlabel from globals
+    local xlabs ""
+    forvalues y = ${start_year}(1)${end_year} {
+        local pos = `y' - ${start_year} + 1
+        local xlabs `"`xlabs' `pos' "`y'""'
+    }
+
     ** Plot combined figure (scheme-consistent)
     twoway ///
         (rcap ci_lo ci_hi xpos if outcome == "incearn_real", lcolor(stc1)) ///
@@ -207,7 +214,7 @@ preserve
         xline(`xline_pos', lcolor(gs6)) ///
         ytitle("PPML Coefficient") ///
         xtitle("") ///
-        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid labsize(small)) ///
+        xlabel(`xlabs', nogrid labsize(small)) ///
         ylabel(-.3(.1).3, angle(0) labsize(small)) ///
         legend(order(2 "Own Earnings" 4 "Total HH Income" 6 "Other HH Income") ///
                rows(1) position(6) size(small))
@@ -236,7 +243,7 @@ preserve
         xline(`xline_pos', lcolor(gs6)) ///
         ytitle("PPML Coefficient") ///
         xtitle("") ///
-        xlabel(1 "2012" 2 "2013" 3 "2014" 4 "2015" 5 "2016" 6 "2017", nogrid labsize(small)) ///
+        xlabel(`xlabs', nogrid labsize(small)) ///
         ylabel(-.3(.1).3, angle(0) labsize(small)) ///
         legend(order(2 "Own Earnings" 4 "Total HH Income") ///
                rows(1) position(6) size(small))

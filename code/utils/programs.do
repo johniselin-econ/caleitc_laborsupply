@@ -599,7 +599,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 7: export_table_panel
+** PROGRAM 8: export_table_panel
 ** Exports a panel of regression results to LaTeX
 **
 ** Labels are passed using | as separator to avoid quote handling issues
@@ -687,7 +687,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 8: add_spec_indicators
+** PROGRAM 9: add_spec_indicators
 ** Adds specification indicator statistics (s1-s4) to stored estimates
 ** =============================================================================
 
@@ -726,7 +726,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 9: add_table_stats
+** PROGRAM 10: add_table_stats
 ** Adds common table statistics (ymean, implied effect) to stored estimates
 ** =============================================================================
 
@@ -780,7 +780,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 10: export_spec_indicators
+** PROGRAM 11: export_spec_indicators
 ** Exports specification indicators table (used at end of multi-panel tables)
 ** =============================================================================
 
@@ -804,7 +804,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 11: make_table_coefplot
+** PROGRAM 12: make_table_coefplot
 ** Creates coefficient plot from table estimates (multiple outcomes x specs)
 ** Produces a figure like Table 2 visualization with panels by outcome
 **
@@ -932,7 +932,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 12: load_baseline_sample
+** PROGRAM 13: load_baseline_sample
 ** Loads ACS data with standard sample restrictions
 ** =============================================================================
 
@@ -982,7 +982,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 13: setup_did_vars
+** PROGRAM 14: setup_did_vars
 ** Creates standard DID variables (ca, post, treated) and caps hh_adult_ct
 ** =============================================================================
 
@@ -1028,7 +1028,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 14: export_results
+** PROGRAM 15: export_results
 ** Exports table to local and Overleaf (if enabled) with single call
 ** =============================================================================
 
@@ -1139,7 +1139,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 15: run_all_specs
+** PROGRAM 16: run_all_specs
 ** Runs all 4 specifications for a given outcome
 ** =============================================================================
 
@@ -1238,7 +1238,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 16: export_event_coefficients
+** PROGRAM 17: export_event_coefficients
 ** Exports event study coefficients to CSV
 ** =============================================================================
 
@@ -1305,7 +1305,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 17: export_graph
+** PROGRAM 18: export_graph
 ** Exports graph to local and Overleaf (if enabled)
 ** =============================================================================
 
@@ -1358,7 +1358,7 @@ end
 
 
 ** =============================================================================
-** PROGRAM 18: run_heterogeneity_table
+** PROGRAM 19: run_heterogeneity_table
 ** Runs heterogeneity analysis across subgroups
 ** =============================================================================
 
