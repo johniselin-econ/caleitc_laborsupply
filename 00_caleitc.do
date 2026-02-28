@@ -10,11 +10,6 @@ Authors: John Iselin
 
 For more information, contact john.iselin@yale.edu
 
-** TO-DO LIST
-** 1) Run Data Prep via R (IPUMS API)
-** 2) Clean Data in Stata
-** 3) Run Triple-Difference Analysis
-** 4) Generate Tables and Figures
 
 *******************************************************************************/
 
@@ -49,7 +44,9 @@ global date "`: di %tdCY-N-D daily("$S_DATE", "DMY")'"
 ** Set Directories
 ** NOTE: Update this path to match your local setup
 ** Example: global dir "C:/Users/yourname/Documents/GitHub/caleitc_laborsupply/"
-global dir "`c(pwd)'/"
+global dir 		"`c(pwd)'/"
+** Convert backslashes to forward slashes (prevents R escape errors on Windows)
+global dir : subinstr global dir "\" "/" , all
 global code 	"${dir}code/"				// CODE FILEPATH
 global data 	"${dir}data/"				// DATA FILEPATH
 global results 	"${dir}results/"			// RESULTS FILEPATH
@@ -90,7 +87,7 @@ global start_year_data = 2006
 global end_year_data = 2019
 
 ** OVERLEAF OPTION (1=Save to overleaf, 0=save only locally)
-global overleaf = 0
+global overleaf = 1
 
 ** DEBUG OPTION (1=debug on, 0=debug off)
 global debug = 0
@@ -102,7 +99,7 @@ do ${code}utils/programs.do
 ** =============================================================================
 ** (00) CALL R CODE TO IMPORT IPUMS DATA
 ** =============================================================================
-/*
+
 ** Note: R handles IPUMS API calls. Requires ipumsr package and API key.
 ** The R script downloads ACS data year-by-year to data/acs/ as RDS files.
 
@@ -127,7 +124,7 @@ rcall script "${code}R/01_data_prep_other.R", 	///
           end_year_data  <- ${end_year_data}; 	///
           overwrite_bls  <- `overwrite_bls' 	///
     ) vanilla
-*/
+
 ** =============================================================================
 ** (01) DATA CLEANING
 ** =============================================================================

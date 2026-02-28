@@ -261,17 +261,19 @@ rds_file_monthly <- file.path(dir_data_int, "VKZ_state_minwage_monthly.rds")
 state_minwage_monthly <- read_excel(file.path(outdir, "mw_state_monthly.xlsx")) %>%
   select(
     state_fips    = `State FIPS Code`,
-    year          = Year,
-    month         = Month,
+    monthly_date  = `Monthly Date`,
     state_minwage = `Monthly State Average`
   ) %>%
   mutate(
+    year  = as.integer(str_extract(monthly_date, "^\\d+")),
+    month = as.integer(str_extract(monthly_date, "\\d+$")),
     state_fips = if_else(
       str_length(as.character(state_fips)) == 2,
       as.character(state_fips),
       paste0("0", as.character(state_fips))
     )
   ) %>%
+  select(-monthly_date) %>%
   left_join(state_info, by = "state_fips") %>%
   select(year, month, state_fips, state_name, state_abb, state_minwage)
 
@@ -322,17 +324,19 @@ substate_minwage_monthly <- read_excel(file.path(outdir, "mw_substate_monthly.xl
   select(
     state_fips    = `State FIPS Code`,
     substate_name = `City/County`,
-    year          = Year,
-    month         = Month,
+    monthly_date  = `Monthly Date`,
     substate_minwage = `Monthly Average`
   ) %>%
   mutate(
+    year  = as.integer(str_extract(monthly_date, "^\\d+")),
+    month = as.integer(str_extract(monthly_date, "\\d+$")),
     state_fips = if_else(
       str_length(as.character(state_fips)) == 2,
       as.character(state_fips),
       paste0("0", as.character(state_fips))
     )
   ) %>%
+  select(-monthly_date) %>%
   left_join(state_info, by = "state_fips") %>%
   select(year, month, state_fips, state_name, state_abb, substate_name, substate_minwage)
 
