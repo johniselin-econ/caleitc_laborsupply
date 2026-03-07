@@ -1,7 +1,7 @@
 /*******************************************************************************
 File Name:      02_mvpf.do
 Creator:        John Iselin
-Date Update:    February 2026
+Date Update:    March 2026
 
 Purpose:        Calculates the Marginal Value of Public Funds (MVPF) for the CalEITC
 
@@ -14,6 +14,10 @@ Purpose:        Calculates the Marginal Value of Public Funds (MVPF) for the Cal
                 2) Full-time → Part-time (intensive margin): Decreases tax revenue
 
                 Uses estimated full-time effect to adjudicate between channels.
+
+                Design dimension: loops over triple-diff (design=0) and
+                quad-diff (design=1, education as 4th dimension) to bound
+                treatment effects against confounders.
 
 Project: CalEITC Labor Supply Effects
 *******************************************************************************/
@@ -62,7 +66,7 @@ program define fiscal_cost
             spec_m      /// Include minimum wage in spec (0/1)
             contrs      /// Control states: 0=all, 1=no eitc, 2=medicaid, 3=minwage
             hetero      /// Heterogeneity: 0=none, 1=year, 2=qc_ct, 3=hh_adult_ct
-            full        /// Adjust for discrete effect: 0=no, 1=yes
+            design      /// Estimation design: 0=triple-diff, 1=quad-diff
             model       // Model count for tracking
 
     ** -------------------------------------------------------------------------
@@ -79,21 +83,35 @@ program define fiscal_cost
     ** Set sample based on argument
     ** -------------------------------------------------------------------------
 
-    if `sample' == 0 {
-        dis "Sample: All, 20-49"
-        gen sample = inrange(age, 20, 49)
+    if `design' == 1 {
+        ** Quad-diff: always include both education groups; sample controls age only
+        if inlist(`sample', 0, 1) {
+            dis "Sample: All education, 20-49 (quad-diff)"
+            gen sample = inrange(age, 20, 49)
+        }
+        else {
+            dis "Sample: All education, 20-64 (quad-diff)"
+            gen sample = inrange(age, 20, 64)
+        }
     }
-    else if `sample' == 1 {
-        dis "Sample: Low-ed, 20-49"
-        gen sample = (education < 4) & inrange(age, 20, 49)
-    }
-    else if `sample' == 2 {
-        dis "Sample: All, 20-64"
-        gen sample = inrange(age, 20, 64)
-    }
-    else if `sample' == 3 {
-        dis "Sample: Low-ed, 20-64"
-        gen sample = (education < 4) & inrange(age, 20, 64)
+    else {
+        ** Triple-diff: standard sample definitions
+        if `sample' == 0 {
+            dis "Sample: All, 20-49"
+            gen sample = inrange(age, 20, 49)
+        }
+        else if `sample' == 1 {
+            dis "Sample: Low-ed, 20-49"
+            gen sample = (education < 4) & inrange(age, 20, 49)
+        }
+        else if `sample' == 2 {
+            dis "Sample: All, 20-64"
+            gen sample = inrange(age, 20, 64)
+        }
+        else if `sample' == 3 {
+            dis "Sample: Low-ed, 20-64"
+            gen sample = (education < 4) & inrange(age, 20, 64)
+        }
     }
 
     ** -------------------------------------------------------------------------
@@ -136,17 +154,41 @@ program define fiscal_cost
     gen treated = (state_fips == 6 & qc_present == 1 & year >= 2015)
     label var treated "Treated"
 
-	replace hh_adult_ct = 3 if hh_adult_ct > 3 
-	
+	replace hh_adult_ct = 3 if hh_adult_ct > 3
+
+    ** Quad-diff variables
+    if `design' == 1 {
+        gen noncollege = (education < 4)
+        label var noncollege "Non-college educated"
+        gen quad_treated = (noncollege == 1 & ca == 1 & qc_present == 1 & year >= 2015)
+        label var quad_treated "Quad-Diff ATE"
+    }
+
     ** -------------------------------------------------------------------------
     ** Set specifications for regressions
     ** -------------------------------------------------------------------------
 
-    ** Base fixed effects (triple-diff)
-    local did "qc_ct year state_fips"
-    local did "`did' state_fips#year"
-    local did "`did' state_fips#qc_ct"
-    local did "`did' year#qc_ct"
+    ** Set treatment variable name
+    if `design' == 1 {
+        local treatvar "quad_treated"
+    }
+    else {
+        local treatvar "treated"
+    }
+
+    ** Fixed effects (triple-diff vs quad-diff)
+    if `design' == 1 {
+        ** Saturated 3-way FEs (absorb unemployment x QC and minwage x QC)
+        local did "state_fips#year#qc_ct state_fips#year#noncollege"
+        local did "`did' state_fips#qc_ct#noncollege year#qc_ct#noncollege"
+    }
+    else {
+        ** Base triple-diff fixed effects
+        local did "qc_ct year state_fips"
+        local did "`did' state_fips#year"
+        local did "`did' state_fips#qc_ct"
+        local did "`did' year#qc_ct"
+    }
 
     local controls ""
     local unemp ""
@@ -154,17 +196,24 @@ program define fiscal_cost
     ** Add demographic controls if specified
     if `spec_d' == 1 {
         dis "Including demographic controls"
-        local controls "i.education i.age_bracket i.minage_qc"
-        local controls "`controls' i.race_group i.hispanic i.hh_adult_ct"
+        if `design' == 1 {
+            ** Exclude education (absorbed by noncollege interactions)
+            local controls "i.age_bracket i.minage_qc"
+            local controls "`controls' i.race_group i.hispanic i.hh_adult_ct"
+        }
+        else {
+            local controls "i.education i.age_bracket i.minage_qc"
+            local controls "`controls' i.race_group i.hispanic i.hh_adult_ct"
+        }
     }
 
-    ** Add unemployment controls if specified
+    ** Add unemployment controls if specified (absorbed by saturated FEs for design=1)
     if `spec_u' == 1 {
         dis "Including unemployment controls"
         local unemp "`unemp' c.state_unemp#i.qc_ct"
     }
 
-    ** Add minimum wage controls if specified
+    ** Add minimum wage controls if specified (absorbed by saturated FEs for design=1)
     if `spec_m' == 1 {
         dis "Including minimum wage controls"
         local unemp "`unemp' c.mean_st_mw#i.qc_ct"
@@ -176,26 +225,26 @@ program define fiscal_cost
 
     if `hetero' == 0 {
         dis "No treatment heterogeneity"
-        local treated "treated"
+        local treat_spec "`treatvar'"
         gen placeholder = 1
         local het_vars "placeholder"
     }
 
     if `hetero' == 1 {
         dis "Treatment varies by year"
-        local treated "i1.treated#i(2015/`p_end').year"
+        local treat_spec "i1.`treatvar'#i(2015/`p_end').year"
         local het_vars "year"
     }
 
     if `hetero' == 2 {
         dis "Treatment varies by count of qualifying children"
-        local treated "i1.treated#i(1/3).qc_ct"
+        local treat_spec "i1.`treatvar'#i(1/3).qc_ct"
         local het_vars "qc_ct"
     }
 
     if `hetero' == 3 {
         dis "Treatment varies by count of adults in HH"
-        local treated "i1.treated#i(1/3).hh_adult_ct"
+        local treat_spec "i1.`treatvar'#i(1/3).hh_adult_ct"
         local het_vars "hh_adult_ct"
     }
 
@@ -208,15 +257,11 @@ program define fiscal_cost
         if "`var'" == "full_time_y" local txt "full-time"
         if "`var'" == "part_time_y" local txt "part-time"
 
-        ** For "full" option, restrict FT effect to discrete location ($24K-$30K)
-        if `full' == 1 & "`var'" == "full_time_y" {
-            gen out = (`var' == 1 & inrange(incearn_nom, 24000, 30000))
-        }
-        else gen out = `var'
+        gen out = `var'
 
-        ** Run triple-difference regression with HDFE
+        ** Run triple-difference (or quad-diff) regression with HDFE
         reghdfe out                         /// Dependent var
-                `treated'                   /// TREATMENT
+                `treat_spec'                /// TREATMENT
                 `unemp' `controls'          /// Unemp. + Demo controls
                 if sample == 1              /// SAMPLE
                 [aw = weight],              /// Weighted
@@ -232,17 +277,17 @@ program define fiscal_cost
         gen `var'_pred_on = yhat1_reghdfe_XB + fe
         label var `var'_pred_on "Predicted `txt' status, treatment on"
 
-        ** Temporarily set treated = 0 for counterfactual prediction
-        gen tmp = treated
-        qui replace treated = 0
+        ** Temporarily set treatment = 0 for counterfactual prediction
+        gen tmp = `treatvar'
+        qui replace `treatvar' = 0
 
         ** Predict with treatment OFF
         qui predict yhat2_reghdfe_XB if sample == 1, xb
         gen `var'_pred_off = yhat2_reghdfe_XB + fe
         label var `var'_pred_off "Predicted `txt' status, treatment off"
 
-        ** Restore treated variable
-        qui replace treated = tmp
+        ** Restore treatment variable
+        qui replace `treatvar' = tmp
         drop tmp yhat*_reghdfe_XB __hdfe*__ fe
 
         ** Generate predicted change in outcome
@@ -257,11 +302,22 @@ program define fiscal_cost
     ** Restrict to treated CalEITC-eligible sample for fiscal calculations
     ** -------------------------------------------------------------------------
 
-    qui replace sample = sample == 1 & ///
-                         inrange(year, 2015, `p_end') & ///
-                         qc_present == 1 & ///
-                         state_fips == 6 & ///
-                         taxsim_sim1_steitc >= 0
+    if `design' == 1 {
+        ** Quad-diff: restrict to non-college treated sample
+        qui replace sample = sample == 1 & ///
+                             noncollege == 1 & ///
+                             inrange(year, 2015, `p_end') & ///
+                             qc_present == 1 & ///
+                             state_fips == 6 & ///
+                             taxsim_sim1_steitc >= 0
+    }
+    else {
+        qui replace sample = sample == 1 & ///
+                             inrange(year, 2015, `p_end') & ///
+                             qc_present == 1 & ///
+                             state_fips == 6 & ///
+                             taxsim_sim1_steitc >= 0
+    }
 
     ** -------------------------------------------------------------------------
     ** Assign individuals to behavioral response groups
@@ -540,11 +596,11 @@ program define fiscal_cost
     gen hetero = `hetero'
     gen model = `model'
     gen ft_pt_cf = `ft_pt_cf_inc'
-    gen full = `full'
+    gen design = `design'
 
     ** Sort and order
-    sort year group sample p_end spec_* contrs hetero ft_pt_cf full
-    order year group sample p_end spec_* contrs hetero ft_pt_cf full
+    sort year group sample p_end spec_* contrs hetero ft_pt_cf design
+    order year group sample p_end spec_* contrs hetero ft_pt_cf design
 
     ** Format TAXSIM variables
     foreach var of varlist taxsim* {
@@ -602,11 +658,18 @@ forvalues c = 0/2 {
 ** Loop over demographic controls (0/1)
 forvalues d = 0/1 {
 
-** Loop over unemployment controls (0/1)
-forvalues u = 0/1 {
+** Loop over estimation design (0=triple-diff, 1=quad-diff)
+forvalues g = 0/1 {
 
-** Loop over minimum wage controls (0/1)
-forvalues m = 0/1 {
+** Skip spec_u/spec_m variation when design=1 (absorbed by saturated FEs)
+local u_max = cond(`g' == 1, 0, 1)
+local m_max = cond(`g' == 1, 0, 1)
+
+** Loop over unemployment controls
+forvalues u = 0/`u_max' {
+
+** Loop over minimum wage controls
+forvalues m = 0/`m_max' {
 
 ** Loop over heterogeneity (0=none, 1=year, 2=qc_ct)
 forvalues h = 0/2 {
@@ -614,13 +677,10 @@ forvalues h = 0/2 {
 ** Loop over FT-PT counterfactual income (1=min wage, 2=median, 3=mean)
 forvalues i = 1/3 {
 
-** Loop over full effect option (0=entire, 1=discrete only)
-forvalues f = 0/1 {
-
     dis "=============================================="
     dis "Running Model `ct'"
-    dis "  Sample: `s', Controls: `c', Demo: `d', Unemp: `u', MW: `m'"
-    dis "  Hetero: `h', CF Inc: `i', Full: `f'"
+    dis "  Sample: `s', Controls: `c', Demo: `d', Design: `g'"
+    dis "  Unemp: `u', MW: `m', Hetero: `h', CF Inc: `i'"
     dis "=============================================="
 
     ** Run fiscal cost program
@@ -633,7 +693,7 @@ forvalues f = 0/1 {
                 `m'     /// Minimum wage
                 `c'     /// Control states
                 `h'     /// Heterogeneity
-                `f'     /// Full effect option
+                `g'     /// Estimation design
                 `ct'    // Model count
 
     ** Save or append results
@@ -648,8 +708,6 @@ forvalues f = 0/1 {
     ** Update model counter
     local ct = `ct' + 1
 
-} // END FULL LOOP
-
 } // END FT-PT CF INCOME LOOP
 
 } // END HETEROGENEITY LOOP
@@ -657,6 +715,8 @@ forvalues f = 0/1 {
 } // END MINIMUM WAGE LOOP
 
 } // END UNEMPLOYMENT LOOP
+
+} // END DESIGN LOOP
 
 } // END DEMOGRAPHICS LOOP
 
@@ -702,9 +762,9 @@ label var ft_pt_cf "FT-to-PT counterfactual income"
 label define lb_ft_pt_cf 1 "Binding minimum wage" 2 "Median income" 3 "Mean income", modify
 label values ft_pt_cf lb_ft_pt_cf
 
-label var full "Full-time effect specification"
-label define lb_full 0 "Entire effect" 1 "Discrete effect only ($24K-$30K)"
-label values full lb_full
+label var design "Estimation design"
+label define lb_design 0 "Triple-difference" 1 "Quadruple-difference", modify
+label values design lb_design
 
 label define lb_groups 1 "Full-time to part-time" 2 "Non-working to part-time", modify
 label values group lb_groups
@@ -820,11 +880,11 @@ foreach var of varlist effect_* direct_costs* {
 
 ** Collapse to model-year level (sum effects across groups)
 collapse (sum) effect_*_real pop (mean) direct_costs*_real, ///
-    by(year model sample hetero spec_* p_end contrs ft_pt_cf full)
+    by(year model sample hetero spec_* p_end contrs ft_pt_cf design)
 
 ** Collapse to model level (sum across years)
 collapse (sum) effect_* direct_costs* pop, ///
-    by(model sample hetero spec_* p_end contrs ft_pt_cf full)
+    by(model sample hetero spec_* p_end contrs ft_pt_cf design)
 
 ** -------------------------------------------------------------------------
 ** Calculate MVPF components
@@ -891,19 +951,24 @@ capture mkdir "${results}paper/fiscal"
 ** - Control states: All (0)
 ** - Heterogeneity: By QC count (2)
 ** - CF income: Minimum wage (1)
-** - Full effect: Entire (0)
+** - Design: Triple-diff (0)
 
 dis "=============================================="
 dis "MVPF Summary Statistics"
 dis "=============================================="
 
 summ mvpf_4 if sample == 1 & spec_d == 1 & spec_u == 1 & spec_m == 1 & ///
-               contrs == 0 & hetero == 2 & ft_pt_cf == 1 & full == 0
+               contrs == 0 & hetero == 2 & ft_pt_cf == 1 & design == 0
 local mvpf_pref = `r(mean)'
-dis "Preferred specification MVPF (min wage CF): `mvpf_pref'"
+dis "Preferred specification MVPF (triple-diff, min wage CF): `mvpf_pref'"
 
 summ mvpf_4 if sample == 1 & spec_d == 1 & spec_u == 1 & spec_m == 1 & ///
-               contrs == 0 & hetero == 2 & ft_pt_cf == 2 & full == 0
+               contrs == 0 & hetero == 2 & ft_pt_cf == 1 & design == 1
+local mvpf_quad = `r(mean)'
+dis "Quad-diff specification MVPF (min wage CF): `mvpf_quad'"
+
+summ mvpf_4 if sample == 1 & spec_d == 1 & spec_u == 1 & spec_m == 1 & ///
+               contrs == 0 & hetero == 2 & ft_pt_cf == 2 & design == 0
 local mvpf_pref2 = `r(mean)'
 dis "Preferred specification MVPF ($27K CF): `mvpf_pref2'"
 
@@ -912,8 +977,8 @@ dis "Overall MVPF: Mean=`r(mean)', SD=`r(sd)', Min=`r(min)', Max=`r(max)'"
 dis "=============================================="
 
 ** Note: Detailed figures are generated by separate scripts:
-** - 02_fig_mvpf_dist.do: MVPF distribution histogram
-** - 02_fig_mvpf_spillovers.do: Fiscal spillovers bar charts
+** - 03_fig_mvpf_dist.do: MVPF distribution histogram
+** - 03_fig_mvpf_spillovers.do: Fiscal spillovers bar charts
 
 ** -------------------------------------------------------------------------
 ** Summary table: MVPF by key specification choices
@@ -942,6 +1007,14 @@ preserve
 collapse (mean) mvpf_mean = mvpf_4 (sd) mvpf_sd = mvpf_4 (count) n = mvpf_4, by(hetero)
 list, clean noobs
 export delimited "${results}tables/mvpf_by_hetero.csv", replace
+
+restore
+preserve
+
+** By design
+collapse (mean) mvpf_mean = mvpf_4 (sd) mvpf_sd = mvpf_4 (count) n = mvpf_4, by(design)
+list, clean noobs
+export delimited "${results}tables/mvpf_by_design.csv", replace
 
 restore
 
