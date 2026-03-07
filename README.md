@@ -30,42 +30,45 @@ caleitc_laborsupply/
 │   ├── 02_eitc_param_prep.do      # EITC benefit schedule preparation
 │   ├── 02b_caleitc_param_gen.do   # CalEITC parameters generation
 │   │
-│   │   ## (03) MAIN TEXT - BY PAPER SECTION
-│   │   # Section 2.1: Federal and California EITC Structure
-│   ├── 03_fig_eitc_sched.do       # Figure 1: EITC benefit schedules (TY 2016)
-│   ├── 03_fig_earn_hist.do        # Figure 2: Histograms of CA workers
+│   │   ## (03) MAIN TEXT — AEJ:EP (main_aejep.tex)
+│   │   # Section 2: Policy Background
+│   ├── 03_fig_eitc_sched.do       # Fig 1: EITC benefit schedules (TY 2016)
+│   ├── 03_fig_earn_hist.do        # Fig 2: Histograms of CA workers
 │   │   # Section 3: Conceptual Framework
-│   ├── 03_fig_budget.do           # Figure 3: Budget constraint (2 QC, 2016)
-│   │   # Section 5.1: Trends
-│   ├── 03_fig_emp_trends.do       # Figure 4: FT/PT employment trends
-│   │   # Section 5.2: Primary Triple-Difference Results
+│   ├── 03_fig_budget.do           # Fig 3: Budget constraint (2 QC, 2016)
+│   │   # Section 5.1: Main Results
 │   ├── 03_tab_main.do             # Table 1: Main triple-diff estimates
-│   ├── 03_fig_event_emp.do        # Figure 5: Event-study (employment)
-│   ├── 03_fig_hours_bins.do       # Figure 6: Effect by weekly hours
-│   ├── 03_fig_weeks.do            # Figure 7: Effect by annual weeks
-│   │   # Section 5.4: Robustness
-│   ├── 03_sdid_state.do           # Table 2: Synthetic DID estimates
-│   ├── 03_fig_event_col_placebo.do # Figure 8: College placebo (falsification)
-│   ├── 03_fig_spec_curve.do       # Figure 9: Specification curves
-│   │   # Section 6: Annual Earnings
+│   ├── 03_fig_event_emp.do        # Fig 4: Event-study (employment)
+│   │   # Section 5.2: Decomposition
+│   ├── 03_fig_hours_bins.do       # Fig 5: Effect by weekly hours
+│   │   # Section 5.3: Robustness
+│   ├── 03_sdid_county.do          # Table 2: County-panel weighted SDID
+│   ├── 03_fig_event_col_placebo.do # Fig 6: College placebo (falsification)
+│   ├── 03_tab_quad_diff.do        # (inline) Quadruple-difference
+│   ├── 03_tab_oster_bounds.do     # (inline) Oster bounds
+│   │   # Section 6: Earnings
 │   ├── 03_tab_earnings.do         # Table 3: Earnings effects (OLS & PPML)
-│   ├── 03_fig_earn_bins.do        # Figure 10: Earnings distribution changes
+│   ├── 03_fig_earn_bins.do        # Fig 7: Earnings distribution changes
 │   │   # Section 7: Heterogeneity
-│   ├── 03_tab_het_qc.do           # Figure 11: By number of QC
-│   ├── 03_tab_het_adults.do       # Figure 12: By number of adults
-│   ├── 03_tab_het_qc_age.do       # Figure 13: By age of youngest QC
-│   ├── 03_fig_event_earn.do       # Figure 14: Own vs HH income event-study
-│   │   # Section 8: MVPF and Fiscal Externalities
-│   ├── 03_fig_mvpf_dist.do        # Figure 15: MVPF distribution
-│   ├── 03_fig_mvpf_spillovers.do  # Figure 16: Fiscal spillovers
-│   │   # ** FUTURE WORK ** (not currently in paper)
+│   ├── 03_tab_het_adults.do       # Fig 8: By number of adults
+│   ├── 03_fig_event_earn.do       # Own vs HH income event-study
+│   │   # Section 8: MVPF
+│   ├── 03_fig_mvpf_dist.do        # Fig 9: MVPF distribution
+│   │   # Demoted to appendix (uncomment in 00_caleitc.do for full draft)
+│   ├── 03_fig_emp_trends.do       # FT/PT employment trends
+│   ├── 03_fig_weeks.do            # Effect by annual weeks
+│   ├── 03_fig_spec_curve.do       # Specification curves
+│   ├── 03_tab_het_qc.do           # By number of QC
+│   ├── 03_tab_het_qc_age.do       # By age of youngest QC
+│   ├── 03_fig_mvpf_spillovers.do  # Fiscal spillovers
+│   │   # Archived (not in AEJ:EP submission)
+│   ├── 03_sdid_state.do           # State-level SDID (superseded by county)
 │   ├── 03_fig_treat_by_earn.do    # Treatment effects by earnings bins
 │   ├── 03_tab_earn_hhcomp.do      # Earnings by HH composition
 │   ├── 03_tab_intensive.do        # Intensive margin (hours, weeks)
 │   ├── 03_tab_sim_inst.do         # Simulated instrument results
 │   ├── 03_tab_hh_earn.do          # Household earnings (OLS & PPML)
-│   ├── 03_sdid_county.do          # County panel weighted SDID
-│   ├── 03_tab_desc.do             # Deprecated - see 04_appA_tab1.do
+│   ├── 03_tab_desc.do             # Deprecated — see 04_appA_tab1.do
 │   ├── 02_descriptives.do         # Summary statistics (standalone)
 │   │
 │   │   ## (04) APPENDICES
@@ -380,39 +383,38 @@ Reusable Stata programs for analysis:
 
 ## Output
 
-Outputs are organized to match the paper structure.
+Outputs are organized to match the paper structure. Two paper versions exist:
+- **`main_aejep.tex`** — AEJ:EP submission (~40 pages, 12 main-text exhibits)
+- **`main.tex`** — Full working draft (~93 pages, 19+ exhibits)
 
-### Main Text Figures and Tables
+The master script `00_caleitc.do` produces exhibits for `main_aejep.tex` by default. To reproduce the full draft, uncomment the "DEMOTED" and "ARCHIVED" blocks.
 
-| Paper Ref | Output File | Description |
-|-----------|-------------|-------------|
-| **Section 2.1: Federal and California EITC Structure** |||
-| Figure 1 (p.10) | `fig_eitc_sched.*` | Federal and CA EITC benefits schedule, TY 2016 |
-| Figure 2 (p.11) | `fig_earn_hist.*` | Histograms of California workers |
+### Main Text Exhibits (AEJ:EP, `main_aejep.tex`)
+
+| Exhibit | Output File | Description |
+|---------|-------------|-------------|
+| **Section 2: Policy Background** |||
+| Figure 1 | `fig_eitc_sched.*` | Federal and CA EITC benefits schedule, TY 2016 |
+| Figure 2 | `fig_earn_hist.*` | Histograms of California workers |
 | **Section 3: Conceptual Framework** |||
-| Figure 3 (p.13) | `fig_budget.*` | Budget constraint for parent with 2 QC (2016) |
-| **Section 5.1: Trends** |||
-| Figure 4 (p.22) | `fig_emp_trends.*` | Full-time and part-time employment in the ACS |
-| **Section 5.2: Primary Triple-Difference Results** |||
-| Table 1 (p.24) | `tab_main*.tex` | Triple-diff estimates on annual employment |
-| Figure 5 (p.25) | `fig_event_emp.*` | Event-study estimates on annual employment |
-| Figure 6 (p.27) | `fig_hours_bins.*` | Effect by weekly hours worked |
-| Figure 7 (p.28) | `fig_weeks.*` | Effect by annual weeks of work |
-| **Section 5.4: Robustness** |||
-| Table 2 (p.30) | `tab_sdid_state*.tex` | Synthetic DID estimates |
-| Figure 8 (p.31) | `fig_event_col_placebo.*` | College-educated sample (falsification) |
-| Figure 9 (p.34) | `fig_spec_curve.*` | Specification curves |
-| **Section 6: Annual Earnings** |||
-| Table 3 (p.38) | `tab_earnings*.tex` | Triple-diff estimates on annual earnings |
-| Figure 10 (p.39) | `fig_earn_bins.*` | Changes in earnings distribution over time |
+| Figure 3 | `fig_budget.*` | Budget constraint for parent with 2 QC (2016) |
+| **Section 5.1: Main Results** |||
+| Table 1 | `tab_main*.tex` | Triple-diff estimates on annual employment |
+| Figure 4 | `fig_event_emp.*` | Event-study estimates on annual employment |
+| **Section 5.2: Decomposition** |||
+| Figure 5 | `fig_hours_bins.*` | Effect by weekly hours worked |
+| **Section 5.3: Robustness** |||
+| Table 2 | `tab_sdid_county*.tex` | County-panel weighted SDID estimates |
+| Figure 6 | `fig_event_emp_college.*` | College-educated sample (falsification) |
+| **Section 6: Earnings** |||
+| Table 3 | `tab_earnings*.tex` | Triple-diff estimates on annual earnings |
+| Figure 7 | `fig_earn_bins.*` | Changes in earnings distribution over time |
 | **Section 7: Heterogeneity** |||
-| Figure 11 (p.45) | `fig_tab_het_qc.*` | Employment effects by number of QC |
-| Figure 12 (p.47) | `fig_tab_het_adults.*` | Employment effects by number of adults |
-| Figure 13 (p.48) | `fig_tab_het_qc_age.*` | Employment effects by age of youngest QC |
-| Figure 14 (p.50) | `fig_event_earn.*` | Mother's earnings vs household income |
-| **Section 8: MVPF and Fiscal Externalities** |||
-| Figure 15 (p.53) | `fig_mvpf_dist.*` | Distribution of MVPF estimates |
-| Figure 16 (p.55) | `fig_mvpf_spillovers.*` | Implied fiscal spillovers |
+| Figure 8 | `fig_tab_het_adults.*` | Employment effects by number of adults |
+| **Section 8: MVPF** |||
+| Figure 9 | `fig_mvpf_distribution.*` | Distribution of MVPF estimates |
+
+Additional inline results from: `03_tab_quad_diff.do` (quadruple-diff), `03_tab_oster_bounds.do` (Oster bounds), `03_fig_event_earn.do` (own vs HH income)
 
 ### Appendix Outputs
 
@@ -438,14 +440,25 @@ Outputs are organized to match the paper structure.
 | **Appendix D: Inference** |||
 | Table D.1 (p.93) | `tab_appE_tab1*.tex` | Alternative inference procedures |
 
-### Additional Outputs (Not in Current Paper)
+### Demoted from Main Text (appendix or available from full draft)
 
-- `tab_sim_inst_*.tex` - Simulated instrument (RF and IV/2SLS)
-- `tab_intensive_*.tex` - Intensive margin (hours, weeks, weekly employment)
-- `tab_earn_hhcomp_*.tex` - Earnings by household composition
-- `tab_hh_earn_*.tex` - Household earnings (OLS and PPML)
-- `tab_sdid_county_*.tex` - County panel weighted SDID
-- `fig_appA_spec_curve_reported_*` - Specification curves (reported hours/weeks only)
+| Output File | Description | Status |
+|-------------|-------------|--------|
+| `fig_emp_trends.*` | FT/PT employment trends | Appendix candidate |
+| `fig_weeks.*` | Effect by annual weeks | Appendix candidate |
+| `fig_spec_curve.*` | Specification curves | Appendix candidate |
+| `fig_tab_het_qc.*` | Employment effects by number of QC | Appendix candidate |
+| `fig_tab_het_qc_age.*` | Employment effects by age of youngest QC | Appendix candidate |
+| `fig_mvpf_spillovers.*` | Implied fiscal spillovers | Appendix candidate |
+
+### Archived Outputs (not in AEJ:EP submission)
+
+- `tab_sim_inst_*.tex` — Simulated instrument (footnote only)
+- `tab_intensive_*.tex` — Intensive margin (hours, weeks)
+- `tab_earn_hhcomp_*.tex` — Earnings by HH composition
+- `tab_hh_earn_*.tex` — Household earnings (OLS and PPML)
+- `tab_sdid_state_*.tex` — State-level SDID (superseded by county)
+- `fig_appA_spec_curve_reported_*` — Specification curves (reported hours/weeks)
 
 ## Notes
 
