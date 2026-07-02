@@ -128,8 +128,12 @@ program define ferman_pinto_boot_ind_par, rclass
     mata: B_reps = `B'
 
     ** Run bootstrap in mata (much faster than Stata loop)
+    ** Pass alpha_hat so p-values compare bootstrap draws against the
+    ** observed statistic (not against zero)
+    mata: alpha_hat_obs = `alpha_hat'
     mata: fp_bootstrap_results = fp_vectorized_bootstrap( ///
-        W_vec, W_norm_vec, var_M_vec, P_vec, ca_vec, N_states, B_reps)
+        W_vec, W_norm_vec, var_M_vec, P_vec, ca_vec, N_states, B_reps, ///
+        alpha_hat_obs)
 
     ** Get results back from mata
     mata: st_local("p_without", strofreal(fp_bootstrap_results[1]))
@@ -159,7 +163,7 @@ program define ferman_pinto_boot_ind_par, rclass
     }
 
     ** Clean up mata
-    mata: mata drop W_vec W_norm_vec var_M_vec P_vec ca_vec fp_bootstrap_results
+    mata: mata drop W_vec W_norm_vec var_M_vec P_vec ca_vec fp_bootstrap_results alpha_hat_obs
 
     restore
 
@@ -183,7 +187,8 @@ real vector fp_vectorized_bootstrap(
     real vector P,
     real vector ca,
     real scalar N,
-    real scalar B)
+    real scalar B,
+    real scalar alpha_hat)
 {
     real matrix draws
     real vector W_tilde, W_tilde_corr
@@ -233,16 +238,18 @@ real vector fp_vectorized_bootstrap(
         alpha2_vec[b] = W_1_adj - W_0_adj
     }
 
-    // Compute p-values (two-sided)
-    alpha_sq = alpha1_vec[1]^2  // Will be overwritten, placeholder
+    // Compute p-values (two-sided): share of bootstrap alpha^2 exceeding
+    // the observed alpha_hat^2 (mirrors the serial ferman_pinto_boot_ind)
+    alpha_sq = alpha_hat^2
 
-    // For p-value calculation, we need the original alpha_hat
-    // This will be passed in, but for now compute from bootstrap
     r_unadj = alpha1_vec :^ 2
     r_adj = alpha2_vec :^ 2
 
+    p_without = mean(r_unadj :> alpha_sq)
+    p_with = mean(r_adj :> alpha_sq)
+
     // Return: [p_without, p_with, alpha1_vec, alpha2_vec]
-    return((mean(r_unadj :> 0) \ mean(r_adj :> 0) \ alpha1_vec \ alpha2_vec))
+    return((p_without \ p_with \ alpha1_vec \ alpha2_vec))
 }
 
 end
@@ -272,8 +279,9 @@ program define ri_bs_par, rclass
     gen never_treat = (ever_treat == 0)
     drop ever_treat
 
-    ** Define control states for RI
-    egen control_states = group(`CL') if never_treat != 6
+    ** Define control states for RI (never-treated states only; the treated
+    ** state must be excluded from the placebo set)
+    egen control_states = group(`CL') if never_treat == 1
     qui summ control_states
     local n = `r(max)'
     qui levelsof control_states, local(contr_states)

@@ -58,8 +58,8 @@ di _n "Parallel processing enabled with `ncores' clusters"
 local start = ${start_year}
 local end = ${end_year}
 
-** Define outcomes
-local outcomes "full_time_y part_time_y"
+** Define outcomes (match serial 04_appE_inference.do)
+local outcomes "employed_y full_time_y part_time_y"
 
 ** Bootstrap parameters (adjust for debug mode)
 if ${debug} == 1 {
@@ -90,7 +90,7 @@ use if  female == 1 & ///
         age_sample_20_49 == 1 & ///
         citizen_test == 1 & ///
         state_status > 0 & ///
-        education <= 3 & ///
+        education < 4 & ///
         inrange(year, `start', `end') ///
     using "${data}final/acs_working_file.dta", replace
 
@@ -132,15 +132,16 @@ save "${data}interim/acs_prepared_for_inference.dta", replace
 
 ** Generate all outcome × specification combinations
 clear
-set obs 8
+set obs 12
 
 gen task_id = _n
 gen outcome = ""
 gen spec = .
 
-** Assign tasks
-replace outcome = "full_time_y" if inrange(task_id, 1, 4)
-replace outcome = "part_time_y" if inrange(task_id, 5, 8)
+** Assign tasks (order matches serial outcome loop)
+replace outcome = "employed_y" if inrange(task_id, 1, 4)
+replace outcome = "full_time_y" if inrange(task_id, 5, 8)
+replace outcome = "part_time_y" if inrange(task_id, 9, 12)
 replace spec = mod(task_id - 1, 4) + 1
 
 ** Save task list
@@ -154,7 +155,7 @@ list, clean
 ** =============================================================================
 
 di _n "Starting parallel inference estimation..."
-di "Tasks: 8 (2 outcomes × 4 specifications)"
+di "Tasks: 12 (3 outcomes × 4 specifications)"
 di "Bootstrap replications: $par_B"
 di "RI bootstrap replications: $par_B_ri"
 
@@ -319,7 +320,7 @@ di _n "Combining results from parallel workers..."
 clear
 local first = 1
 
-forvalues t = 1/8 {
+forvalues t = 1/12 {
     capture confirm file "${data}interim/inference_results_task`t'.dta"
     if _rc == 0 {
         if `first' == 1 {
@@ -370,8 +371,11 @@ save `results'
 restore
 
 ** Generate tables for each outcome
+** NOTE: with employed_y included, tab_appE_tab1_1/2/3 = employed/full-time/
+** part-time (numbering matches the serial file; previously _1/_2 were
+** full-time/part-time) — update the paper appendix includes accordingly
 local i = 1
-foreach out in full_time_y part_time_y {
+foreach out in employed_y full_time_y part_time_y {
 
     di _n "Generating table for outcome: `out'"
 
@@ -411,7 +415,7 @@ foreach out in full_time_y part_time_y {
     }
 
     ** Export results table
-    local stats_list "N p_crve p_wcbs p_riwcbs_b p_riwcbs_t p_block p_block_fp"
+    local stats_list "N p_crve p_wcbs p_riwcbs_t p_riwcbs_b p_block p_block_fp"
     local stats_fmt "%9.0fc %9.3fc %9.3fc %9.3fc %9.3fc %9.3fc %9.3fc"
 
     local stats_labels `" "  Observations" "'
@@ -452,7 +456,7 @@ foreach out in full_time_y part_time_y {
 ** =============================================================================
 
 ** Remove task-specific result files
-forvalues t = 1/8 {
+forvalues t = 1/12 {
     capture erase "${data}interim/inference_results_task`t'.dta"
 }
 

@@ -588,7 +588,7 @@ foreach out of local outcomes {
     ** Export results table
     ** -------------------------------------------------------------------------
 
-    local stats_list "N p_crve p_wcbs p_riwcbs_b p_riwcbs_t p_block p_block_fp"
+    local stats_list "N p_crve p_wcbs p_riwcbs_t p_riwcbs_b p_block p_block_fp"
     local stats_fmt "%9.0fc %9.3fc %9.3fc %9.3fc %9.3fc %9.3fc %9.3fc"
 
     local stats_labels `" "  Observations" "'

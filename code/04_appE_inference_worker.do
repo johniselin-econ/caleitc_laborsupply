@@ -24,12 +24,12 @@ args my_task
 if missing("`my_task'") {
     di as error "Error: task_id argument required"
     di as error "Usage: do 04_appE_inference_worker.do, args(task_id)"
-    di as error "       where task_id is 1-8"
+    di as error "       where task_id is 1-12"
     exit 198
 }
 
-if !inrange(`my_task', 1, 8) {
-    di as error "Error: task_id must be between 1 and 8"
+if !inrange(`my_task', 1, 12) {
+    di as error "Error: task_id must be between 1 and 12"
     exit 198
 }
 
