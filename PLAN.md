@@ -214,14 +214,24 @@ Done in this pass (code changes, not yet re-run):
       targets in the file header (ATE 1.8/1.1/0.7; N = 132,910; pre-means
       71.6/51.3/20.4). Must be validated against the committed outputs before trusting.
 
-Blocked on data (not on this server):
+Runs (updated 2026-07-02):
 
-- [ ] Rebuild `data/final/acs_working_file.dta` — requires IPUMS + BLS API keys
-      (`api_codes.txt`) and a TAXSIM-capable Stata (module `Stata/19` is available on
-      the cluster: `module load Stata/19`), or copy the working file from the machine
-      that produced the committed results.
-- [ ] Run `03_tab_quad_diff.do`, `03_tab_oster_bounds.do`, validated
-      `03_tab_main_educ.do`, and the fixed Appendix E battery.
+- [x] Rebuilt `data/final/acs_working_file.dta` on the cluster (IPUMS download +
+      `01_clean_data.do`, Stage 1, `code/hpc/stage1.do`).
+- [x] Ran `03_tab_quad_diff.do` and `03_tab_oster_bounds.do`. Quad-diff:
+      employment ~+1.8***, full-time ~−0.1 (n.s.), part-time ~+1.9*** — the
+      CalEITC-attributable full-time decline essentially disappears after netting
+      out the college trend (plan's back-of-envelope had −2.2; see §C framing).
+- [x] Ran reconstructed `03_tab_main_educ.do`. Partial validation: N (132,910) and
+      pre-period means (71.6/51.3/20.4) match the committed tables exactly, but
+      ATE is 2.1** vs. committed 1.8* and adj. R² is lower (0.063 vs 0.099) — the
+      original spec likely absorbed more (different FEs). See author decision below.
+- [ ] Fixed Appendix E battery: running (SLURM job 17006108, `code/hpc/stage2.do`).
+      First attempt (16996060) crashed: Stata's `parallel` transfers ado-programs
+      via `prog()` but not Mata functions, so every worker died at
+      `ri_compute_pvalues() not found` after its RI permutations. Fixed —
+      `run_inference_task` now compiles `04_appE_inference_programs.do` in each
+      worker and fail-fasts if the Mata functions are missing.
 - [ ] Compare fixed FP/RIWB p-values against the committed
       `results/paper/tab_appE_tab1_*.tex` and update the paper's inference footnote.
 

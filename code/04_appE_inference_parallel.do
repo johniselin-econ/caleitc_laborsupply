@@ -167,6 +167,20 @@ program define run_inference_task
     ** This program runs on the task list dataset split by parallel
     ** Each worker gets a subset of rows (tasks)
 
+    ** parallel's prog() option transfers ado-programs but NOT Mata functions,
+    ** so each worker must compile fp_vectorized_bootstrap() and
+    ** ri_compute_pvalues() itself before doing any work
+    do "${code}04_appE_inference_programs.do"
+
+    ** Fail fast (minutes, not hours) if the Mata functions are missing
+    capture mata: assert(findexternal("ri_compute_pvalues()") != NULL)
+    local rc1 = _rc
+    capture mata: assert(findexternal("fp_vectorized_bootstrap()") != NULL)
+    if `rc1' | _rc {
+        di as error "Worker missing required Mata functions after compile"
+        exit 3499
+    }
+
     ** Get task parameters from the current observation
     local my_task = task_id[1]
     local out = outcome[1]
