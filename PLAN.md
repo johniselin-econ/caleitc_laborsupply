@@ -226,14 +226,24 @@ Runs (updated 2026-07-02):
       pre-period means (71.6/51.3/20.4) match the committed tables exactly, but
       ATE is 2.1** vs. committed 1.8* and adj. R² is lower (0.063 vs 0.099) — the
       original spec likely absorbed more (different FEs). See author decision below.
-- [ ] Fixed Appendix E battery: running (SLURM job 17006108, `code/hpc/stage2.do`).
-      First attempt (16996060) crashed: Stata's `parallel` transfers ado-programs
-      via `prog()` but not Mata functions, so every worker died at
-      `ri_compute_pvalues() not found` after its RI permutations. Fixed —
-      `run_inference_task` now compiles `04_appE_inference_programs.do` in each
-      worker and fail-fasts if the Mata functions are missing.
-- [ ] Compare fixed FP/RIWB p-values against the committed
-      `results/paper/tab_appE_tab1_*.tex` and update the paper's inference footnote.
+- [x] Fixed Appendix E battery: completed (SLURM job 17006108, `code/hpc/stage2.do`,
+      9h50m, 2026-07-03). All 12 workers succeeded; the Mata fail-fast never fired;
+      corrected placebo filter and RIWB label order verified in the log. (First
+      attempt 16996060 crashed: Stata's `parallel` transfers ado-programs via
+      `prog()` but not Mata functions, so every worker died at
+      `ri_compute_pvalues() not found`. Fixed — `run_inference_task` now compiles
+      `04_appE_inference_programs.do` in each worker.)
+- [x] Compared fixed p-values against committed `results/paper/tab_appE_tab1_*.tex`
+      (old numbering: 1 = full-time, 2 = part-time; N 480,445 on old data vs.
+      461,616 rebuilt). Spec 4: part-time WCBS 0.102 (all specs 0.096–0.110),
+      FP 0.043; full-time WCBS 0.106 (was 0.082 — no spec below 0.10 anymore),
+      FP 0.000, RIWB 0.14–0.24; employment null everywhere (ATE −0.3, WCBS 0.59).
+      Regenerated appE ATEs/N match the stage-1 main tables exactly.
+- [ ] Update the paper's inference footnote (`main_aejep.tex:261`): "significant at
+      the five or ten percent level" does not survive as a blanket claim. Defensible:
+      part-time marginally significant at ~10% (WCB) and 5% (FP, spec 4); full-time
+      rests on Ferman–Pinto alone (0.009/0.000 in specs 3–4). FP p = 0.000 also
+      awaits the `(1+#exceed)/(1+B)` convention decision below.
 
 Author decisions flagged (not made unilaterally):
 
