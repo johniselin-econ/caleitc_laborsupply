@@ -158,9 +158,58 @@ the `cd`/`results.raw` disk dance; remap positional `v25`/`v39`/`v10` to named o
 `wildbootstrap`→`fwildclusterboot`; `rwolf2`→`wildrwolf`; BKY q-values→port the loop;
 `sdid`→`synthdid`; `parallel`→`future`/`furrr`; `rcall`→eliminated.
 
-**Genuinely custom ports (the standard-error worry, confirmed):** Ferman–Pinto,
-the RIWB, the county pop-weighted SDID bootstrap, and `sdid_event`. No R packages exist;
-write and unit-test each against the (fixed) serial Stata output.
+**Genuinely custom ports (the standard-error worry, confirmed):** Ferman–Pinto and
+the RIWB. No R packages exist; write and unit-test each against the (fixed) serial
+Stata output.
+
+**SDID: use the `synthdid_weights` fork instead of porting `sdid_wt.do` / `sdid_event`**
+(reviewed 2026-07-03; repo at `../synthdid_weights`, the Iselin–Ryan weighted-SDID
+package). It covers both custom pieces natively:
+`synthdid_estimate_weighted(Y, N0, T0, treated.weights, ...)` replaces the
+`sdid_wt.do` population-weighted aggregation, and `synthdid_event_study()` (Ciccia
+decomposition, bootstrap/placebo bands, uses the estimate's stored `cluster`)
+replaces `sdid_event`. `vcov()` offers bootstrap/jackknife/placebo with per-resample
+weight renormalization. Tests are current (38 weighted/remedy tests, 2026-07-01).
+Notes for the port:
+
+- **Estimator difference, not a bug:** `sdid_wt.do` fits SDID once *per treated CA
+  county* vs. the common donor pool, then averages ATTs weighted by each county's
+  **first-period (2010) mean population** (`sdid_wt.do:78-82`; the flagged author
+  decision). The package fits **one joint weighted SDID** with `treated.weights`.
+  Numbers will differ from Table 2; treat as an upgrade + re-estimation, not a
+  golden-file replication. Match `treated.weights` to 2010 county pop for
+  comparability (or resolve the author decision first).
+- **Inference with one treated state:** state-clustered bootstrap is infeasible (one
+  treated cluster). Unit-level bootstrap over counties = like-for-like with the
+  current Stata block bootstrap (B=100, **no seed** — set one). Placebo SE is the
+  only valid method if collapsing to one treated unit; it can't cluster and
+  under-covers at high weight concentration (their MC: 0.74 coverage vs 1.00).
+- **The fork's own ACA results are a direct warning for our design:** pop-weighted
+  county SDID with big urban treated counties failed in-time placebos (placebo
+  ≈ −15 vs headline −17.5) from size-correlated differential trends; not
+  CA-specific. Remedies shipped in the package: `detrend = TRUE` (per-unit
+  pre-period linear trend; needs T0 ≥ 3, no covariates) and
+  `synthdid_estimate_stratified()` (size-binned donor pools). When porting Table 2,
+  pair the headline with in-time placebos + both remedies and report a range.
+- **Mechanics:** load by sourcing the fork's `R/*.R` (their own scripts do this; no
+  install needed; only base R + mvtnorm required). `panel.matrices()` requires a
+  balanced no-NA panel and orders rows controls-first sorted by unit ID —
+  `treated.weights`/`cluster` must align to that order. No covariate passthrough
+  (`X` must be built by hand; Stata's `covariates(, projected)` ≠ the package's
+  joint-beta `X` handling — document the difference). Cluster R: `module load
+  R/4.4.2-gfbf-2024a` (see the fork's CLAUDE.md for Lmod gotchas).
+- **Pipeline facts (from the 2026-07-03 review):** the paper's only SDID exhibit is
+  Table 2 = `tab_sdid_county_1/2/3` + `_end` (earnings `_4` produced, unused; state
+  script + the 8 `fig_sdid_event_*` jpgs superseded/not in paper).
+  `data/interim/sdid_county_panel.dta` does not exist on disk — the panel is
+  rebuilt only when `03_sdid_county.do` runs, and the committed SDID tables predate
+  the 2026-07-02 working-file rebuild (stale). Discrepancies to fix: table note
+  says "500 replications", code uses B=100; note says 2012–2017, panel is
+  2010–2017; the paper's hard-coded column headers (Basic/Triple/Basic+Cov/
+  Triple+Cov) disagree with the code's column order (Basic/Basic+Cov/Triple/
+  Triple+Cov) and the `_end` checkmark footer. Stale `tab_sdid_county_*_{nonweighted,
+  standard,weighted}.tex` and `tab_sdid_state_combined.tex` in `results/` come from
+  an older version — ignore.
 
 **Phases:**
 0. *(In Stata, before porting — in progress, see below.)* Fix inference bugs; reconcile
@@ -176,7 +225,9 @@ write and unit-test each against the (fixed) serial Stata output.
    against the Stata `.dta`), then the estimation helpers, validated
    coefficient-by-coefficient against existing tables as golden files.
 3. Inference battery + SDID (custom SE code, tested against corrected Stata output; add
-   Conley–Taber here). County SDID bootstrap and `sdid_event` are the hard parts.
+   Conley–Taber here). FP/RIWB are the custom-port hard parts; SDID rides on the
+   `synthdid_weights` fork (see notes above) — regenerate the county panel first
+   (`sdid_county_panel.dta` is not on disk and Table 2 is stale vs. the rebuilt data).
 4. Elasticities and MVPF last — `02_mvpf.do` is the hardest single file (9-deep spec
    loop, `savefe` counterfactuals, `runiform` behavioral-group assignment). RNG streams
    won't match Stata: treat as re-estimation with a documented seed, not replication.
