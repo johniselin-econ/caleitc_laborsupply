@@ -307,14 +307,18 @@ Runs (updated 2026-07-02):
 
 Author decisions flagged (not made unilaterally):
 
-- [ ] RI p-value convention `(1+#exceed)/(1+B)` and identical-design placebo refits
-      (§B) — changes p-values. **Lit review done (2026-07-03, deep-research run):
-      see `PLAN_inference_litreview.md`** — the literature supports the +1
-      convention (Phipson–Smyth 2010; Young 2019 QJE; Canay–Romano–Shaikh 2017),
-      keeping CA in the placebo refits with an identical design (MacKinnon–Webb
-      2020; Conley–Taber 2011), and a placebo-only reference distribution with
-      MW 2019 (Adv. Econometrics v39) as the citable precedent for our RIWB
-      hybrid. Remaining decision is only to approve the change and re-run.
+- [x] RI p-value convention `(1+#exceed)/(1+B)` and identical-design placebo refits
+      (§B) — **approved 2026-07-03 and implemented** (lit review in
+      `PLAN_inference_litreview.md`: +1 convention per Phipson–Smyth 2010 /
+      Young 2019 QJE / Canay–Romano–Shaikh 2017; CA kept in placebo refits with
+      identical design per MacKinnon–Webb 2020 / Conley–Taber 2011; placebo-only
+      reference distribution with MW 2019 Adv. Econometrics v39 as the RIWB
+      precedent). Changes in `04_appE_inference_programs.do` (both RIWB fixes +
+      FP +1) and the serial `04_appE_inference.do` (same, plus an off-by-one in
+      serial `ri_bs` STEP 5 where the first reference-distribution row was
+      missing — counted as an exceedance — and the last draw was dropped).
+      Benchmark re-run of the battery: debug validation job 17048331, then full
+      stage-2; committed job-17006108 tables are the pre-change benchmark.
 - [ ] `sdid_wt` population-weight extraction (first-period mean vs. panel total).
 - [ ] Whether the reconstructed within-CA education design is what produced
       `tab_main_educ_*` — if the original script exists on another machine, prefer it.

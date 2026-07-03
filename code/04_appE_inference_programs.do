@@ -157,8 +157,8 @@ program define ferman_pinto_boot_ind_par, rclass
         mata: st_store(., "alpha2", fp_bootstrap_results[(`B'+3)..(2*`B'+2)])
         gen alpha1_sq = alpha1^2
         gen alpha2_sq = alpha2^2
-        gen p_1 = alpha1_sq > alpha_sq
-        gen p_2 = alpha2_sq > alpha_sq
+        gen p_1 = alpha1_sq >= alpha_sq
+        gen p_2 = alpha2_sq >= alpha_sq
         save "`DATA'", replace
     }
 
@@ -238,15 +238,17 @@ real vector fp_vectorized_bootstrap(
         alpha2_vec[b] = W_1_adj - W_0_adj
     }
 
-    // Compute p-values (two-sided): share of bootstrap alpha^2 exceeding
-    // the observed alpha_hat^2 (mirrors the serial ferman_pinto_boot_ind)
+    // Compute p-values (two-sided): bootstrap alpha^2 weakly exceeding
+    // the observed alpha_hat^2, under the (1 + #exceed)/(1 + B) convention
+    // (Phipson & Smyth 2010; Davison & Hinkley) — the observed statistic
+    // counts as a tie with itself, so p can never be exactly zero
     alpha_sq = alpha_hat^2
 
     r_unadj = alpha1_vec :^ 2
     r_adj = alpha2_vec :^ 2
 
-    p_without = mean(r_unadj :> alpha_sq)
-    p_with = mean(r_adj :> alpha_sq)
+    p_without = (1 + sum(r_unadj :>= alpha_sq)) / (1 + B)
+    p_with = (1 + sum(r_adj :>= alpha_sq)) / (1 + B)
 
     // Return: [p_without, p_with, alpha1_vec, alpha2_vec]
     return((p_without \ p_with \ alpha1_vec \ alpha2_vec))
@@ -287,12 +289,15 @@ program define ri_bs_par, rclass
     qui levelsof control_states, local(contr_states)
 
     ** STEP 3: Estimate RI t-statistics for each placebo treatment
+    ** Placebo refits keep the treated state in the sample as an untreated
+    ** unit and use the identical design as the actual refit; only the
+    ** placebo ASSIGNMENT set excludes it (MacKinnon & Webb 2020)
     foreach j of local contr_states {
         ** Define placebo treatment
         gen ptreat = (control_states == `j') & (`PT' == 1)
 
         ** Estimate DID
-        qui reghdfe `Y' ptreat `U' if never_treat == 1 [aw = `W'], ///
+        qui reghdfe `Y' ptreat `U' [aw = `W'], ///
             vce(cluster `CL') absorb(`DiD' `C')
 
         local b_hat_`j' = _b[ptreat]
@@ -355,8 +360,8 @@ program define ri_bs_par, rclass
                 local t_hat_`j'_`b' = _b[`X'] / _se[`X']
             }
             else {
-                ** Placebo treatment
-                qui reghdfe tmp_ywild ptreat `U' if never_treat == 1 [aw = `W'], ///
+                ** Placebo treatment (full sample, identical design to j = 0)
+                qui reghdfe tmp_ywild ptreat `U' [aw = `W'], ///
                     vce(cluster `CL') absorb(`DiD' `C')
                 local b_hat_`j'_`b' = _b[ptreat]
                 local t_hat_`j'_`b' = _b[ptreat] / _se[ptreat]
@@ -432,20 +437,29 @@ mata:
 real vector ri_compute_pvalues(real matrix results, real scalar t_0, real scalar b_0)
 {
     real scalar p_t, p_beta
+    real matrix placebo
     real vector t_abs, b_abs
     real scalar t_0_abs, b_0_abs
     real scalar S
 
+    // Reference distribution: placebo-assignment draws only (j >= 1, col 1).
+    // Wild draws under the real assignment (j == 0) stay in the saved
+    // dataset for diagnostics but are excluded here (Young 2019; MacKinnon
+    // & Webb 2019, 2020); the observed statistic enters via the +1 term
+    placebo = select(results, results[., 1] :>= 1)
+
     // Get absolute values
-    t_abs = abs(results[., 3])
-    b_abs = abs(results[., 4])
+    t_abs = abs(placebo[., 3])
+    b_abs = abs(placebo[., 4])
     t_0_abs = abs(t_0)
     b_0_abs = abs(b_0)
 
-    // Count exceedances
-    S = rows(results)
-    p_t = sum(t_abs :> t_0_abs) / S
-    p_beta = sum(b_abs :> b_0_abs) / S
+    // (1 + #exceed)/(1 + S) convention: the observed statistic counts as
+    // a tie with itself, so p can never be exactly zero (Phipson & Smyth
+    // 2010; Young 2019 QJE eq. 5; Canay-Romano-Shaikh 2017 Remark 2.2)
+    S = rows(placebo)
+    p_t = (1 + sum(t_abs :>= t_0_abs)) / (1 + S)
+    p_beta = (1 + sum(b_abs :>= b_0_abs)) / (1 + S)
 
     return((p_t \ p_beta))
 }

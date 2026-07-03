@@ -220,15 +220,17 @@ program define ferman_pinto_boot_ind, rclass
     gen alpha = `alpha_hat'
     gen alpha_sq = alpha^2
 
-    ** Generate p-values
-    gen p_1 = alpha1_sq > alpha_sq if !missing(alpha1) & !missing(alpha)
-    gen p_2 = alpha2_sq > alpha_sq if !missing(alpha2) & !missing(alpha)
+    ** Generate exceedance indicators (weak inequality)
+    gen p_1 = alpha1_sq >= alpha_sq if !missing(alpha1) & !missing(alpha)
+    gen p_2 = alpha2_sq >= alpha_sq if !missing(alpha2) & !missing(alpha)
 
-    ** Calculate mean p-values
-    qui summ p_1
-    local p_without = `r(mean)'
-    qui summ p_2
-    local p_with = `r(mean)'
+    ** Calculate p-values under the (1 + #exceed)/(1 + B) convention
+    ** (Phipson & Smyth 2010): the observed statistic counts as a tie with
+    ** itself, so p can never be exactly zero
+    qui count if p_1 == 1
+    local p_without = (1 + r(N)) / (1 + `B')
+    qui count if p_2 == 1
+    local p_with = (1 + r(N)) / (1 + `B')
 
     ** Display results
     di _n "Ferman and Pinto (2019) P-Value, w/o correction = " %4.3f `p_without'
@@ -285,6 +287,9 @@ program define ri_bs, rclass
     qui levelsof control_states, local(contr_states)
 
     ** Loop over control states
+    ** Placebo refits keep the treated state in the sample as an untreated
+    ** unit and use the identical design as the actual refit; only the
+    ** placebo ASSIGNMENT set excludes it (MacKinnon & Webb 2020)
     foreach j of local contr_states {
         di "RI: `j'"
 
@@ -292,7 +297,7 @@ program define ri_bs, rclass
         gen ptreat = (control_states == `j') & (`PT' == 1)
 
         ** Estimate DID
-        qui reghdfe `Y' ptreat `U' if never_treat == 1 [aw = `W'], ///
+        qui reghdfe `Y' ptreat `U' [aw = `W'], ///
             vce(cluster `CL') absorb(`DiD' `C')
 
         local b_hat_`j' = _b[ptreat]
@@ -359,7 +364,9 @@ program define ri_bs, rclass
     local ct = `B' * (`n' + 1)
     set obs `ct'
 
-    gen n = _n - 1
+    ** n runs 1..B*(n+1) so every stored draw maps to exactly one row
+    ** (was _n - 1: first row stayed missing and the last draw was lost)
+    gen n = _n
     gen b = .
     gen j = .
     gen t = .
@@ -384,16 +391,22 @@ program define ri_bs, rclass
     gen t_abs = abs(t)
     gen beta_abs = abs(beta)
 
-    ** Generate indicators
-    gen ind_t = t_abs > t_0_abs
-    gen ind_beta = beta_abs > beta_0_abs
+    ** Generate exceedance indicators (weak inequality), placebo draws only:
+    ** the reference distribution excludes wild draws under the real
+    ** assignment (j == 0), which stay in the saved dataset for diagnostics
+    ** (Young 2019; MacKinnon & Webb 2019, 2020)
+    gen ind_t = t_abs >= t_0_abs if j >= 1
+    gen ind_beta = beta_abs >= beta_0_abs if j >= 1
 
-    ** Calculate p-values
+    ** Calculate p-values under the (1 + #exceed)/(1 + S) convention:
+    ** the observed statistic counts as a tie with itself, so p can never
+    ** be exactly zero (Phipson & Smyth 2010; Young 2019 QJE eq. 5;
+    ** Canay-Romano-Shaikh 2017 Remark 2.2)
     egen sum_ind_t = total(ind_t)
     egen sum_ind_beta = total(ind_beta)
-    gen S = _N
-    gen p_t = sum_ind_t / S
-    gen p_beta = sum_ind_beta / S
+    gen S = `B' * `n'
+    gen p_t = (1 + sum_ind_t) / (1 + S)
+    gen p_beta = (1 + sum_ind_beta) / (1 + S)
 
     qui summ p_t
     local p_t = `r(mean)'
