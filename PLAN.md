@@ -290,11 +290,20 @@ Runs (updated 2026-07-02):
       FP 0.043; full-time WCBS 0.106 (was 0.082 — no spec below 0.10 anymore),
       FP 0.000, RIWB 0.14–0.24; employment null everywhere (ATE −0.3, WCBS 0.59).
       Regenerated appE ATEs/N match the stage-1 main tables exactly.
-- [ ] Update the paper's inference footnote (`main_aejep.tex:261`): "significant at
-      the five or ten percent level" does not survive as a blanket claim. Defensible:
-      part-time marginally significant at ~10% (WCB) and 5% (FP, spec 4); full-time
-      rests on Ferman–Pinto alone (0.009/0.000 in specs 3–4). FP p = 0.000 also
+- [x] Updated the paper's inference footnote (`main_aejep.tex:261`, 2026-07-03):
+      now states part-time significant at ~10% (WCB) / 5% (FP, preferred spec),
+      full-time only under FP, employment null. Added the missing
+      `\section{Alternative Inference}` (`sec:app_inf` was a dangling ref) with the
+      regenerated three-panel table (`tab_appE_tab1_1/2/3` = employed/FT/PT) and a
+      methods note; synced the three tables to `results/paper/`. FP p = 0.000 still
       awaits the `(1+#exceed)/(1+B)` convention decision below.
+- [ ] **Vintage mismatch in `results/paper/`** (author decision): its `tab_main_*`
+      are the old-extract versions (N = 480,445; spec-4 employed −0.4, FT −3.8,
+      PT +3.4) while the regenerated appE tables now alongside them use the rebuilt
+      extract (N = 461,616; −0.3 / −4.1 / +3.7, matching `results/tables/`).
+      A compile mixing both is internally inconsistent. Syncing `tab_main_*`
+      changes headline numbers and hard-coded prose (e.g. §Results "−0.4",
+      "3.4 pp") — decide whether the rebuilt extract is now canonical.
 
 Author decisions flagged (not made unilaterally):
 

@@ -1,0 +1,815 @@
+\documentclass[11pt]{article}
+
+\usepackage{amssymb,amsmath,amsfonts,eurosym,ulem,graphicx,caption,booktabs,color,setspace,sectsty,comment,footmisc,caption,natbib,pdflscape,array,hyperref,multirow, siunitx, subcaption, bbm, chngcntr}
+\usepackage[capposition=top]{floatrow}
+\usepackage[nameinlink]{cleveref}
+
+\captionsetup{skip=0.5\baselineskip}
+
+\newcommand{\tabnotes}[2]{\bottomrule \multicolumn{#1}{@{}p{1\linewidth}@{}}{\footnotesize #2 } \end{tabular}\end{table}}
+
+\hypersetup{
+  colorlinks=true,
+  citecolor=black,
+  linkcolor=black,
+  filecolor=black,
+  urlcolor=blue,
+}
+
+\let\ORGhypersetup\hypersetup
+\protected\def\hypersetup{\ORGhypersetup}
+\pdfstringdefDisableCommands{%
+  \def\hypersetup#1{}%
+  \let\Cref\crtCref
+  \let\cref\crtcref
+}
+
+\normalem
+
+\onehalfspacing
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}{Proposition}
+\newenvironment{proof}[1][Proof]{\noindent\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+
+\newtheorem{hyp}{Hypothesis}
+\newtheorem{subhyp}{Hypothesis}[hyp]
+\renewcommand{\thesubhyp}{\thehyp\alph{subhyp}}
+
+\newcommand{\red}[1]{{\color{red} #1}}
+\newcommand{\blue}[1]{{\color{blue} #1}}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]{>{\raggedleft\let\newline\arraybackslash\hspace{0pt}}m{#1}}
+
+\crefname{appfig}{Appendix Figure}{Appendix Figures}
+\crefname{apptab}{Appendix Table}{Appendix Tables}
+
+\newcommand*{\latestversion}{Click \href{https://sites.google.com/view/johniselin/research}{here} for the latest version.}
+
+% Change equation numbering to continuous
+\renewcommand{\theequation}{\arabic{equation}}
+
+% Ensure that references only display the equation number
+\makeatletter
+\renewcommand{\@eqnnum}{\arabic{equation}}
+\makeatother
+\usepackage[a4paper, total={6.5in, 8in}]{geometry}
+
+%% Footnote size
+\newenvironment{fignote}{\begin{quote}\footnotesize}{\end{quote}}
+
+%% TODO command for bullet-point placeholders
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\revnote}[1]{\textcolor{blue}{\textbf{[NOTE: #1]}}}
+
+\begin{document}
+
+\begin{titlepage}
+\title{The Labor Supply Effects of the California Earned Income Tax Credit \thanks{I would like to thank Melissa Kearney, Katharine Abraham, and Daniel Reck for their advising and support. I would also like to thank seminar participants at the University of Maryland and the 2024 National Tax Association Annual Conference for their comments. Finally, I am grateful to Daniel Arias and Erica Ryan for their many insights. A full replication file is available at \url{https://github.com/johniselin-econ/caleitc_laborsupply}.}}
+\author{John Iselin\thanks{The Budget Lab at Yale} }
+\date{\parbox{\linewidth}{\centering%
+  \today\endgraf\bigskip
+  \latestversion\endgraf
+  }}
+
+\maketitle
+\begin{abstract}
+\noindent
+\revnote{TARGET: $\leq$ 100 words. Current abstract is 198 words. Revised sketch below.}
+
+\todo{Rewrite abstract. Key elements:
+\begin{itemize}
+    \item State EITCs are a growing policy tool; CalEITC (2015) broke with federal structure by targeting very-low-income workers
+    \item Triple-difference + SDID: 3 pp increase in part-time, offsetting decrease in full-time ($\sim$50,000 workers)
+    \item Earnings decline consistent with discrete labor supply model (Kosonen \& Matikka 2023)
+    \item Response concentrated in multi-adult households, suggesting intra-household bargaining
+    \item MVPF of 0.7--0.9, driven by federal fiscal spillovers from reduced earnings
+\end{itemize}}
+
+\vspace{0.3in}
+\noindent\textbf{Keywords:} Earned Income Tax Credit, California, Labor Supply \\
+\vspace{0in}\\
+\noindent\textbf{JEL Codes:} H71, H24, J21, J68\\
+
+\bigskip
+\end{abstract}
+\setcounter{page}{0}
+\thispagestyle{empty}
+\end{titlepage}
+\pagebreak \newpage
+
+\doublespacing
+
+%% =============================================================================
+%% SECTION 1: INTRODUCTION (target: 4-5 pages)
+%% =============================================================================
+
+\section{Introduction} \label{sec:introduction}
+
+%% --- Paragraph 1: Motivation (phase-in as policy lever) ---
+%% Tightened from original opening. Cut enumeration of programs.
+
+There is a large and growing literature that shows that providing resources to low-income households with young children can both decrease child poverty in the short run and improve the longer-term outcomes of children across a range of measures \citep{duncan_roadmap_2019,page_new_2024}. Since the 1990s, two major tax-based safety net programs---the Earned Income Tax Credit (EITC) and the Child Tax Credit (CTC)---have aimed to support low-income families while minimizing labor supply distortions by phasing in benefits with earned income. As a result, non-workers and very-low-income families receive little-to-no benefit from these programs. Understanding how individuals respond to changes in the parameters governing the phase-in of these credits is critical to evaluating proposed reforms, yet less is known about this margin than about the extensive-margin effects of the federal EITC.
+
+%% --- Paragraph 2: This paper + CalEITC + approach ---
+
+In this paper, I provide evidence on the labor supply response of workers to changes in incentives at the very bottom of the earnings distribution using quasi-experimental evidence stemming from the implementation of the California Earned Income Tax Credit (CalEITC). Passed in 2015, the CalEITC was designed to provide larger transfers to very-low-income, predominantly part-time, workers with children who were eligible for very small benefit amounts from federal tax credits \citep{rueben_upward_2017}. The CalEITC nearly doubled the phase-in rate of the combined federal and California EITC schedule, meaning that workers could maximize the refundable tax credit at a much lower level of earnings than from the federal EITC alone, as shown in \Cref{fig:fig_sch}. I employ a triple-difference approach---comparing the employment of single women with and without children, inside and outside of California, before and after the CalEITC---which accounts for the concern that differential trends between parents and non-parents may violate the parallel trends assumption in simpler designs \citep{kleven_eitc_2024}.
+
+%% --- Paragraph 3: Main results ---
+
+Applying this approach to American Community Survey (ACS) data from 2012 through 2017, I find no change in overall employment following the introduction of the CalEITC. However, part-time work increases by approximately 3 percentage points, and full-time work decreases by a similar amount. These offsetting effects suggest that the CalEITC induced a shift from full-time to part-time work, equal to approximately 50,000 single mothers. This finding is robust to Synthetic Difference-in-Differences \citep{arkhangelsky_synthetic_2021}, a quadruple-difference using education as a fourth dimension, and Oster (2019) bounds on selection. A placebo test on college-educated women shows no effect on part-time work, and while there is some evidence of a smaller decline in full-time work in that sample, the quadruple-difference and Oster bounds confirm that the main results are not driven by a California-specific confounder. Using data on hours and weeks worked, I find that the response occurs entirely through a reduction in hours per week, not weeks per year.
+
+%% --- Paragraph 4: Earnings + discrete labor supply ---
+
+Both the welfare effects of this transition and the appropriate model of labor supply depend on the counterfactual income a full-time worker would have earned absent the CalEITC. I present evidence favoring a discrete labor supply interpretation \citep{kosonen_discrete_2023}: annual earnings fall by \$700--\$1,500, and the earnings distribution shifts downward in a manner inconsistent with a marginal hours adjustment. These patterns are more consistent with workers choosing among a limited set of work arrangements.
+
+%% --- Paragraph 5: Heterogeneity ---
+
+To explore mechanisms, I examine heterogeneity across household characteristics. The largest shift from full-time to part-time work occurs among women living in multi-adult households, suggesting that household composition affects a woman's ability to adjust labor supply. Notably, the response is not limited to mothers of very young children, ruling out a pure childcare story. Individual earnings fall while household income remains relatively stable, consistent with intra-household smoothing \citep{chiappori_collective_1992, blundell_collective_2005}.
+
+%% --- Paragraph 6: Elasticities + MVPF ---
+
+Using these results, I calculate mobility elasticities of between 1.2 and 1.9, which are large relative to prior federal EITC estimates but may reflect the unique ability of mothers in multi-adult households to respond to incentives. Following \cite{hendren_unified_2020}, I estimate a Marginal Value of Public Funds (MVPF) of between 0.7 and 0.9---well below the MVPF of 3.2 to 4.2 estimated for the federal EITC by \cite{bastian_eitc_2021}. This gap is driven primarily by reduced earnings from the shift to part-time work and interactions with the federal tax and transfer system.
+
+%% --- Paragraph 7: Contribution (compressed) ---
+
+This paper presents one of the first evaluations of the CalEITC. Previous work by \cite{neumark_too_2025} finds no change in overall employment---a result consistent with my findings. My paper is the first to document the compositional shift from full-time to part-time work and to provide an MVPF estimate for the program. It contributes to the emerging literature on discrete labor supply responses to tax changes \citep{kosonen_discrete_2023}, the broader literature on EITC labor supply effects \citep{eissa_labor_1996, meyer_welfare_2001, hoynes_effective_2018, bastian_rise_2020, kleven_eitc_2024}, and recent evidence on earnings-benefit decoupling from policies such as the fully refundable 2021 CTC \citep{enriquez_short-term_2023, goldin_child_2024} and unconditional cash transfers \citep{vivalt_employment_2024}.\footnote{This paper also connects to research on CalEITC take-up \citep{iselin_measuring_2023} and on the California Young Child Tax Credit \citep{goldin_child_2024, unrath_filing_2024}.}
+
+%% --- Road map (2 sentences) ---
+
+The remainder of the paper is structured as follows. Section \ref{sec:background} describes the federal and California EITCs. Section \ref{sec:conceptual} outlines the conceptual framework. Section \ref{sec:emp_data} presents the data and empirical strategy. Section \ref{sec:results} shows the main results. Section \ref{sec:earnings} examines earnings effects and elasticities. Section \ref{sec:heterogeneity} explores heterogeneity by household characteristics. Section \ref{sec:mvpf} estimates the MVPF. Section \ref{sec:conclusion} concludes.
+
+
+%% =============================================================================
+%% SECTION 2: POLICY BACKGROUND (target: 2-3 pages)
+%% =============================================================================
+
+\section{Policy Background} \label{sec:background}
+
+%% --- Federal EITC (compressed) ---
+
+The federal EITC is one of the largest means-tested cash transfer programs in the United States, providing \$64 billion in refundable tax credits to 31 million low-income workers in 2022 \citep{irs_statistics_2023}. A taxpayer's EITC benefit is primarily a function of earned income, with parameters varying by number of qualifying children and marital status. The credit phases in at a fixed rate, holds constant through a plateau region, and then phases out, as depicted in \Cref{fig:eitc_sch_2016_a}.\footnote{I report the same figures for 2015 and 2017 in \cref{fig:fig_appA_sch_15_17}. The CTC during this period provided a maximum credit of \$1,000 per child; the combined refundable schedule is shown in \Cref{fig:fig_appA_eitc_ctc}.}
+
+%% --- CalEITC (compressed) ---
+
+In June 2015, California introduced the CalEITC. Unlike most of the 31 other states with EITC supplements, California's credit was not a fixed percentage of the federal EITC.\footnote{Most states trade administrative simplicity for policy flexibility by providing a credit equal to a percentage of the federal credit \citep{rueben_upward_2017}.} The CalEITC consisted only of phase-in and phase-out regions, and eligibility was limited to individuals with earnings on the phase-in region of the federal EITC. The result is a joint federal--state schedule (the black line in \Cref{fig:eitc_sch_2016_a}) with a faster phase-in rate, meaning taxpayers could receive close to their maximum EITC at a lower level of earnings.
+
+%% --- CalEITC changes + targeting ---
+
+The CalEITC has undergone changes since its introduction \citep{davis_who_2019}. Prior to 2017, self-employment income was excluded from the CalEITC earnings definition; this was amended in 2017, when the eligibility range was also expanded (see \Cref{fig:eitc_sch_2017}). As shown in \Cref{fig:hist_a} and noted by \cite{rueben_upward_2017}, workers eligible for the largest CalEITC benefits are predominantly part-time workers. Single mothers are the group most likely to benefit, based on pre-treatment earnings distributions (\Cref{fig:hist_b}).
+
+
+%% FIGURE 1: EITC benefit schedules
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.6\textwidth}
+   \includegraphics[width=1\linewidth]{figures/fig_eitc_sched_a.jpg}
+   \caption{EITC schedule for a parent with 2 qualifying children}
+   \label{fig:eitc_sch_2016_a}
+\end{subfigure}
+\begin{subfigure}[b]{0.6\textwidth}
+   \includegraphics[width=1\linewidth]{figures/fig_eitc_sched_b.jpg}
+   \caption{EITC schedule by count of qualifying children}
+   \label{fig:eitc_sch_2016_b}
+\end{subfigure}
+
+\caption{Federal and California EITC benefits schedule, TY 2016.} \label{fig:fig_sch}
+
+\floatfoot{\textbf{Note}: Benefit schedules generated using NBER's TAXSIM model version 35 \citep{feenberg_introduction_1993}. Assumes a single filer whose adjusted gross income consists solely of wage income.}
+\end{figure}
+
+
+%% FIGURE 2: Earnings histograms
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.6\textwidth}
+       \includegraphics[width=1\linewidth]{figures/fig_earn_hist_a.jpg}
+       \caption{Single women, by full- and part-time status (2014)}
+       \label{fig:hist_a}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.6\textwidth}
+       \includegraphics[width=1\linewidth]{figures/fig_earn_hist_b.jpg}
+       \caption{All, by marital status and sex (2012-2014)}
+       \label{fig:hist_b}
+    \end{subfigure}
+
+    \caption{Histograms of California workers} \label{fig:fig_hist}
+
+\floatfoot{\textbf{Note}: Data: American Community Survey, 2014 (panel a) and 2012--2014 (panel b). Sample: California workers aged 20--49, US citizens, not in armed services, not in school, not potential qualifying children. Histograms show weighted counts by earned income bin. Panel (a) separates by full-time (35+ hours/week) and part-time ($<35$ hours/week) status; panel (b) by marital status and sex. Dashed lines show CalEITC (red) and federal EITC (black) benefit amounts for a single parent with 2 qualifying children.}
+\end{figure}
+
+
+%% =============================================================================
+%% SECTION 3: CONCEPTUAL FRAMEWORK (target: 1.5-2 pages)
+%% =============================================================================
+
+\section{Conceptual Framework} \label{sec:conceptual}
+
+%% --- Setup (compressed) ---
+
+I describe the margins along which taxpayers may adjust labor supply in response to the CalEITC. Because the CalEITC mirrors federal EITC eligibility rules and nearly all CalEITC claimants also claim the federal EITC, the combined federal--state schedule is the relevant budget set \citep{davis_who_2019, iselin_measuring_2023}. As shown in \Cref{fig:budget_constr}, introducing the CalEITC shifts the budget constraint outward.
+
+%% --- Continuous model (compressed) ---
+
+Following \cite{kosonen_discrete_2023}, consider an agent with utility $u(c,z)$, where $c$ is after-tax income and $z$ is gross income. With a continuous choice set, the budget constraint is $c = z(1-\tau) + R$, where $(1-\tau)$ is the net-of-tax rate and $R$ is virtual income. Under the CalEITC, agents in region A of \Cref{fig:budget_constr} face competing substitution and income effects, while agents in region B have an unambiguous incentive to work less. Past work has generally found that agents respond along the extensive rather than intensive margin \citep{saez_taxpayers_2010, chetty_adjustment_2011, nichols_earned_2015, kleven_eitc_2024}. Importantly, under continuous labor supply, agents in region C---the area to the left of the federal EITC kink---would not be expected to respond.
+
+%% --- Discrete model (compressed) ---
+
+Now consider a discrete model, following \cite{saez_optimal_2002} and \cite{kosonen_discrete_2023}, in which agents choose among $J$ discrete levels of earnings. In a simple example, agents choose between not working, part-time, and full-time work, as denoted by the dashed lines on \Cref{fig:budget_constr}. This setup still allows the extensive-margin response seen in the continuous model, but it also rationalizes larger shifts from full-time to part-time work among agents who were previously in region C---a response that the continuous model cannot explain.
+
+
+%% FIGURE 3: Budget constraint
+\begin{figure}[htbp]
+\begin{center}
+\includegraphics[width=0.9\linewidth]{figures/fig_budget.jpg}
+\caption{Budget constraint for parent with 2 qualifying children (QC) in 2016}
+\label{fig:budget_constr}
+\end{center}
+\floatfoot{\textbf{Note}: Federal EITC parameters calculated using NBER's TAXSIM model version 35 \citep{feenberg_introduction_1993}. X-axis: normalized leisure (proportion of potential working time). Lines show pre-tax income (dashed black), after-tax income with federal EITC only (solid green), and after-tax income with federal plus California EITC (dashed green) for a minimum wage worker. Region A: substitution effect may dominate, increasing labor supply. Region B: income and substitution effects align, decreasing labor supply. Region C: no response expected under continuous labor supply, but discrete models predict possible declines.}
+\end{figure}
+
+
+%% =============================================================================
+%% SECTION 4: EMPIRICAL STRATEGY AND DATA (target: 3-4 pages)
+%% =============================================================================
+
+\section{Empirical Strategy and Data} \label{sec:emp_data}
+
+\subsection{Empirical Strategy} \label{sec:emp}
+
+%% --- Triple-diff design (compressed) ---
+
+My main specification is a cross-sectional triple-difference design, comparing single women with and without qualifying children (difference 1), before and after the CalEITC in 2015 (difference 2), in California versus untreated states (difference 3). This estimate recovers a causal effect under the assumption that the employment difference between single women with and without children in California would have trended similarly to that difference in control states \citep{olden_triple_2022}. The approach leverages two untreated groups---non-parents and out-of-state parents---and controls for economic and demographic trends within California that affect both groups equally. I estimate:
+%
+\begin{equation}
+\label{eq:eq1}
+\begin{split}
+       y_{ist} = &  \alpha + \beta \text{Treated}_{ist} + \eta  X_{it} + \theta( U_{st} \times \text{QC}_{it}) + \mu(\text{MW}_{st} \times \text{QC}_{it}) \\
+       & + \delta_t + \gamma_s + \text{QC}_{it} + (\text{QC} \times \delta)_{it} + (\text{QC}\times \gamma)_{ist} + (\delta \times \gamma)_{st} + \epsilon_{it}
+\end{split}
+\end{equation}
+
+where $y_{ist}$ is the outcome for individual $i$ in state $s$ at time $t$, $\text{QC}_{it}$ is a fixed effect for the number of qualifying children (capped at 3), and the remaining terms include state, year, and all pairwise interaction fixed effects. Treatment is defined as:
+%
+\begin{equation}
+\label{eq:eq2}
+\text{Treated}_{ist} = \textbf{1} \left [ (\text{QC}_{it} > 0) \And (\text{t} \geq 2015) \And (\text{s} = \text{CA})  \right ]
+\end{equation}
+%
+Standard errors are clustered at the state level.\footnote{With one treated cluster among 28, standard CRVE may over-reject. In \Cref{sec:app_inf}, I implement alternative inference procedures including randomization inference, wild-cluster bootstrap \citep{cameron_bootstrap-based_2008}, and the correction of \cite{ferman_inference_2019}. The part-time estimates remain significant at the ten percent level under the wild-cluster bootstrap and at the five percent level under the \cite{ferman_inference_2019} correction in the preferred specification; the full-time estimates are significant only under the latter correction, and the employment estimates are indistinguishable from zero under all procedures.}
+
+%% --- Controls (compressed) ---
+
+The vector $X_{it}$ includes demographic controls (age, education, race, Hispanic origin, age of youngest child, number of adults in household). I also control for state unemployment $\times$ QC count and binding state minimum wage $\times$ QC count, to account for differential effects of labor market conditions and minimum wage changes across family types.\footnote{California began a series of minimum wage increases in 2014, coinciding with the CalEITC. \cite{godoy_parental_2024} find that single mothers respond to minimum wage increases by increasing full-time employment, implying that without this control, my estimates of the CalEITC's full-time effect would be biased toward zero.}
+
+%% --- Control states (compressed) ---
+
+My control state pool excludes Alaska and states with EITC policy changes between 2008 and 2019, yielding 28 states including California (\Cref{tab:state_tab}).\footnote{Excluded states: CO, CT, HI, IL, IA, KS, LA, ME, MD, MA, MI, MN, MT, NJ, NM, OH, OR, RI, SC, VT, WI.} I perform robustness checks with alternative control pools, including restricting to states without any state EITC and to Medicaid expansion states.
+
+%% --- Event study ---
+
+I extend the analysis to an event-study specification:
+\begin{equation}
+\label{eq:eq3}
+\begin{split}
+       y_{ist} = &  \alpha + \sum_{j \neq 2014} \beta_j \left ( \text{Year}_{j=t} \times \textbf{1} \left [ (\text{QC}_{it} > 0) \And (\text{s} = \text{CA})  \right ] \right ) \\
+       & + \eta X_{it}  + \theta ( U_{st} \times \text{QC}_{it})+ \mu (\text{MW}_{st} \times \text{QC}_{it}) \\
+       & + \delta_t + \gamma_s + \text{QC}_{it} + (\text{QC} \times \delta)_{it} + (\text{QC}\times \gamma)_{ist} + (\delta \times \gamma)_{st} + \epsilon_{it}
+\end{split}
+\end{equation}
+
+My main specification covers 2012 through 2017 to avoid the Great Recession recovery and post-2017 confounders (TCJA, YCTC).
+
+%% --- SDID (compressed) ---
+
+To address the concern that control states may not approximate California's counterfactual trends, I supplement the triple-difference with Synthetic Difference-in-Differences \citep{arkhangelsky_synthetic_2021}. I estimate SDID using a county-year panel, constructing a synthetic version of each California county and reporting population-weighted average effects.\footnote{I adapt the bootstrap procedure in \cite{clarke_synthetic_2023} for standard errors.}
+
+
+\subsection{Data} \label{sec:data}
+
+%% --- ACS + sample (compressed) ---
+
+My primary data source is the American Community Survey (ACS) from 2010 through 2017, downloaded via IPUMS \citep{ruggles_ipums_2023}. My main outcome variables are indicators for employment during the last 12 months, and for full-time (35+ hours/week) versus part-time ($<$35 hours/week) work, following the BLS definition.\footnote{The ACS reference period is the 12 months prior to interview, not the calendar year. I address potential timing concerns in \Cref{sec:app_a} using CPS monthly data.}
+
+My main sample consists of single women aged 20--49 without a college degree, who are US citizens, not in school, not in group quarters or the armed services, and not potential qualifying children. I assign qualifying children to adults using household composition and demographics, abstracting from strategic claiming behavior \citep{jones_doubled-up_2016}; any resulting mis-assignment attenuates my estimates. Balance tests (\Cref{tab:tab_appA_balance_test_3d_basic,tab:tab_appA_balance_test_3d_controls}) show small demographic differences that are controlled for in my main specification.
+
+
+%% =============================================================================
+%% SECTION 5: MAIN RESULTS (target: 6-7 pages)
+%% =============================================================================
+
+\section{Main Results} \label{sec:results}
+
+\subsection{Primary Triple-Difference Results} \label{sec:main_results}
+
+%% --- Lead with results, not trends ---
+\revnote{Trends figure (old Fig 4) moved to appendix. Reference in passing.}
+
+\Cref{tab:triple_diff_main} presents the main results. Column 1 shows the basic triple-difference; columns 2--4 sequentially add demographic controls, state unemployment $\times$ QC, and state minimum wage $\times$ QC. Across all specifications, the effect on overall employment is small and statistically insignificant. Full-time work decreases by between 2.1 and 4.1 percentage points, while part-time employment increases by between 2.9 and 3.7 percentage points. The full-time decrease and part-time increase are statistically indistinguishable in magnitude, implying a net shift of between 41,000 and 75,000 single mothers from full-time to part-time work. Employment trends, shown in \Cref{fig:appA_emp_trends}, confirm parallel pre-trends across treatment and control groups.
+
+%% TABLE 1: Main triple-diff
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference estimates of the effect of the CalEITC on annual employment.}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
+        &\multicolumn{1}{c}{\shortstack{Basic Triple \\ Difference}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Unemployment\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Minimum Wage\\Controls}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: Employed in the last 12-months}} \\[-2ex]
+        \input{tables/tab_main_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: Employed full-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_main_2} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel C: Employed part-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_main_3} \\[-3.5ex]
+        \input{tables/tab_main_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:triple_diff_main}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1}. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. Demographic controls (columns 2--4): 5-year age bins, race/Hispanic origin, education, age of youngest qualifying child, number of adults in household. Column 3 adds state unemployment $\times$ QC count; column 4 adds state minimum wage $\times$ QC count. Standard errors clustered at state level. * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
+
+
+%% --- Event study ---
+
+\Cref{fig:fig_event_emp} reports event-study estimates from Equation \eqref{eq:eq3} with the full set of controls. The results show no effect on overall employment, a sharp drop in full-time work, and a corresponding increase in part-time work beginning immediately in 2015. Pre-treatment coefficients are close to zero and statistically insignificant, consistent with the identifying assumption. The part-time effect is stable throughout the post period, while the full-time effect attenuates somewhat in 2017.
+
+%% FIGURE 4: Event study
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.9\linewidth]{figures/fig_event_emp.jpg}
+\caption{Event-study estimates of the effect of the CalEITC on annual employment.}
+   \label{fig:fig_event_emp}
+
+\floatfoot{\textbf{Note}: Event-study estimates of Equation \eqref{eq:eq3}. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. All models include demographic controls, state unemployment $\times$ QC count, and state minimum wage $\times$ QC count. Reference year: 2014. Standard errors clustered at state level. Bars represent 95\% confidence intervals.}
+
+\end{figure}
+
+
+\subsection{Decomposition} \label{sec:decomposition}
+
+%% --- Hours bins ---
+
+I decompose the shift by hours worked per week in \Cref{fig:fig_hours}. Employment declines among women working 40--60 hours per week and increases among those working 20--34 hours, consistent with a substantial reduction in average hours rather than a marginal adjustment near the full-time threshold.
+
+%% FIGURE 5: Hours bins
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.9\linewidth]{figures/fig_hours_bins.jpg}
+\caption{Effect of the CalEITC on employment, by weekly hours worked}
+   \label{fig:fig_hours}
+
+\floatfoot{\textbf{Note}: Event-study estimates of Equation \eqref{eq:eq3}. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. All models include full controls. Reference year: 2014. Standard errors clustered at state level. Bars represent 95\% confidence intervals.}
+\end{figure}
+
+%% --- Weeks worked (reference appendix) ---
+
+I also estimate effects by annual weeks worked and find that the full- and part-time effects are concentrated entirely among those working 50--52 weeks per year (\Cref{fig:appA_weeks}). Workers respond to the CalEITC by adjusting hours per week, not weeks per year, consistent with resource-constrained individuals for whom extended periods without work would be costly.
+
+
+\subsection{Robustness} \label{sec:robustness}
+
+%% --- SDID ---
+
+\paragraph{Synthetic Difference-in-Differences.} I validate the main results using SDID (\Cref{tab:sdid}). Across specifications with and without time-varying covariates, and models estimated on the within-county difference between mothers and non-mothers, I find a 1.3--5.4 percentage point decrease in full-time work and a 3.3--4.0 percentage point increase in part-time work, confirming the direction and magnitude of the triple-difference estimates.
+
+%% TABLE 2: SDID
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Synthetic Difference-in-Differences estimates}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
+        &\multicolumn{1}{c}{\shortstack{Basic SDID}}
+        &\multicolumn{1}{c}{\shortstack{Triple SDID}}
+        &\multicolumn{1}{c}{\shortstack{Basic + Cov}}
+        &\multicolumn{1}{c}{\shortstack{Triple + Cov}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: Employed}} \\[-2ex]
+        \input{tables/tab_sdid_county_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: Employed full-time}} \\[-2ex]
+        \input{tables/tab_sdid_county_2} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel C: Employed part-time}} \\[-2ex]
+        \input{tables/tab_sdid_county_3} \\[-3.5ex]
+        \input{tables/tab_sdid_county_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:sdid}
+    \floatfoot{\textbf{Note}: Synthetic Difference-in-Differences estimates using county-level panel with population weights. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. Bootstrap standard errors (500 replications). * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
+
+
+%% --- College placebo ---
+
+\paragraph{College placebo.} I run a placebo test on college-educated women, who are less exposed to the CalEITC given their higher earnings. \Cref{fig:college_placebo} shows no effect on part-time work in this sample. There is some evidence of a decline in full-time work of approximately 2 percentage points starting in 2016, though the effect is not consistently statistically significant (see \Cref{tab:triple_diff_col_placebo}). This raises the possibility that some portion of the full-time decline in the main sample reflects a broader California-specific trend. Two additional analyses address this concern directly.
+
+%% FIGURE 6: College placebo
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.8\linewidth]{figures/fig_event_emp_college.jpg}
+\caption{College-educated sample: Event-study estimates (falsification test)}
+\label{fig:college_placebo}
+\floatfoot{\textbf{Note}: Event-study estimates of Equation \eqref{eq:eq3} for college-educated placebo sample. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, \textit{with} college degree, not potential qualifying children. All models include full controls. Reference year: 2014. Standard errors clustered at state level. Bars represent 95\% confidence intervals.}
+\end{figure}
+
+
+%% --- Quadruple-difference (NEW) ---
+
+\paragraph{Quadruple-difference.}
+\todo{Insert quadruple-difference results from \texttt{03\_tab\_quad\_diff.do}. Key content:
+\begin{itemize}
+    \item Uses education (college vs. non-college) as a fourth difference dimension
+    \item Nets out any CA $\times$ Post $\times$ QC confounder common to both education groups
+    \item Report coefficients and SEs for employed, full-time, and part-time
+    \item If the full-time effect survives the quad-diff, the college placebo concern is resolved
+    \item Expected framing: ``To directly address this concern, I estimate a quadruple-difference that uses education as a fourth dimension. The estimated effect on part-time work is [X] pp (SE [Y]), and on full-time work is [X] pp (SE [Y]).''
+\end{itemize}}
+
+
+%% --- Oster bounds (NEW) ---
+
+\paragraph{Selection on unobservables.}
+\todo{Insert Oster (2019) bounds from \texttt{03\_tab\_oster\_bounds.do}. Key content:
+\begin{itemize}
+    \item Report $\delta^*$ (the proportional selection ratio) for full-time and part-time outcomes
+    \item Report bias-adjusted $\beta$ estimates
+    \item Convention: $\delta^* > 1$ means unobservables would need to be more important than observables to explain away the result
+    \item Expected framing: ``Following \cite{oster_unobservable_2019}, I assess the degree of selection on unobservables required to explain away the estimated effects. The implied $\delta^*$ values are [X] for full-time and [Y] for part-time, well above the conventional threshold of 1.''
+\end{itemize}}
+
+
+%% --- Specification curves + other robustness (compressed) ---
+
+\paragraph{Additional robustness.} Specification curves varying the sample (with/without college, ages 20--49 vs.\ 20--64), control state pool (main, no-EITC, Medicaid expansion), time period, and control sets show a consistent 2--4 percentage point increase in part-time work and a matching decline in full-time work (\Cref{fig:appA_specurve}). Approximately 75 percent of the part-time increase is driven by wage workers (\Cref{sec:app_self}).\footnote{A simulated instrument approach following \cite{gruber_elasticity_2002} confirms the overall employment effect but lacks power to decompose the full-time/part-time margin; see Online Appendix E.}
+
+
+%% =============================================================================
+%% SECTION 6: EARNINGS + ELASTICITIES (target: 2-3 pages)
+%% =============================================================================
+
+\section{Annual Earnings} \label{sec:earnings}
+
+%% --- Earnings triple-diff ---
+
+Given the shift from full-time to part-time work, I expect earned income to fall. \Cref{tab:tab_earnings} reports triple-difference estimates of the CalEITC's effect on earnings. Across OLS (full sample and positive-earnings only) and Poisson specifications, I find a decrease in earnings of between 4 and 7 percent, or \$600--\$1,600 annually. Self-reported earnings in the ACS are a noisy measure of true taxable earnings \citep{meyer_use_2021}, so I treat these estimates as suggestive; detailed discussion of measurement issues is in Online Appendix I.
+
+
+%%% TABLE 3: Earnings
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference estimates, effect of the CalEITC on annual earnings}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}\\
+        &\multicolumn{1}{c}{\shortstack{Basic Triple \\ Difference}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Unemployment\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Minimum Wage\\Controls}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: OLS - No restrictions}} \\[-2ex]
+        \input{tables/tab_earnings_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: OLS - positive income only}} \\[-2ex]
+        \input{tables/tab_earnings_2} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel C: Poisson}} \\[-2ex]
+        \input{tables/tab_earnings_3} \\
+        \input{tables/tab_earnings_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}   }
+    \label{tab:tab_earnings}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1}. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in armed services, not in school, without college degree, not potential qualifying children. Dependent variable: annual earnings (wages + self-employment income) in real 2019 dollars. Panel A: OLS including non-workers; Panel B: OLS excluding non-workers; Panel C: Poisson (PPML) including non-workers. All columns include demographic, unemployment $\times$ QC, and minimum wage $\times$ QC controls. Standard errors clustered at state level. * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
+
+
+%% --- Earnings distribution ---
+
+Following \cite{kosonen_discrete_2023}, I visualize the shift in the earnings distribution in \Cref{fig:distr}. In California (\Cref{fig:distr_ca}), relative density increases between \$6,000 and \$18,000---at and above the CalEITC-maximizing point---and decreases above full-time minimum-wage earnings. No comparable shift occurs in control states (\Cref{fig:distr_contr}). This pattern is inconsistent with a marginal hours reduction near the federal EITC kink, but consistent with a discrete labor supply transition where workers shift from one earnings level to another.
+
+
+%% FIGURE 7: Earnings distribution
+\begin{figure}[htbp]
+\centering
+
+\begin{subfigure}[b]{0.65\textwidth}
+     \includegraphics[width=1\linewidth]{figures/fig_earn_binsa.jpg}
+   \caption{California}
+   \label{fig:distr_ca}
+\end{subfigure}
+\begin{subfigure}[b]{0.65\textwidth}
+     \includegraphics[width=1\linewidth]{figures/fig_earn_binsb.jpg}
+   \caption{Control states}
+   \label{fig:distr_contr}
+\end{subfigure}
+
+\caption{Changes in the earnings distribution over time, California versus control states}
+\label{fig:distr}
+\floatfoot{\textbf{Note}: Difference in earned income distribution (real 2019 dollars) between workers with and without qualifying children: 2012--2014 (solid) vs. 2015--2017 (dashed). Data: American Community Survey. Sample: single women aged 20--49, without college degree. Panel (a): California; Panel (b): control states. Panel (a) overlays federal and California EITC schedules (2 QC, 2017) and full-time minimum wage earnings.}
+\end{figure}
+
+
+%% --- Elasticities (subsection, compressed) ---
+
+\subsection{Elasticities} \label{sec:elasticity}
+
+To contextualize these results, I construct ``mobility'' elasticities that capture the degree to which workers relocate across the earnings distribution in response to changes in average tax rates \citep{saez_optimal_2002, kreiner_taxation_2015, kosonen_discrete_2023}. This requires assuming that the entire part-time increase comes from former full-time workers, and specifying counterfactual full-time earnings. Given uncertainty about the counterfactual, I consider three levels: annual minimum-wage earnings (\$21,840), and median and mean 2014 full-time earnings of California single mothers (\$30,655 and \$36,413 in 2017 dollars).
+
+I find mobility elasticities of 1.2, 1.7, and 1.9 for each assumption, respectively. These are large relative to prior federal EITC estimates, exceeding all but those from the 1986 reform \citep{kleven_eitc_2024}. However, the group driving the response---single mothers in multi-adult households---may be uniquely able to adjust labor supply relative to the populations studied in earlier work.
+
+
+%% =============================================================================
+%% SECTION 7: HETEROGENEITY (target: 2-3 pages)
+%% =============================================================================
+
+\section{Heterogeneity and Household Behavior} \label{sec:heterogeneity}
+
+%% --- Lead with multi-adult HH (the novel finding) ---
+
+\subsection{Household Composition} \label{sec:het_adults}
+
+I examine heterogeneity by the number of adults in the household. As shown in \Cref{fig:het_adults}, the shift from full-time to part-time work is concentrated among households with three or more adults: part-time work increases by approximately 5 percentage points, and full-time work decreases by approximately 7 percentage points. Among households with one or two adults, the effects are smaller and not always statistically significant. This concentration in larger households points to a role for household-level decision-making in the response to the CalEITC, with implications for the literature on collective labor supply \citep{chiappori_collective_1992, blundell_collective_2005}. The most straightforward explanation is that it is less costly for single mothers to reduce labor supply when other earners are present in the household.
+
+
+%% FIGURE 8: Heterogeneity by adults
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.9\linewidth]{figures/fig_tab_het_adults.jpg}
+\caption{Triple-difference estimates of the effect of the CalEITC on annual employment, by number of adults in household}
+\label{fig:het_adults}
+\floatfoot{\textbf{Note}: Triple-difference estimates of Equation \eqref{eq:eq1} by number of adults in household. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. All models include full controls. Standard errors clustered at state level. Bars represent 95\% confidence intervals.}
+\end{figure}
+
+
+%% --- HH income (compressed) ---
+
+\subsection{Individual versus Household Income}
+
+If mothers in larger households reduce work because other adults compensate, I would expect household income to remain stable even as individual earnings fall. \Cref{fig:earn_hh_event} presents event-study estimates for both outcomes. Individual earnings decline following the CalEITC, consistent with the shift to part-time work. However, household income remains relatively stable, consistent with intra-household smoothing---though I cannot rule out other explanations given the observational nature of this comparison.
+
+\todo{Decision: include Fig 14 (own vs HH income event study) here as a standalone figure, or combine with Fig 8 as panel (b). If standalone:}
+
+%% FIGURE: Own vs HH income event study
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.9\linewidth]{figures/fig_event_earn_2.jpg}
+\caption{Event-study estimates: Mother's earnings versus household income}
+\label{fig:earn_hh_event}
+\floatfoot{\textbf{Note}: Event-study estimates of Equation \eqref{eq:eq3} comparing mother's individual earnings vs. total household income (real 2019 dollars). Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. All models include full controls. Reference year: 2014. Standard errors clustered at state level. Bars represent 95\% confidence intervals.}
+\end{figure}
+
+
+%% --- QC count + QC age (compressed to 1 paragraph each, figures in appendix) ---
+
+\subsection{Other Dimensions of Heterogeneity}
+
+I also examine heterogeneity by number of qualifying children and age of youngest child; detailed results are in \Cref{fig:appA_het_qc,fig:appA_het_qc_age}. The full-time to part-time shift is concentrated among mothers with one or two qualifying children, with no significant effect for those with three or more---diverging from the federal EITC literature, where effects increase with the number of children \citep{hoynes_effective_2018}. The null result for mothers with three or more children implies that household constraints can override benefit incentives. Additionally, the response is not limited to mothers of very young children, ruling out a pure childcare explanation for the shift to part-time work. Together with the multi-adult household finding, these results suggest that the labor supply response reflects intra-household bargaining over work and home production, not simply childcare-related decisions.
+
+
+%% =============================================================================
+%% SECTION 8: MVPF (target: 2-3 pages)
+%% =============================================================================
+
+\section{MVPF and Fiscal Externalities} \label{sec:mvpf}
+
+I estimate the Marginal Value of Public Funds (MVPF) of the CalEITC following \cite{hendren_unified_2020}:
+\begin{equation}
+    \label{eq:mvpf}
+    \text{MVPF} = \frac{\text{Willingness-to-Pay}}{\text{Program Cost}}
+\end{equation}
+
+I estimate willingness-to-pay by assuming taxpayers value \$1 in refundable credit at \$1, and, via the envelope theorem, that workers who change labor supply are approximately indifferent between their new and counterfactual work arrangements.\footnote{This assumption is non-trivial; see \cite{lockwood_optimal_2020} for discussion of settings where the behavioral response itself has welfare value.} Therefore WTP $= \text{CalEITC}_D - \text{CalEITC}_B$, where the subscripts denote the direct program cost and the cost attributable to behavioral responses, respectively.
+
+Program cost incorporates fiscal spillovers from the labor supply response on federal and state tax revenue:
+\begin{equation}
+\begin{split}
+\text{Program Cost} & = \text{CalEITC}_D - \text{Federal IIT Tax Changes} \\
+  & - \text{Federal Payroll Tax Changes} - \text{California IIT Tax Changes}
+\end{split}
+\end{equation}
+
+I simulate fiscal spillovers using TAXSIM, drawing a random sample of single mothers working part-time in the CalEITC earnings range and computing their federal and state tax liabilities with and without the labor supply change.\footnote{I do not estimate spillovers from other social programs or long-term effects due to data limitations; the direction of bias is ambiguous. See Online Appendix for details.}
+
+%% --- Results ---
+
+Across all specifications and counterfactual earnings assumptions, I estimate a MVPF of between 0.7 and 0.9 (\Cref{fig:fig_hist_2017_f1_mvpf}), implying it costs the government between \$1.10 and \$1.60 to deliver \$1 in benefits. The MVPF is lower when the assumed counterfactual full-time income is higher, as the federal government loses more revenue when a higher earner reduces labor supply. The fiscal cost is driven primarily by reduced payroll tax revenue. For higher counterfactual earnings, the loss is compounded by increased federal EITC eligibility as workers move back onto the phase-out region.\footnote{The decomposition of fiscal spillovers by revenue source is shown in \Cref{fig:appA_fiscal_spill}.}
+
+%% FIGURE 9: MVPF distribution
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=\linewidth]{figures/fig_mvpf_distribution.jpg}
+\caption{Distribution of Marginal Value of Public Funds estimates}
+   \label{fig:fig_hist_2017_f1_mvpf}
+
+\floatfoot{\textbf{Note}: Distribution of MVPF estimates calculated as described in \Cref{sec:mvpf}. Estimates vary by: employment effect specification, heterogeneity type (none, by year, by QC count), and counterfactual full-time earnings (minimum wage, median, mean CA single mother earnings in 2014). Vertical lines: three representative models with full controls, varying counterfactual earnings.}
+\end{figure}
+
+These estimates are well below the MVPF of 3.2 to 4.2 estimated by \cite{bastian_eitc_2021} for the federal EITC, a gap driven by the earnings reduction from the full-time to part-time shift and its interaction with federal taxes. This highlights that the net fiscal cost of state-level programs can depend critically on how they interact with federal policies.
+
+
+%% =============================================================================
+%% SECTION 9: CONCLUSION (target: 1-1.5 pages)
+%% =============================================================================
+
+\section{Conclusion} \label{sec:conclusion}
+
+In this paper, I examine the labor supply response of single mothers to the implementation of the CalEITC. Using a triple-difference design, supported by Synthetic Difference-in-Differences, I find that the CalEITC shifted single mothers from full-time to part-time work between 2015 and 2017. Annual earnings fell by roughly \$700--\$1{,}500, while overall employment is essentially unchanged; the compositional shift operates primarily through hours per week rather than weeks per year.
+
+The estimates are robust across specifications, including a quadruple-difference using education as a fourth dimension and Oster (2019) bounds on selection, both of which confirm that the results are not driven by unobserved confounders. The results are more consistent with a discrete, rather than continuous, labor supply model: workers appear to respond by switching among a limited set of work arrangements. Using the estimated behavioral responses, I obtain mobility elasticities between 1.2 and 1.9 and an MVPF between 0.7 and 0.9, implying that the program costs more than \$1 in (state plus federal) revenue to deliver \$1 in benefits to recipients.
+
+I also find that the full-time to part-time transition is concentrated among large, multi-adult households, indicating an important role for intra-household bargaining in allowing women the flexibility to respond to the CalEITC's incentives. Individual earnings fall while household income remains relatively stable, consistent with intra-household smoothing. These findings suggest that household context matters for understanding behavioral responses to tax policy: characteristics outside the tax unit but inside the household appear to inform the elasticity of a given worker.
+
+Two important limitations stem from the ACS data. First, without longitudinal data, I cannot track individual transitions or the duration of part-time work spells. Second, self-reported earnings are a noisy measure of true taxable earnings, making it difficult to pin down the counterfactual income of switchers---a key parameter for welfare analysis. Both limitations could be addressed with administrative earnings records that match the tax-year reference period and allow direct observation of earnings transitions. Ideally, such data would also capture utilization of other safety net programs, enabling a more complete MVPF estimate.
+
+
+%% =============================================================================
+%% BIBLIOGRAPHY
+%% =============================================================================
+\newpage
+
+\bibliographystyle{aer}
+\bibliography{references}
+
+
+%% =============================================================================
+%% IN-PAPER APPENDIX (target: 2-3 pages)
+%% =============================================================================
+
+\appendix
+\setcounter{section}{0}
+\setcounter{table}{0}
+\setcounter{figure}{0}
+\pagenumbering{roman}
+\counterwithin{table}{section}
+\counterwithin{figure}{section}
+\renewcommand{\figurename}{Appendix Figure}
+\renewcommand{\tablename}{Appendix Table}
+\crefalias{figure}{appfig}
+\crefalias{table}{apptab}
+
+\def\tableautorefname{Appendix Table}
+\def\figureautorefname{Appendix Figure}
+\renewcommand*{\thesection}{\Alph{section}}
+\renewcommand*{\thesubsection}{\thesection.\arabic{subsection}}
+
+\let\subsectionautorefname\sectionautorefname
+\let\subsubsectionautorefname\sectionautorefname
+
+\clearpage
+
+\section{Additional Tables and Figures} \label{sec:app_a}
+
+%% State table
+\begin{table}[htbp]
+    \centering
+    \caption{Sample states and population statistics}
+    \resizebox{0.6\textwidth}{!}{\input{tables/tab_appA_fig1}}
+    \label{tab:state_tab}
+    \floatfoot{\textbf{Note}: Mean, minimum, and maximum annual population of single women aged 20-49 without a college degree across 2012-2017, using ACS person weights. Final three columns indicate inclusion in the main sample, Medicaid expansion sample, and no-EITC sample.}
+\end{table}
+
+%% Balance tests
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference balance test (no economic controls)}
+        \resizebox{\textwidth}{!}{\input{tables/tab_appA_balance_1}}
+    \label{tab:tab_appA_balance_test_3d_basic}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1} with no minimum wage or unemployment controls. Sample: single women aged 20-49, without college degree, 2012-2017. Romano-Wolf corrected p-values reported. Standard errors clustered at state level. * 0.10 ** 0.05 *** 0.01.}
+\end{table}
+
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference balance test (with economic controls)}
+         \resizebox{\textwidth}{!}{\input{tables/tab_appA_balance_3}}
+    \label{tab:tab_appA_balance_test_3d_controls}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1} with unemployment and minimum wage controls. Sample: single women aged 20-49, without college degree, 2012-2017. Romano-Wolf corrected p-values reported. Standard errors clustered at state level. * 0.10 ** 0.05 *** 0.01.}
+\end{table}
+
+
+%% College placebo table
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference estimates, college placebo test}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
+        &\multicolumn{1}{c}{\shortstack{Basic Triple \\ Difference}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Unemployment\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Minimum Wage\\Controls}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: Employed in the last 12-months}} \\[-2ex]
+        \input{tables/tab_col_placebo_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: Employed full-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_col_placebo_2} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel C: Employed part-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_col_placebo_3} \\[-3.5ex]
+        \input{tables/tab_main_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:triple_diff_col_placebo}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1}. Sample: single women aged 20-49, \textit{with} college degree, 2012-2017. Standard errors clustered at state level. * 0.10 ** 0.05 *** 0.01.}
+\end{table}
+
+
+\clearpage
+
+\section{Alternative Inference} \label{sec:app_inf}
+
+The main estimates cluster standard errors at the state level with a single treated cluster (California) among 28 states, a setting in which standard cluster-robust inference can over-reject \citep{ferman_inference_2019}. \Cref{tab:tab_appE_inference} re-evaluates the main triple-difference estimates under five alternative procedures: a wild-cluster bootstrap \citep[WCBS;][]{cameron_bootstrap-based_2008}; randomization-inference wild bootstrap p-values based on the t-statistic (RIWB-t) and on the coefficient (RIWB-b), which compare the observed statistic to a placebo distribution generated by reassigning treatment among the never-treated control states; a pairs block bootstrap resampling states (BB); and the \cite{ferman_inference_2019} correction to the block bootstrap (Corrected BB), which adjusts the bootstrap distribution for the single treated cluster.
+
+The employment estimates are indistinguishable from zero under every procedure. The part-time estimates are stable near the ten percent level under the wild-cluster bootstrap across all four specifications and reach the five percent level under the Ferman--Pinto correction in the preferred specification. The full-time estimates are significant only under the Ferman--Pinto correction; wild-cluster bootstrap and randomization-inference p-values for full-time work lie above conventional thresholds.
+
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Alternative inference procedures for the main triple-difference estimates}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
+        &\multicolumn{1}{c}{\shortstack{Basic Triple \\ Difference}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Unemployment\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Minimum Wage\\Controls}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: Employed in the last 12-months}} \\[-2ex]
+        \input{tables/tab_appE_tab1_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: Employed full-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_appE_tab1_2} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel C: Employed part-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_appE_tab1_3} \\[-3.5ex]
+        \input{tables/tab_main_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:tab_appE_inference}
+    \floatfoot{\textbf{Note}: Each panel re-estimates the corresponding panel of \Cref{tab:triple_diff_main} (Equation \eqref{eq:eq1}; identical samples and specifications) and reports p-values for the treatment effect under alternative inference procedures: cluster-robust (CRVE, as in the main text), wild-cluster bootstrap (WCBS; 1,000 replications), randomization-inference wild bootstrap based on the t-statistic (RIWB-t) and on the coefficient (RIWB-b), pairs block bootstrap over states (BB), and the \cite{ferman_inference_2019} corrected block bootstrap (Corrected BB). Randomization procedures reassign placebo treatment among the 27 never-treated control states. Standard errors in parentheses and significance stars reflect CRVE. * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
+
+%% =============================================================================
+%% PLACEHOLDER LABELS FOR DEMOTED FIGURES (referenced from main text)
+%% These need to be created / moved from current appendix or main text
+%% =============================================================================
+
+\todo{The following appendix figures are referenced from the main text and need to be included here or in the online supplement:
+\begin{itemize}
+    \item \texttt{fig:appA\_emp\_trends} -- Employment trends (demoted from main Fig 4)
+    \item \texttt{fig:appA\_weeks} -- Weeks worked (demoted from main Fig 7)
+    \item \texttt{fig:appA\_specurve} -- Specification curves (demoted from main Fig 9)
+    \item \texttt{fig:appA\_het\_qc} -- Heterogeneity by QC count (demoted from main Fig 11)
+    \item \texttt{fig:appA\_het\_qc\_age} -- Heterogeneity by QC age (demoted from main Fig 13)
+    \item \texttt{fig:appA\_fiscal\_spill} -- Fiscal spillover decomposition (demoted from main Fig 16)
+    \item \texttt{fig:fig\_appA\_sch\_15\_17} -- EITC schedules 2015/2017 (keep from current appendix)
+    \item \texttt{fig:fig\_appA\_eitc\_ctc} -- EITC+CTC schedules (keep from current appendix)
+    \item \texttt{fig:fig\_appA\_unemp} -- Unemployment trends (keep from current appendix)
+    \item \texttt{fig:fig\_appA\_minwage} -- Minimum wages (keep from current appendix)
+    \item \texttt{fig:fig\_appA\_firststage} -- ATR first stage (keep from current appendix)
+\end{itemize}}
+
+
+%% =============================================================================
+%% ONLINE SUPPLEMENT SECTIONS (to be split into separate document)
+%% =============================================================================
+
+\revnote{The following appendix sections should be moved to a separate online supplement document. Kept here temporarily for reference.}
+
+\todo{Online Appendix sections to create:
+\begin{itemize}
+    \item \textbf{Appendix B: Other Populations} -- Married women, single/married men event studies (current App B, unchanged)
+    \item \textbf{Appendix C: Self-Employment} -- Wage worker tables + event studies, self-employment tables + event studies (current App C, unchanged)
+    \item \textbf{Appendix D: Alternative Inference} -- now included above as \Cref{sec:app_inf} with the regenerated (bug-fixed) battery; table numbering changed to employed/full-time/part-time (\texttt{tab\_appE\_tab1\_1/2/3})
+    \item \textbf{Appendix E: Simulated Instrument} -- First stage, reduced form, IV tables (from archived \texttt{03\_tab\_sim\_inst.do})
+    \item \textbf{Appendix F: Quadruple-Difference Details} -- Full table with all specs and earnings outcomes
+    \item \textbf{Appendix G: Oster Bounds Details} -- Full $\delta^*$ matrix across specifications
+    \item \textbf{Appendix H: Education-Stratified Results} -- \texttt{tab\_main\_educ} + \texttt{fig\_event\_emp\_educ}
+    \item \textbf{Appendix I: Earnings Measurement} -- Extended ACS caveats discussion (cut from main Section 6)
+\end{itemize}}
+
+
+\end{document}
