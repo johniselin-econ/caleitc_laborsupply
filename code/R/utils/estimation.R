@@ -48,8 +48,14 @@ setup_did_vars <- function(df, post_year = 2014, eventstudy = FALSE) {
 # run_triple_diff (programs.do:191-258): reghdfe outcome treated
 #   [+ c.unemp#i.qcvar + c.minwage#i.qcvar] [aw=weight],
 #   absorb(fes + controls) vce(cluster clustervar)
-# In fixest, c.x#i.g (all-level slopes, no reference) is i(g, x); the treated
-# coefficient is invariant to the slope parameterization.
+#
+# Collinearity note: with state_fips^year absorbed and a state-year-level x
+# (unemployment, minimum wage), the full slope set {x * 1[qc = k]} sums to x,
+# which lies in the absorbed span — one slope must drop. reghdfe omits the
+# HIGHEST qc level (log: "3.qc_ct#c.state_unemp omitted"); we mirror that
+# with ref = max level so the design matrix matches column-for-column
+# (validated SEs then agree to display precision instead of drifting with
+# whichever column the solver happens to drop).
 run_triple_diff <- function(outcome, data,
                             treatvar = "treated",
                             controls = NULL,
@@ -62,8 +68,48 @@ run_triple_diff <- function(outcome, data,
 
   rhs <- treatvar
   for (v in c(unempvar, minwagevar)) {
-    rhs <- if (!is.null(qcvar)) paste0(rhs, " + i(", qcvar, ", ", v, ")")
-           else paste(rhs, "+", v)
+    if (!is.null(qcvar)) {
+      ref <- max(data[[qcvar]], na.rm = TRUE)
+      rhs <- paste0(rhs, " + i(", qcvar, ", ", v, ", ref = ", ref, ")")
+    } else {
+      rhs <- paste(rhs, "+", v)
+    }
+  }
+
+  fml <- as.formula(paste(outcome, "~", rhs, "|",
+                          paste(c(fes, controls), collapse = " + ")))
+
+  # fixef.tol 1e-10: validation-grade demeaning precision (reghdfe uses 1e-8;
+  # fixest default 1e-6 leaves SEs drifting at ~1e-3 in the interaction specs)
+  feols(fml, data = data,
+        weights = as.formula(paste0("~", weightvar)),
+        cluster = as.formula(paste0("~", clustervar)),
+        ssc = SSC_REGHDFE,
+        fixef.tol = 1e-10)
+}
+
+# run_event_study (programs.do:267-318): as run_triple_diff but the treatment
+# term is b<baseyear>.<eventvar> — year-specific effects with the base year
+# as reference. Same collinearity mirroring for the qc-interacted controls.
+run_event_study <- function(outcome, data,
+                            eventvar = "childXyearXca",
+                            baseyear = 2014,
+                            controls = NULL,
+                            unempvar = NULL,
+                            minwagevar = NULL,
+                            fes = DID_BASE,
+                            weightvar = "weight",
+                            clustervar = "state_fips",
+                            qcvar = NULL) {
+
+  rhs <- paste0("i(", eventvar, ", ref = ", baseyear, ")")
+  for (v in c(unempvar, minwagevar)) {
+    if (!is.null(qcvar)) {
+      ref <- max(data[[qcvar]], na.rm = TRUE)
+      rhs <- paste0(rhs, " + i(", qcvar, ", ", v, ", ref = ", ref, ")")
+    } else {
+      rhs <- paste(rhs, "+", v)
+    }
   }
 
   fml <- as.formula(paste(outcome, "~", rhs, "|",
@@ -72,5 +118,6 @@ run_triple_diff <- function(outcome, data,
   feols(fml, data = data,
         weights = as.formula(paste0("~", weightvar)),
         cluster = as.formula(paste0("~", clustervar)),
-        ssc = SSC_REGHDFE)
+        ssc = SSC_REGHDFE,
+        fixef.tol = 1e-10)
 }

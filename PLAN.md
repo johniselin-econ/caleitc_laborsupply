@@ -413,3 +413,39 @@ Author decisions flagged (not made unilaterally):
 - [ ] Stale legacy outputs in `results/` (old `tab_sdid_county_*_{nonweighted,
       standard,weighted}`, `tab_sdid_state_*`, `tab2_*`–`tab6_*` in
       `results/paper/`) — left in place; sweep when the new SDID exhibits land.
+
+---
+
+## Phase 2 status (started 2026-07-04)
+
+- [x] **`qc_assignment` ported and validated row-for-row.**
+      `code/R/utils/qc_assignment.R` collapses the per-pernum Stata loop to
+      grouped joins; six faithfulness quirks documented inline (age 0→1
+      recode, distinct-parent `matched` counts, cap-at-9 placed BETWEEN the
+      pointer phase and the HOH fallback, strict-age pointer matches,
+      grandchild→foster→sibling order, Stata missing semantics for
+      HOH-less households). Golden dumps for 2012 + 2015
+      (`code/hpc/stage4_qcdump.do`, job 17094344): **all 5,957,813 rows
+      identical** on qc_ct/matched/min_qc_age (job 17094416).
+- [x] **Estimation helpers ported and validated coefficient-by-coefficient.**
+      `code/R/utils/estimation.R`: `setup_did_vars`, `run_triple_diff`,
+      `run_event_study` on fixest. Golden checks (jobs 17094715/17094737):
+      all 12 tab_main coefficient/SE pairs and all 15 event-study
+      coefficients match at display precision (coefs ≤ 1.5e-7 rel., SEs
+      ≤ 6.6e-6 rel., N exact). Three reghdfe-matching conventions locked in
+      (documented in estimation.R): `ssc(fixef.K = "nested",
+      cluster.adj = TRUE)`; the qc-interacted state-year controls drop the
+      HIGHEST qc level (mirrors reghdfe's collinearity omission —
+      `Σ_k x·1[qc=k] = x` lies in the absorbed state×year span);
+      `fixef.tol = 1e-10` (fixest's default 1e-6 leaves clustered SEs
+      drifting at ~1e-3 in the interaction specs).
+- [ ] Cleaning pipeline port (`01_clean_data.do` → R): the big remaining
+      piece — per-year prep, TAXSIM via `usincometaxes` (sim 1/2/3), income
+      variables, merges (unemployment, minimum wage, county), state_status,
+      sample flags, working-file assembly. `qc_assignment` (done) was the
+      treatment-defining risk; TAXSIM columns v25/v39/v10 remapping and the
+      sim-3 kink targets (`caleitc_params.txt`, provenance unknown — see
+      `data/eitc_parameters/README.md`) are the remaining hard parts.
+- [ ] Remaining table helpers as needed by later exhibits (`run_all_specs`
+      wrapper, `add_table_stats` ymean/implied-effect stats, PPML wrappers,
+      export/`modelsummary` layer).
