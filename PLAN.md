@@ -306,9 +306,17 @@ Runs (updated 2026-07-02):
       **exactly** (spec-1 employed 0.8280433, spec-4 FT −4.076644). The committed
       `results/paper/tab_main_*` (480,445) are simply pre-overhaul stale files
       that were never regenerated. **The rebuilt extract is canonical.**
-      Remaining to-do: regenerate `tab_main_*` (and other stale stage-1 outputs)
-      into `results/paper/` and update hard-coded prose (§Results "−0.4",
-      "3.4 pp" → rebuilt-extract values).
+      Done 2026-07-04: synced rebuilt-extract `tab_main_*`, `tab_col_placebo_*`,
+      `tab_earnings_*` into `results/paper/` (SDID tables left alone — being
+      re-estimated from scratch; `tab_appA_balance_*` has no local mirror).
+      Prose was already written against rebuilt numbers; fixed the remaining
+      mismatches (FT lower bound 2.1→2.2, implied shift 75,000→76,000; spec-1
+      employment is now 0.8** so "insignificant across all specifications"
+      reworded; college-placebo FT decline now starred in all four specs so
+      "not consistently significant" reworded). Flagged, not changed
+      (author-voice calls): §Earnings "4 and 7 percent" understates the PPML
+      upper bound (−0.08 ⇒ 8%; true in the old vintage too), and the intro's
+      "approximately 50,000" sits low in the new 41k–76k implied range.
 - [x] **+1 RI convention re-run complete** (SLURM job 17058169, 10h15m,
       2026-07-04; debug validation job 17048331 agreed on ATEs/CRVE with
       coarser resampling p-values). vs. the pre-change benchmark (17006108):
