@@ -71,7 +71,10 @@ increases could *mimic* the FT→PT treatment effect. Complement the quad-diff w
    instrument machinery already builds most of this) and interact treatment with
    predicted-exposure terciles. Stays entirely inside the non-college sample, so it is
    immune to the "college women are a bad counterfactual" critique and has a different
-   bias profile than the quad-diff.
+   bias profile than the quad-diff. *(See `PLAN_siminstrument_note.md` for the
+   continuous-DiD methodology: reframe Sim 2 as an exposure-design DiD per
+   Callaway–Goodman-Bacon–Sant'Anna 2024 / Borusyak–Hull 2023, with dose-group
+   event studies implementing this item.)*
 3. **Medicaid.** CA expanded January 2014; part of the control pool did not. Promote the
    Medicaid-expansion-states-only control pool (already in the spec curve) to a named
    test; note the event-study break at 2015 (not 2014) as supporting evidence.
