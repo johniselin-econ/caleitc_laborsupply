@@ -120,3 +120,19 @@ taxsim_out.dta
 .claude/
 CLAUDE.md
 quality_reports/
+
+# -------------------------------------------
+# Machine-specific config (commit only the .example)
+# -------------------------------------------
+config/local_paths.yaml
+
+# -------------------------------------------
+# renv (commit renv.lock, activate.R, settings.json only)
+# -------------------------------------------
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+renv/staging/

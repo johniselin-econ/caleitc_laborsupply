@@ -1,0 +1,135 @@
+# =============================================================================
+# CalEITC Labor Supply — consolidated analysis parameters
+#
+# Single source of truth for constants previously duplicated (and in places
+# inconsistent) across 01_clean_data.do, 02_eitc_param_prep.do,
+# 02b_caleitc_param_gen.do, 02_mvpf.do, 03_fig_spec_curve.do, and
+# 04_appA_fig_spec_curve_reported.do. Values transcribed 2026-07-04 from the
+# audit in PLAN.md §D Phase 1; file:line provenance noted per block.
+#
+# Load in R via code/R/utils/config.R (yaml::read_yaml). During the migration
+# the Stata pipeline keeps its own copies; this file is authoritative for R.
+# =============================================================================
+
+years:
+  analysis_start: 2012          # 00_caleitc.do
+  analysis_end: 2017
+  data_start: 2006
+  data_end: 2019
+  treatment_base: 2014          # last pre-period year (event-study base)
+  caleitc_start: 2015           # first CalEITC tax year (enacted June 2015)
+
+seed: 56403
+
+sample:
+  age_min: 20
+  age_max: 49
+  age_max_alt: 64               # alternate sample used in spec curves
+  full_time_hours: 35           # usual hours/week threshold
+  full_time_hours_alts: [31, 39]  # alt thresholds in 01_clean_data.do:360-373
+
+# -----------------------------------------------------------------------------
+# State classification (FIPS). Source of truth: 01_clean_data.do:513-530
+# (state_status: 2 = treated, 1 = control, 0 = EITC-change (dropped),
+# -1 = excluded).
+# -----------------------------------------------------------------------------
+states:
+  treated: 6                    # California
+  excluded: [2, 11]             # Alaska, DC
+  # States with their own EITC changes in-window; dropped from the control
+  # pool when building state_status (01_clean_data.do:520):
+  eitc_change:
+    [8, 9, 15, 17, 19, 20, 22, 23, 24, 25, 26, 27, 30, 34, 35, 39, 41, 44,
+     45, 50, 55]
+  # Named alternative control pools (02_mvpf.do:121-146; duplicated verbatim
+  # in 03_fig_spec_curve.do:82-96 and 04_appA_fig_spec_curve_reported.do:97-111):
+  pools:
+    # contrs==1 "no state EITC": DROP these FIPS. NOTE: subtly different from
+    # eitc_change above (adds 10, 18, 31, 40, 49, 51; includes the always-
+    # excluded 2, 11; omits 20, 22). Two definitions coexist in the Stata
+    # code — reconcile before the R port fixes one.
+    no_state_eitc_drop:
+      [2, 8, 9, 10, 11, 15, 17, 18, 19, 23, 24, 25, 26, 27, 30, 31, 34, 35,
+       39, 40, 41, 44, 45, 49, 50, 51, 55]
+    # contrs==2 "Medicaid expansion by 2014": KEEP these FIPS
+    medicaid_2014_keep:
+      [4, 5, 6, 8, 9, 10, 11, 15, 17, 19, 21, 24, 25, 26, 27, 32, 33, 34,
+       35, 36, 38, 39, 41, 44, 50, 53, 54]
+    # contrs==3 "minimum-wage increase in 2014": KEEP these FIPS
+    minwage_2014_keep: [6, 9, 10, 26, 27, 34]
+
+# -----------------------------------------------------------------------------
+# Price indices. THREE series and THREE base years coexist in the Stata code;
+# all are recorded here verbatim. The R port must pick one canonical
+# series/base (author decision, flagged in PLAN.md) — until then, blocks are
+# named by series so nothing silently changes.
+# -----------------------------------------------------------------------------
+prices:
+  # IPUMS cpi99 usage (01_clean_data.do): real 2019 USD = nominal * cpi99 / cpi99_2019
+  cpi99_2019: 0.652             # divisor, 01_clean_data.do:402-436
+  cpi99_2015_fallback: 0.811    # fallback if acs_2015.csv missing
+                                # (01_clean_data.do:64) — FLAG: true 2015
+                                # cpi99 is ~0.68; verify before reuse
+  # CPI-U-RS (02b_caleitc_param_gen.do:159-170; deflator base 2015 = 372.2,
+  # real values expressed in 2017 USD via 385.0):
+  cpi_u_rs:
+    2010: 340.5
+    2011: 352.5
+    2012: 359.7
+    2013: 365.0
+    2014: 370.9
+    2015: 372.2
+    2016: 377.0
+    2017: 385.0
+  # CPI-U all items (02_mvpf.do:776-785; base 2017 = 245.121):
+  cpi_u:
+    2015: 237.002
+    2016: 240.005
+    2017: 245.121
+    2018: 251.100
+    2019: 255.653
+
+# -----------------------------------------------------------------------------
+# EITC schedules, nominal USD, keyed by tax_year then qualifying-child count.
+# Federal TY2016: 02_eitc_param_prep.do:28-69 (duplicated as locals at
+# 145-188). CalEITC TY2015-2017: 02b_caleitc_param_gen.do:62-149 (TY2016 also
+# duplicated in 02_eitc_param_prep.do:87-123 and 191-224; values agree).
+# kink1 = end of phase-in ("max_earned" in 02_eitc_param_prep,
+# "pwages_nominal" in 02b); kink2 = end of plateau / start of phase-out.
+# CalEITC has no plateau (kink2 = kink1) and qc0 is ineligible.
+# Pre-2015 CalEITC "schedules" used in simulations are CPI-backcast from
+# TY2015 (02b), not independently legislated — derive, don't store.
+# -----------------------------------------------------------------------------
+eitc_federal:
+  2016:
+    qc0: {phasein_rate: 0.0765, kink1: 6610,  max_credit: 506,
+          kink2: 8270,  phaseout_rate: 0.0765, max_income: 14880}
+    qc1: {phasein_rate: 0.34,   kink1: 10180, max_credit: 3373,
+          kink2: 18190, phaseout_rate: 0.1598, max_income: 39296}
+    qc2: {phasein_rate: 0.40,   kink1: 14290, max_credit: 5572,
+          kink2: 18190, phaseout_rate: 0.2106, max_income: 44648}
+    qc3: {phasein_rate: 0.45,   kink1: 14290, max_credit: 6269,
+          kink2: 18190, phaseout_rate: 0.2106, max_income: 47955}
+
+eitc_california:
+  2015:
+    qc1: {phasein_rate: 0.152, kink1: 2500, max_credit: 380,
+          phaseout_rate: 0.058, max_income: 6580}
+    qc2: {phasein_rate: 0.179, kink1: 3500, max_credit: 627,
+          phaseout_rate: 0.096, max_income: 6580}
+    qc3: {phasein_rate: 0.201, kink1: 3500, max_credit: 705,
+          phaseout_rate: 0.108, max_income: 6580}
+  2016:
+    qc1: {phasein_rate: 0.17,  kink1: 5089, max_credit: 865,
+          phaseout_rate: 0.0799, max_income: 13870}
+    qc2: {phasein_rate: 0.20,  kink1: 7145, max_credit: 1429,
+          phaseout_rate: 0.1053, max_income: 13870}
+    qc3: {phasein_rate: 0.225, kink1: 7145, max_credit: 1607,
+          phaseout_rate: 0.1053, max_income: 13870}
+  2017:
+    qc1: {phasein_rate: 0.17,  kink1: 5189, max_credit: 882,
+          phaseout_rate: 0.0799, max_income: 15009}
+    qc2: {phasein_rate: 0.20,  kink1: 7286, max_credit: 1457,
+          phaseout_rate: 0.1053, max_income: 15009}
+    qc3: {phasein_rate: 0.225, kink1: 7286, max_credit: 1639,
+          phaseout_rate: 0.1053, max_income: 15009}

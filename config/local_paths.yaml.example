@@ -1,0 +1,19 @@
+# =============================================================================
+# Machine-specific paths — copy to config/local_paths.yaml and edit.
+# config/local_paths.yaml is gitignored; this .example file is the template.
+# Replaces the hard-coded Overleaf path formerly at 00_caleitc.do:61/68.
+# All paths may be absolute or relative to the repo root.
+# =============================================================================
+
+# Optional Overleaf/Dropbox sync target for figures and tables.
+# Leave empty (or set overleaf: false) to export locally only.
+overleaf: false
+overleaf_dir: ""                # e.g. "C:/Users/you/Dropbox/Apps/Overleaf/CalEITC"
+
+# API credentials file (never commit). CSV with header "name, code" and rows
+# for "ipums" and "bls".
+api_codes: "api_codes.txt"
+
+# Data directories — defaults are in-repo; override e.g. to a scratch disk.
+data_dir: "data"
+results_dir: "results"
