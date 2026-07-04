@@ -214,9 +214,9 @@ do ${code}03_tab_quad_diff.do
 do ${code}03_tab_oster_bounds.do
 
 ** Education-stratified results: within-CA triple-diff by education
-** (RECONSTRUCTED script — validate against committed tab_main_educ_* outputs;
-** see header of 03_tab_main_educ.do)
+** (recovered from the 2026-03-05 run logs; see script headers)
 do ${code}03_tab_main_educ.do
+do ${code}03_fig_event_emp_educ.do
 
 ** -----------------------------------------------------------------------------
 ** Section 6: Earnings

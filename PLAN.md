@@ -297,13 +297,26 @@ Runs (updated 2026-07-02):
       regenerated three-panel table (`tab_appE_tab1_1/2/3` = employed/FT/PT) and a
       methods note; synced the three tables to `results/paper/`. FP p = 0.000 still
       awaits the `(1+#exceed)/(1+B)` convention decision below.
-- [ ] **Vintage mismatch in `results/paper/`** (author decision): its `tab_main_*`
-      are the old-extract versions (N = 480,445; spec-4 employed −0.4, FT −3.8,
-      PT +3.4) while the regenerated appE tables now alongside them use the rebuilt
-      extract (N = 461,616; −0.3 / −4.1 / +3.7, matching `results/tables/`).
-      A compile mixing both is internally inconsistent. Syncing `tab_main_*`
-      changes headline numbers and hard-coded prose (e.g. §Results "−0.4",
-      "3.4 pp") — decide whether the rebuilt extract is now canonical.
+- [x] **Vintage mismatch in `results/paper/` — resolved by the recovered run logs**
+      (`logs.zip`, explored 2026-07-04): the author's own local pipeline switched
+      from N = 480,445 to N = 461,616 at the **2026-02-01/02 data-clean overhaul**
+      (new TAXSIM sim-3 machinery, `primary_filer` logic), and every local run
+      thereafter (2026-02-02 through the final 2026-03-07 `03_tab_main` run) used
+      the 461,616 extract with coefficients matching the cluster rebuild
+      **exactly** (spec-1 employed 0.8280433, spec-4 FT −4.076644). The committed
+      `results/paper/tab_main_*` (480,445) are simply pre-overhaul stale files
+      that were never regenerated. **The rebuilt extract is canonical.**
+      Remaining to-do: regenerate `tab_main_*` (and other stale stage-1 outputs)
+      into `results/paper/` and update hard-coded prose (§Results "−0.4",
+      "3.4 pp" → rebuilt-extract values).
+- [x] **+1 RI convention re-run complete** (SLURM job 17058169, 10h15m,
+      2026-07-04; debug validation job 17048331 agreed on ATEs/CRVE with
+      coarser resampling p-values). vs. the pre-change benchmark (17006108):
+      WCBS unchanged, part-time FP 0.043 → 0.037 (spec 4, still <0.05),
+      full-time FP now 0.001 (no more exact zeros). Tables committed and
+      synced to `results/paper/`; appendix table note updated with the +1
+      convention and identical-design refit language. Footnote 261 prose
+      verified still accurate.
 
 Author decisions flagged (not made unilaterally):
 
@@ -319,6 +332,23 @@ Author decisions flagged (not made unilaterally):
       missing — counted as an exceedance — and the last draw was dropped).
       Benchmark re-run of the battery: debug validation job 17048331, then full
       stage-2; committed job-17006108 tables are the pre-change benchmark.
-- [ ] `sdid_wt` population-weight extraction (first-period mean vs. panel total).
-- [ ] Whether the reconstructed within-CA education design is what produced
-      `tab_main_educ_*` — if the original script exists on another machine, prefer it.
+- [x] `sdid_wt` population-weight extraction — **mooted 2026-07-04**: author
+      decision to start the SDID from scratch on the new methodology (the
+      `synthdid_weights` fork, one joint weighted fit) rather than replicate
+      `sdid_wt.do`. No golden-file replication of the per-county-loop
+      estimator; Table 2 will be re-estimated (with in-time placebos +
+      detrend/stratified remedies per §D).
+- [x] Education design — **recovered from the original run logs 2026-07-04**
+      (`03_tab_main_educ_log_2026-03-05.log` + `03_fig_event_emp_educ_log_2026-03-05.log`
+      in `logs.zip`; Stata logs echo the full scripts). The July reconstruction
+      was wrong in one load-bearing way: the original triple-diff FEs interact
+      the **full 4-level `education`** variable (`qc_ct#education`,
+      `year#education`), not the binary no-college indicator, and spec 1 has no
+      county FEs — this explains the 2.1 vs 1.8 ATE and 0.063 vs 0.099 adj-R²
+      gaps. Also: the event study was a **separate script**
+      (`03_fig_event_emp_educ.do`, eventvar `childXyearXnocol`), whose 2016
+      employed coefficient 2.887 (1.124) matches the committed CSV. Both
+      scripts re-transcribed verbatim from the logs into `code/` and registered
+      in `code/00_caleitc.do`; log-vintage data is the same rebuilt extract
+      (CA N = 132,910), so a validation re-run should now match the committed
+      tables to the digit. **To-do: validation re-run.**

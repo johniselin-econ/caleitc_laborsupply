@@ -1,38 +1,39 @@
 /*******************************************************************************
 File Name:      03_tab_main_educ.do
-Creator:        John Iselin (reconstructed July 2026)
+Creator:        John Iselin
 Date Update:    July 2026
 
-Purpose:        RECONSTRUCTION of the missing script behind the committed
-                outputs tab_main_educ_{1,2,3}.tex, tab_main_educ_end.tex,
-                fig_event_emp_educ_coefficients.csv, and fig_event_emp_educ.*
-                (added in commit 53a2fed with no producing do-file).
+Purpose:        Produces tab_main_educ_{1,2,3}.tex and tab_main_educ_end.tex:
+                within-California triple-difference using education
+                (non-college vs. college) in place of the state dimension:
 
-                Inferred design — WITHIN-CALIFORNIA triple-difference using
-                education (non-college vs. college) in place of the state
-                dimension:
+                    treated = nocollege x qc_present x post,  CA only
 
-                    treated = noncollege x qc_present x post,  CA only
-
-                Column structure (from tab_main_educ_end.tex):
-                  (1) Triple-Difference FEs
+                Column structure:
+                  (1) Triple-Difference FEs (4-level education interactions)
                   (2) + County FEs
                   (3) + Demographic Controls
 
-                VALIDATION TARGETS (committed outputs; confirm before trusting):
-                  N = 132,910 in all columns
-                  Employed:  ATE 1.8* (0.9) | 1.7* (0.9) | 1.5 (1.0),  ymean 71.6
-                  Full-time: ATE 1.1 (1.2)  | 1.0 (1.2)  | 0.7 (1.2),  ymean 51.3
-                  Part-time: ATE 0.7 (0.9)  | 0.7 (0.8)  | 0.8 (0.9),  ymean 20.4
-                  Event study (col-3 controls), e.g. employed 2016 = 2.887 (1.124)
+                RECOVERED July 2026 from the original run log
+                (03_tab_main_educ_log_2026-03-05.log): the do-file was lost
+                from the repo, but the log echoes the full script. This file
+                is a faithful transcription. Key design points confirmed by
+                the log: triple-diff FEs interact the FULL 4-level education
+                variable (qc_ct#education, year#education), not the binary
+                no-college indicator; spec 1 has no county FEs; SEs cluster
+                on county_fips (35 clusters).
 
-                Open reconstruction choices (flagged, not certain):
-                  - SEs clustered on county_fips (state clustering is impossible
-                    within CA; committed SE magnitudes are consistent with
-                    county clustering). ACS-unidentified counties (county_fips
-                    == 0) form a single cluster.
-                  - Demographic controls exclude education (it is the third
-                    difference dimension here).
+                VALIDATION TARGETS (from the 2026-03-05 log; identical
+                acs_working_file vintage as the current rebuild, CA N=132,910):
+                  Employed:  1.771 (0.905) | 1.748 (0.901) | 1.510 (0.989)
+                  Full-time: 1.117 (1.192) | 1.029 (1.174) | 0.696 (1.177)
+                  Part-time: 0.654 (0.856) | 0.718 (0.844) | 0.813 (0.877)
+                  Adj. R2 (employed): 0.0986 | 0.1042 | 0.1195
+                  ymeans: 71.645 / 51.290 / 20.355
+
+                Uses utility programs: run_triple_diff, add_table_stats,
+                add_spec_indicators, export_results, make_table_coefplot,
+                export_graph
 
 Project: CalEITC Labor Supply Effects
 *******************************************************************************/
@@ -43,10 +44,17 @@ log using "${logs}03_tab_main_educ_log_${date}", ///
     name(log_03_tab_main_educ) replace text
 
 ** =============================================================================
-** Load data and prepare sample: California only, ALL education levels
+** Load data — CA only, all education levels
 ** =============================================================================
 
-use if  female == 1 & ///
+** Variables to load
+local outcomes "employed_y full_time_y part_time_y"
+local controls "age_bracket minage_qc race_group hispanic hh_adult_ct"
+
+use weight `outcomes' `controls' state_unemp mean_st_mw qc_* year ///
+    female married in_school age_sample_20_49 citizen_test ///
+    state_fips county_fips education ///
+    if  female == 1 & ///
         married == 0 & ///
         in_school == 0 & ///
         age_sample_20_49 == 1 & ///
@@ -55,55 +63,30 @@ use if  female == 1 & ///
         inrange(year, ${start_year}, ${end_year}) ///
     using "${data}final/acs_working_file.dta", clear
 
-** Define outcomes
-local outcomes "employed_y full_time_y part_time_y"
+di _n "Loaded CA-only sample (all education levels): N = " _N
 
-** Rescale outcome variables to percentage points
-foreach out of local outcomes {
-    replace `out' = `out' * 100
-}
+** =============================================================================
+** Create DID variables
+** =============================================================================
 
-** Education dimension (replaces the state dimension of the main design)
-gen noncollege = (education < 4)
-label var noncollege "No college degree"
+** No-college indicator (education < 4)
+gen nocollege = (education < 4)
 
-** DID variables
-gen post = (year >= 2015)
-gen treated = (noncollege == 1 & qc_present == 1 & post == 1)
+** Post-period indicator
+gen post = (year > 2014)
+
+** Treatment indicator: no-college x QC x post
+gen treated = (nocollege == 1 & qc_present == 1 & post == 1)
 label var treated "ATE"
 
-** Constant "state" indicator for add_table_stats (all obs are CA)
-gen ca = 1
-
-** Event-study interaction (repo convention, cf. setup_did_vars)
-gen childXyearXeduc = cond(qc_present == 1 & noncollege == 1, year, 2014)
-
-** Update adults per HH (cap at 3)
+** Cap adults per HH at 3
 replace hh_adult_ct = 3 if hh_adult_ct > 3
+capture label drop lb_adult_ct
 label define lb_adult_ct 1 "1" 2 "2" 3 "3+"
 label values hh_adult_ct lb_adult_ct
 
-** =============================================================================
-** Define specifications
-** =============================================================================
-
-** Demographic controls: standard set minus education (3rd diff dimension)
-local demog "age_bracket minage_qc race_group hispanic hh_adult_ct"
-
-** SPEC 1: Triple-difference FEs (education x year x QC pairwise structure)
-local fes1 "noncollege year qc_ct noncollege#year noncollege#qc_ct year#qc_ct"
-local controls1 ""
-
-** SPEC 2: Add county FEs
-local fes2 "`fes1' county_fips"
-local controls2 ""
-
-** SPEC 3: Add demographic controls
-local fes3 "`fes2'"
-local controls3 "`demog'"
-
-** Clustering (see header note)
-local cl "county_fips"
+** Triple-diff FEs: education replaces state as 3rd dimension
+local did_base "qc_ct year education qc_ct#year qc_ct#education year#education"
 
 ** =============================================================================
 ** Run regressions and export tables
@@ -115,29 +98,59 @@ local ct = 1
 
 foreach out of local outcomes {
 
-    forvalues spec = 1(1)3 {
+    ** Scale outcome to percentage points
+    replace `out' = `out' * 100
 
-        eststo est_educ_`out'_`spec': ///
-            reghdfe `out' treated [aw = weight], ///
-            absorb(`fes`spec'' `controls`spec'') ///
-            vce(cluster `cl')
+    ** -----------------------------------------------------------------
+    ** SPEC 1: Basic triple-diff FEs only
+    ** -----------------------------------------------------------------
+    eststo est_`out'_1: ///
+        run_triple_diff `out', ///
+            treatvar(treated) ///
+            fes(`did_base') ///
+            weightvar(weight) ///
+            clustervar(county_fips)
 
-        ** Add ymean and implied effect (mirrors add_table_stats usage)
-        add_table_stats, ///
-            outcome(`out') treatvar(treated) postvar(post) ///
-            statevar(ca) qcvar(qc_present) weightvar(weight) ///
-            samplecond("noncollege == 1")
+    add_table_stats, outcome(`out') treatvar(treated) ///
+        postvar(post) statevar(nocollege) qcvar(qc_present) ///
+        weightvar(weight)
+    add_spec_indicators, spec(1)
 
-        ** Spec indicator strings
-        local s2txt = cond(`spec' >= 2, "Yes", "No")
-        local s3txt = cond(`spec' >= 3, "Yes", "No")
-        estadd local s1 "Yes"
-        estadd local s2 "`s2txt'"
-        estadd local s3 "`s3txt'"
-    }
+    ** -----------------------------------------------------------------
+    ** SPEC 2: Add county FEs
+    ** -----------------------------------------------------------------
+    eststo est_`out'_2: ///
+        run_triple_diff `out', ///
+            treatvar(treated) ///
+            fes(`did_base' county_fips) ///
+            weightvar(weight) ///
+            clustervar(county_fips)
 
-    ** Export panel using utility (dual local/Overleaf export)
-    export_results est_educ_`out'_1 est_educ_`out'_2 est_educ_`out'_3, ///
+    add_table_stats, outcome(`out') treatvar(treated) ///
+        postvar(post) statevar(nocollege) qcvar(qc_present) ///
+        weightvar(weight)
+    add_spec_indicators, spec(2)
+
+    ** -----------------------------------------------------------------
+    ** SPEC 3: Add demographic controls
+    ** -----------------------------------------------------------------
+    eststo est_`out'_3: ///
+        run_triple_diff `out', ///
+            treatvar(treated) ///
+            controls(`controls') ///
+            fes(`did_base' county_fips) ///
+            weightvar(weight) ///
+            clustervar(county_fips)
+
+    add_table_stats, outcome(`out') treatvar(treated) ///
+        postvar(post) statevar(nocollege) qcvar(qc_present) ///
+        weightvar(weight)
+    add_spec_indicators, spec(3)
+
+    ** -----------------------------------------------------------------
+    ** Export table panel
+    ** -----------------------------------------------------------------
+    export_results est_`out'_1 est_`out'_2 est_`out'_3, ///
         filename("tab_main_educ_`ct'.tex") ///
         statslist($stats_list) ///
         statsfmt($stats_fmt) ///
@@ -146,9 +159,9 @@ foreach out of local outcomes {
         label3("  Treated group mean in pre-period") ///
         label4("  Implied employment effect")
 
-    ** Spec indicators footer (first outcome only)
+    ** For first outcome, create spec indicators table
     if `ct' == 1 {
-        export_results est_educ_`out'_1 est_educ_`out'_2 est_educ_`out'_3, ///
+        export_results est_`out'_1 est_`out'_2 est_`out'_3, ///
             filename("tab_main_educ_end.tex") ///
             statslist("s1 s2 s3") ///
             statsfmt("%9s %9s %9s") ///
@@ -159,57 +172,32 @@ foreach out of local outcomes {
     }
 
     local ct = `ct' + 1
+
 }
 
 ** =============================================================================
-** Event study (spec 3 controls) + coefficient CSV + figure
+** Create coefficient plot figure
 ** =============================================================================
 
-tempname coefs
-postfile `coefs' str20 outcome year coef se ci_lo ci_hi ///
-    using "${data}tmp/educ_event_coefs.dta", replace
+** Define outcome labels for panel titles (| separated)
+local out_labels "Employed in last 12 months|Full-time in last 12 months|Part-time in last 12 months"
 
-foreach out of local outcomes {
+** Define specification labels (| separated)
+local spec_labels "No Controls|County FEs|Add Demographics"
 
-    eststo ev_educ_`out': ///
-        reghdfe `out' ib2014.childXyearXeduc [aw = weight], ///
-        absorb(`fes3' `controls3') ///
-        vce(cluster `cl')
+** Create coefficient plot using utility
+make_table_coefplot, ///
+    outcomes(employed_y full_time_y part_time_y) ///
+    outlabels(`out_labels') ///
+    specprefix(est_) ///
+    numspecs(3) ///
+    speclabels(`spec_labels') ///
+    ytitle("Effect of the CalEITC on employment (pp)") ///
+    ymin(-5) ymax(5) ycut(2.5) ///
+    savepath("${results}figures/fig_tab_main_educ.png")
 
-    forvalues y = ${start_year}(1)${end_year} {
-        if `y' == 2014 continue
-        local b = _b[`y'.childXyearXeduc]
-        local s = _se[`y'.childXyearXeduc]
-        post `coefs' ("`out'") (`y') (`b') (`s') ///
-            (`b' - 1.96 * `s') (`b' + 1.96 * `s')
-    }
-}
-
-postclose `coefs'
-
-** Export coefficients to CSV (matches committed
-** fig_event_emp_educ_coefficients.csv format)
-preserve
-use "${data}tmp/educ_event_coefs.dta", clear
-export delimited using ///
-    "${results}tables/fig_event_emp_educ_coefficients.csv", replace
-restore
-
-** Event-study figure
-coefplot ///
-    (ev_educ_employed_y, label("Employed") msymbol(O)) ///
-    (ev_educ_full_time_y, label("Full-time") msymbol(D)) ///
-    (ev_educ_part_time_y, label("Part-time") msymbol(T)), ///
-    keep(*.childXyearXeduc) vertical ///
-    rename(^([0-9]+)\.childXyearXeduc$ = \1, regex) ///
-    yline(0, lcolor(gs8) lpattern(dash)) ///
-    xline(2.5, lcolor(gs8)) ///
-    ciopts(recast(rcap)) ///
-    ytitle("Effect on employment (pp), non-college vs. college") ///
-    xtitle("Year") ///
-    note("Within-California triple-difference by education. Base year: 2014.")
-
-export_graph, filename("fig_event_emp_educ")
+** Export graph using utility
+export_graph, filename("fig_tab_main_educ")
 
 ** =============================================================================
 ** End
