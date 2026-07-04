@@ -41,6 +41,10 @@ keep if task_id == `my_task'
 local out = outcome[1]
 local spec = spec[1]
 
+** Deterministic per-task RNG seed (workers otherwise start with arbitrary
+** RNG state; task offset keeps streams distinct across tasks)
+set seed `= ${seed} + `my_task''
+
 di _n "Worker: Processing task `my_task' (outcome=`out', spec=`spec')"
 
 ** =============================================================================

@@ -436,7 +436,7 @@ if _rc != 0 {
     di as error "TAXSIM execution failed. Ensure taxsimlocal35 is installed."
     di as error "Install with: net install taxsimlocal35, from(https://taxsim.nber.org/stata)"
     cd "${dir}"
-    log close log_04
+    log close log_02
     exit 198
 }
 

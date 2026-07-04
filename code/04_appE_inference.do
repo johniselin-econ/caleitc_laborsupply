@@ -524,6 +524,8 @@ gen pot_treat = (qc_present == 1) & (year >= 2015)
 
 local i = 1
 
+local task = 0
+
 foreach out of local outcomes {
 
     di "Outcome: `out'"
@@ -531,6 +533,11 @@ foreach out of local outcomes {
     forvalues spec = 1(1)4 {
 
         di _n "Specification: `spec'"
+
+        ** Deterministic per-task RNG seed, identical to the parallel path
+        ** (task_id: employed 1-4, full_time 5-8, part_time 9-12)
+        local task = `task' + 1
+        set seed `= ${seed} + `task''
 
         ** Set specification locals
         local did "`did`spec''"

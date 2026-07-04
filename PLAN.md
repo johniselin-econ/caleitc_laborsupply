@@ -359,4 +359,45 @@ Author decisions flagged (not made unilaterally):
       scripts re-transcribed verbatim from the logs into `code/` and registered
       in `code/00_caleitc.do`; log-vintage data is the same rebuilt extract
       (CA N = 132,910), so a validation re-run should now match the committed
-      tables to the digit. **To-do: validation re-run.**
+      tables to the digit. **Validated 2026-07-04** (job 17093834): all four
+      `tab_main_educ_*` tables and the event-study CSV are **byte-identical**
+      to the originally committed 53a2fed outputs. Phase 0 closed.
+
+---
+
+## Phase 1 status (started 2026-07-04)
+
+- [x] **renv** on R 4.4.2 (`module load R/4.4.2-gfbf-2024a`): project library
+      hydrated from the site + `~/r_libs_4.4` libraries (70 packages incl.
+      ipumsr, tidycensus, blsR, synthdid), `renv.lock` committed. Root
+      `.Rprofile` auto-activates (also under Stata `rcall`).
+- [x] **`config/parameters.yaml`** — consolidated years/seed/sample bounds,
+      state classification + the three named control pools, all three
+      price-index blocks (recorded verbatim; series/base-year inconsistencies
+      flagged inline rather than resolved), federal TY2016 + CalEITC
+      TY2015–17 schedules. Known reconciliations deferred to the port:
+      (i) two different "no state EITC" lists (`eitc_change` in cleaning vs
+      the mvpf/spec-curve drop list); (ii) cpi99-2015 fallback 0.811 looks
+      wrong (~0.68 expected); (iii) one canonical deflator/base year TBD.
+- [x] **`config/local_paths.yaml(.example)`** — retires the hard-coded
+      Overleaf/Dropbox path for the R pipeline (Stata master unchanged, so
+      John's Windows setup still works).
+- [x] **R scripts folded in natively**: `code/R/00_main.R` + `utils/config.R`
+      drive `api_code.R` / `01_data_prep_other.R` without `rcall` (the rcall
+      entry point still works — scripts self-execute when the expected
+      variables exist). Smoke-tested on the cluster.
+- [x] **Hygiene**: root `00_caleitc.do` duplicate deleted (code/ copy is the
+      March revision; README already pointed there); `02_elasticities.do:439`
+      log-handle fix (`log_04`→`log_02`); deterministic per-task RNG seeds
+      (`${seed} + task_id`) in the parallel worker, `run_inference_task`, and
+      the serial battery loop — serial and parallel now use identical streams
+      per task (note: next appE regeneration will shift resampling p-values
+      slightly since workers previously started with arbitrary RNG state);
+      `data/eitc_parameters/README.md` documents that `caleitc_params.txt`
+      is NOT 02b output (values disagree; provenance unknown) — sim-3 kink
+      targets must be re-derived transparently in Phase 2.
+- [x] `api_codes.txt` confirmed never committed (gitignored from the start);
+      keys stay machine-local.
+- [ ] Stale legacy outputs in `results/` (old `tab_sdid_county_*_{nonweighted,
+      standard,weighted}`, `tab_sdid_state_*`, `tab2_*`–`tab6_*` in
+      `results/paper/`) — left in place; sweep when the new SDID exhibits land.

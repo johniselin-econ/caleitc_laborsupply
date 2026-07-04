@@ -186,6 +186,10 @@ program define run_inference_task
     local out = outcome[1]
     local spec = spec[1]
 
+    ** Deterministic per-task RNG seed (parallel workers otherwise start with
+    ** arbitrary RNG state; task offset keeps streams distinct across tasks)
+    set seed `= ${seed} + `my_task''
+
     di _n "Running task `my_task': outcome=`out', spec=`spec'"
 
     ** Load the prepared analysis data
