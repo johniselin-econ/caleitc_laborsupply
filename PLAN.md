@@ -375,10 +375,22 @@ Author decisions flagged (not made unilaterally):
       state classification + the three named control pools, all three
       price-index blocks (recorded verbatim; series/base-year inconsistencies
       flagged inline rather than resolved), federal TY2016 + CalEITC
-      TY2015–17 schedules. Known reconciliations deferred to the port:
-      (i) two different "no state EITC" lists (`eitc_change` in cleaning vs
-      the mvpf/spec-curve drop list); (ii) cpi99-2015 fallback 0.811 looks
-      wrong (~0.68 expected); (iii) one canonical deflator/base year TBD.
+      TY2015–17 schedules. **All three reconciliations resolved 2026-07-04**
+      (details in parameters.yaml comments): (i) the two state lists are
+      complementary by construction — the mvpf/spec-curve "no state EITC"
+      drop runs AFTER the baseline `state_status > 0` filter, so it only
+      names the stable-EITC states and correctly omits the changers KS/LA;
+      the R port must preserve that order of operations (minor flag: 49 UT
+      pre-2022 EITC status worth a check if the pool is revisited).
+      (ii) cpi99-2015 fallback was wrong: true value 0.703 (extracted from
+      acs_2015.csv, constant across all 2,997,503 rows); fixed in
+      01_clean_data.do — behavior-neutral, the fallback never triggered.
+      Full empirical cpi99 table (2006–2019) now in parameters.yaml.
+      (iii) canonical deflator: IPUMS cpi99 base 2019 for all person-level
+      income (already the main-results convention); CPI-U-RS retained only
+      for CalEITC kink backcasting in parameter generation; the mvpf CPI-U
+      block is legacy — Phase 4 port re-expresses welfare numbers in 2019
+      USD; figure-specific bases (2014/2017) migrate to 2019 when ported.
 - [x] **`config/local_paths.yaml(.example)`** — retires the hard-coded
       Overleaf/Dropbox path for the R pipeline (Stata master unchanged, so
       John's Windows setup still works).

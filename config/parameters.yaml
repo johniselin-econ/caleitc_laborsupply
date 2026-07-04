@@ -44,10 +44,15 @@ states:
   # Named alternative control pools (02_mvpf.do:121-146; duplicated verbatim
   # in 03_fig_spec_curve.do:82-96 and 04_appA_fig_spec_curve_reported.do:97-111):
   pools:
-    # contrs==1 "no state EITC": DROP these FIPS. NOTE: subtly different from
-    # eitc_change above (adds 10, 18, 31, 40, 49, 51; includes the always-
-    # excluded 2, 11; omits 20, 22). Two definitions coexist in the Stata
-    # code — reconcile before the R port fixes one.
+    # RESOLVED 2026-07-04: this list is NOT in conflict with eitc_change
+    # above — in the Stata code it is applied AFTER `keep if state_status > 0`,
+    # i.e. after the eitc_change states are already dropped. So it only names
+    # the additional STABLE-EITC states (10 DE, 18 IN, 31 NE, 40 OK, 49 UT,
+    # 51 VA), and omitting the changers 20 KS / 22 LA is correct. The 2 and 11
+    # entries are redundant (always excluded) but harmless. The R port must
+    # preserve the same order of operations: baseline pool first, then this
+    # drop. (Minor flag: 49 UT had no state EITC pre-2022 — verify against
+    # TPC data if this pool is ever revisited.)
     no_state_eitc_drop:
       [2, 8, 9, 10, 11, 15, 17, 18, 19, 23, 24, 25, 26, 27, 30, 31, 34, 35,
        39, 40, 41, 44, 45, 49, 50, 51, 55]
@@ -59,17 +64,45 @@ states:
     minwage_2014_keep: [6, 9, 10, 26, 27, 34]
 
 # -----------------------------------------------------------------------------
-# Price indices. THREE series and THREE base years coexist in the Stata code;
-# all are recorded here verbatim. The R port must pick one canonical
-# series/base (author decision, flagged in PLAN.md) — until then, blocks are
-# named by series so nothing silently changes.
+# Price indices. RESOLVED 2026-07-04 (canonical policy for the R port):
+#   * CANONICAL: IPUMS cpi99, base year 2019, for ALL person-level income
+#     deflation (this is already the main-results convention; the paper's
+#     earnings tables state "real 2019 dollars"). The cpi99 table below is
+#     EMPIRICAL — extracted from data/acs/acs_{year}.csv on 2026-07-04,
+#     constant within year (verified: 2015 has a single value across all
+#     2,997,503 rows). real_2019 = nominal * cpi99[year] / cpi99[2019].
+#   * CPI-U-RS: retained ONLY for CalEITC kink backcasting inside parameter
+#     generation (02b; base-2015 relative deflator, 2017-USD display) — a
+#     parameter-construction methodology, not an income deflator.
+#   * CPI-U (02_mvpf.do, base 2017): LEGACY — the Phase 4 MVPF port replaces
+#     it with cpi99-based 2019 factors so welfare numbers share the canonical
+#     base; recorded until then so nothing silently changes.
+#   * Figure-specific bases (2014 in fig_earn_hist, 2017 in fig_earn_bins)
+#     migrate to the canonical 2019 base when those figures are ported.
 # -----------------------------------------------------------------------------
 prices:
-  # IPUMS cpi99 usage (01_clean_data.do): real 2019 USD = nominal * cpi99 / cpi99_2019
-  cpi99_2019: 0.652             # divisor, 01_clean_data.do:402-436
-  cpi99_2015_fallback: 0.811    # fallback if acs_2015.csv missing
-                                # (01_clean_data.do:64) — FLAG: true 2015
-                                # cpi99 is ~0.68; verify before reuse
+  canonical:
+    series: cpi99
+    base_year: 2019
+  # IPUMS cpi99 by ACS year (empirical; see note above). The former Stata
+  # fallback 0.811 (01_clean_data.do:64) was WRONG — true 2015 value is
+  # 0.703; fixed in Stata the same day (fallback never triggered on any run
+  # that produced committed results, so no numbers change).
+  cpi99:
+    2006: 0.826
+    2007: 0.803
+    2008: 0.774
+    2009: 0.777
+    2010: 0.764
+    2011: 0.741
+    2012: 0.726
+    2013: 0.715
+    2014: 0.704
+    2015: 0.703
+    2016: 0.694
+    2017: 0.679
+    2018: 0.663
+    2019: 0.652
   # CPI-U-RS (02b_caleitc_param_gen.do:159-170; deflator base 2015 = 372.2,
   # real values expressed in 2017 USD via 385.0):
   cpi_u_rs:

@@ -60,8 +60,11 @@ if _rc == 0 {
     clear
 }
 else {
-    ** Fallback to approximate value if 2015 file not found
-    global cpi_2015 = 0.811
+    ** Fallback if 2015 file not found: true IPUMS cpi99 for 2015
+    ** (constant across all acs_2015.csv rows; see config/parameters.yaml).
+    ** Was 0.811 — wrong, though never triggered on runs behind committed
+    ** results since the file always existed.
+    global cpi_2015 = 0.703
     dis "Using fallback 2015 CPI value: ${cpi_2015}"
 }
 
