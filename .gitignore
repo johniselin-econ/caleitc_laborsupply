@@ -21,11 +21,13 @@ data/acs/*.xml
 
 # Final processed datasets (large .dta files)
 data/final/*.dta
+data/final/*.rds
 
 # Interim/working datasets
 data/interim/*.dta
 data/interim/*.csv
 data/interim/*.rds
+data/interim/*.raw
 data/interim/minwage_data/
 
 # Temporary working files

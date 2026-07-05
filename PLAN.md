@@ -442,13 +442,38 @@ Author decisions flagged (not made unilaterally):
       `Σ_k x·1[qc=k] = x` lies in the absorbed state×year span);
       `fixef.tol = 1e-10` (fixest's default 1e-6 leaves clustered SEs
       drifting at ~1e-3 in the interaction specs).
-- [ ] Cleaning pipeline port (`01_clean_data.do` → R): the big remaining
-      piece — per-year prep, TAXSIM via `usincometaxes` (sim 1/2/3), income
-      variables, merges (unemployment, minimum wage, county), state_status,
-      sample flags, working-file assembly. `qc_assignment` (done) was the
-      treatment-defining risk; TAXSIM columns v25/v39/v10 remapping and the
-      sim-3 kink targets (`caleitc_params.txt`, provenance unknown — see
-      `data/eitc_parameters/README.md`) are the remaining hard parts.
+- [x] **TAXSIM machinery ported and validated (sims 1, 2, 3).**
+      `code/R/utils/taxsim.R` calls the SAME local NBER taxsim35 binary the
+      Stata pipeline used (not `usincometaxes` — swappable later), so golden
+      outputs reproduce to the cent. Sims 1/3 validate exactly for 2012 +
+      2015 (job 17095726; ~2.2M rows each, v25/v39/v10 remapping confirmed).
+      Sim 2 (cell instrument) validates via the byte-exact golden input
+      dumps (`code/hpc/stage8_sim2dump.do` + `stage8_txpydump.do`):
+      280,268/280,642 working-file cells reproduce exactly through the R
+      stack + collapse (job 17114718). Two Stata artifacts documented as
+      deliberate non-ports (see `taxsim.R` header note and
+      `validate_sim2.R`):
+      (1) **sage contamination is non-deterministic** — the combined-file
+      regeneration draws spouse age through an UNSTABLE sort over per-year
+      hh_id collisions, so the 374 diverging cells (all married; childless
+      via the federal age test, with-kids via state-EITC age dependence)
+      embed a run-specific tie realization that is irreproducible in
+      principle (the merge-back re-sorted the working file, erasing the
+      order; diagnosed in `diagnose_sim2_residual.R`, jobs 17113329/30).
+      The validation gate requires exact reproduction outside the computed
+      sage-ambiguity set and containment within it.
+      (2) **outsheet %10.0g rounding** — taxsimlocal35.ado sent the
+      cpi-reflated money inputs rounded to ~8-9 significant digits; flips
+      5,362 of 16M row-level EITCs but never moves a cell mean past
+      tolerance. The R port sends full precision and the correct 2014-only
+      sage; production impact vs the working file: 1,530 cells (~0.5%).
+- [ ] Working-file assembly (`02_working_file.R`: append + sim-2 merge-back
+      + save) and full-file validation (`validate_working_file.R`, ~105
+      columns row-for-row with the documented sim-2 carve-out) — stage-9
+      chain in flight (jobs 17115507-09). Open note: re-derive the sim-3
+      kink targets (`caleitc_params.txt`, provenance unknown — see
+      `data/eitc_parameters/README.md`) transparently from
+      `config/parameters.yaml`.
 - [ ] Remaining table helpers as needed by later exhibits (`run_all_specs`
       wrapper, `add_table_stats` ymean/implied-effect stats, PPML wrappers,
       export/`modelsummary` layer).
