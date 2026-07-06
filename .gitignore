@@ -138,3 +138,6 @@ renv/lock/
 renv/python/
 renv/sandbox/
 renv/staging/
+
+# Recovered author run logs (mined in Phase 0; see PLAN.md and logszip memory)
+logs.zip
