@@ -511,28 +511,38 @@ the table-helper tail rides with the Phase 3 exhibits).
 
 ## Phase 3 status (started 2026-07-06)
 
-- [ ] **SDID county panel regenerated** (stage 10). Stata golden build
-      (`code/hpc/stage10_sdid_panel.do`, job 17137337: panel-build section
-      of `03_sdid_county.do` verbatim, 2010-2017) →
+- [x] **SDID county panel regenerated and R port validated** (stage 10).
+      Stata golden build (`code/hpc/stage10_sdid_panel.do`, job 17137337:
+      panel-build section of `03_sdid_county.do` verbatim, 2010-2017) →
       `data/interim/sdid_county_panel.dta`. R port
-      (`code/R/utils/sdid_panel.R`) validated row-for-row except the four
-      `_diff` columns, which differ only by float-storage cancellation
-      (all levels ≤ 1e-7 rel); validator re-run with level-scaled diff
-      gates in flight (job 17138700).
+      (`code/R/utils/sdid_panel.R`) **validated** (job 17138700,
+      2026-07-06): 1,928 rows × 24 columns; the four `_diff` columns pass
+      under level-scaled gates (float-storage cancellation only, all
+      levels ≤ 1e-7 rel).
 - [ ] **FP + RIWB ported to R** (`code/R/utils/inference.R`): appE sample/
-      specs, CRVE (dof = G-1), WCBS via `fwildclusterboot` (GitHub
-      s3alfisc/, CRAN-archived; mirrors the Stata areg design, WCR/
-      Rademacher/null imposed), Ferman-Pinto (parallel-program correction
+      specs, CRVE (dof = G-1), Ferman-Pinto (parallel-program correction
       semantics), RIWB (+1 convention, placebo-only reference,
       identical-design refits). Deterministic layers validated against
       stage-11 Stata dumps (job 17137585 → 17137733): RI b ≤ 5e-6, FP
       q/P/var_M/alpha_hat ≤ 5e-7 rel everywhere; RI t and FP W_did sit at
       1e-5-5e-5 from float-stored intermediates in the Stata programs
-      (documented gates in `validate_inference_det.R`; re-run 17138701).
-      Full R battery (stage 12, `code/R/04_appE_inference.R`, 12-task
-      array, B=1000/B_ri=100, seed 56403+task) queued as job 17138702 —
-      resampling p-values to be compared against the job-17058169 golden
-      tables within Monte-Carlo bands.
+      (documented gates in `validate_inference_det.R`; re-run **passed**,
+      job 17138701). **WCBS re-implemented as a hand-rolled WCR-t on
+      `appE_fit`** (2026-07-06) after two failed `fwildclusterboot`
+      attempts: job 17138702 died on a bare `factor()` for spec 1's empty
+      controls; job 17158597 (post-fix, `fe = NULL` since the R engine
+      can't combine WLS with FE projection) died in boottest's dense
+      solve — rebuilding the absorbed grp_state_year FE as dummies
+      alongside the group factors is rank-deficient. The hand-rolled WCR
+      (null imposed, cluster Rademacher, full-model refit t's, +1
+      convention) reuses the machinery already validated at 1e-7;
+      fwildclusterboot via the WildBootTests.jl engine (Julia is on the
+      cluster) remains the §B upgrade path if enumeration/WCU variants
+      are wanted later. Full R battery (stage 12,
+      `code/R/04_appE_inference.R`, 12-task array, B=1000/B_ri=100, seed
+      56403+task with per-method offsets +0/+1e5/+2e5) resubmitted as
+      job 17177816 — resampling p-values to be compared against the
+      job-17058169 golden tables within Monte-Carlo bands.
 - [ ] **Conley-Taber (2011) CIs** — implemented on the placebo-refit
       distribution (`conley_taber()` in inference.R; inverse-ECDF
       quantiles, 27 placebos, convention flagged for author review);

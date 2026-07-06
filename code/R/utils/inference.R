@@ -7,9 +7,10 @@
 #
 #          Methods:
 #            appE_crve_p — CRVE p-value (t on G-1 = 27 dof, reghdfe e(df_r))
-#            appE_wcbs   — wild cluster bootstrap via fwildclusterboot
-#                          (upgrade path per PLAN.md §B; Stata used the
-#                          built-in `wildbootstrap` on the areg variant)
+#            appE_wcbs   — wild cluster restricted (WCR-t) bootstrap,
+#                          hand-rolled on appE_fit (same algorithm as the
+#                          Stata built-in `wildbootstrap`; see the note at
+#                          the function for why not fwildclusterboot)
 #            appE_fp     — Ferman-Pinto (2019) block bootstrap, with and
 #                          without the heteroskedasticity correction
 #            appE_riwb   — randomization-inference wild bootstrap
@@ -110,31 +111,44 @@ appE_crve_p <- function(t_stat, G = N_CLUSTERS) {
 }
 
 # -----------------------------------------------------------------------------
-# Wild cluster bootstrap (04_appE_inference.do:551-563)
-# Stata ran `wildbootstrap areg ... absorb(grp_state_year)` with explicit
-# dummies for the remaining FEs; we mirror that design (WCR, Rademacher,
-# null imposed) via fwildclusterboot on the equivalent fixest fit.
+# Wild cluster restricted bootstrap, WCR-t (04_appE_inference.do:551-563)
+# Same algorithm as the Stata built-in `wildbootstrap` on the areg variant:
+# impose the null (refit without `treated`), draw Rademacher weights at the
+# cluster (state) level, rebuild y* = Xb_r + s_g * e_r, refit the FULL model,
+# and compare the bootstrap t-statistics (cluster-robust, same ssc) to the
+# observed one. Hand-rolled on the validated appE_fit machinery rather than
+# fwildclusterboot: its R engine cannot combine WLS with FE projection, and
+# the fe = NULL fallback rebuilds the absorbed grp_state_year FE as dummies
+# alongside the group factors — a rank-deficient design its dense solve
+# rejects (jobs 17138702 / 17158597). p uses the (1 + #exceed)/(1 + B)
+# convention like the rest of the battery (Stata's builtin divides by B;
+# difference is < 1e-3 at B = 1000, inside the Monte-Carlo comparison bands).
 # -----------------------------------------------------------------------------
 
-appE_wcbs <- function(outcome, data, spec, B = 1000, seed) {
-  sp <- appE_spec(spec)
-  rhs <- "treated"
-  for (v in c(sp$unemp, sp$minwage)) {
-    ref <- max(data$qc_ct, na.rm = TRUE)
-    rhs <- c(rhs, paste0("i(qc_ct, ", v, ", ref = ", ref, ")"))
+appE_wcbs <- function(outcome, data, spec, B = 1000, seed, fit = NULL,
+                      progress = interactive()) {
+  if (is.null(fit)) fit <- appE_fit(outcome, data, spec)
+  t0 <- fit_stats(fit, "treated")[["t"]]
+
+  null <- appE_fit(outcome, data, spec, include_treat = FALSE)
+  stopifnot(fit$nobs == nrow(data), null$nobs == nrow(data))
+  er  <- as.numeric(resid(null))
+  xbr <- as.numeric(fitted(null))
+
+  states <- sort(unique(data$state_fips))
+  state_idx <- match(data$state_fips, states)
+
+  set.seed(seed)
+  t_star <- numeric(B)
+  for (b in seq_len(B)) {
+    if (progress && b %% 100 == 0) message("  WCBS draw ", b, " of ", B)
+    s <- (2 * (runif(length(states)) < 0.5) - 1)  # Rademacher by cluster
+    data$ywild <- xbr + s[state_idx] * er
+    t_star[b] <- fit_stats(appE_fit("ywild", data, spec), "treated")[["t"]]
   }
-  rhs <- c(rhs, "factor(state_fips)", "factor(qc_ct)", "factor(year)",
-           "factor(grp_state_qc)", "factor(grp_year_qc)",
-           paste0("factor(", sp$controls, ")"))
-  fml <- as.formula(paste(outcome, "~", paste(rhs, collapse = " + "),
-                          "| grp_state_year"))
-  fit <- feols(fml, data = data, weights = ~weight, cluster = ~state_fips,
-               ssc = SSC_REGHDFE)
-  bt <- suppressWarnings(fwildclusterboot::boottest(
-    fit, param = "treated", clustid = "state_fips", B = B,
-    type = "rademacher", impose_null = TRUE, fe = "grp_state_year",
-    seed = seed))
-  list(p = bt$p_val, boot = bt)
+
+  list(p = (1 + sum(abs(t_star) >= abs(t0))) / (1 + B),
+       t_0 = t0, t_star = t_star)
 }
 
 # -----------------------------------------------------------------------------

@@ -7,7 +7,9 @@
 #          One (outcome x spec) task per invocation (SLURM array 1-12,
 #          task_id mapping identical to the Stata battery: employed_y 1-4,
 #          full_time_y 5-8, part_time_y 9-12). B = 1000 (WCBS, FP),
-#          B_ri = 100 (RIWB), per-task seed = params$seed + task.
+#          B_ri = 100 (RIWB), per-task seed = params$seed + task, with
+#          per-method offsets (+0 WCBS, +1e5 RIWB, +2e5 FP) so the three
+#          resampling streams are independent within a task.
 #
 #          Output: data/tmp/appE_r_task<k>.rds (all objects incl. draws) and
 #          data/tmp/appE_r_task<k>.csv (one row of p-values) for assembly and
@@ -56,7 +58,8 @@ message(sprintf("ATE %.4f (SE %.4f), CRVE p = %.4f", ms[["b"]], ms[["se"]],
 
 ## Wild cluster bootstrap ------------------------------------------------------
 message("WCBS (B = ", B, ")...")
-wcbs <- appE_wcbs(out, samp, spec, B = B, seed = seed)
+wcbs <- appE_wcbs(out, samp, spec, B = B, seed = seed, fit = main,
+                  progress = TRUE)
 message("WCBS p = ", round(wcbs$p, 4))
 
 ## RIWB + Conley-Taber ---------------------------------------------------------
@@ -67,13 +70,13 @@ message(sprintf("Conley-Taber 90%% CI: [%.3f, %.3f], refit RI p = %.3f",
                 ct$lower, ct$upper, ct$p_ri))
 
 message("RIWB wild draws (", (max(refits$j) + 1) * B_ri, " refits)...")
-riwb <- appE_riwb(out, samp, spec, B = B_ri, seed = seed, refits = refits,
-                  progress = TRUE)
+riwb <- appE_riwb(out, samp, spec, B = B_ri, seed = seed + 100000,
+                  refits = refits, progress = TRUE)
 message(sprintf("RIWB p_t = %.4f, p_beta = %.4f", riwb$p_t, riwb$p_beta))
 
 ## Ferman-Pinto ----------------------------------------------------------------
 message("Ferman-Pinto (B = ", B, ")...")
-fp <- appE_fp(out, samp, spec, B = B, seed = seed)
+fp <- appE_fp(out, samp, spec, B = B, seed = seed + 200000)
 message(sprintf("FP p_without = %.4f, p_with = %.4f", fp$p_without, fp$p_with))
 
 ## Save ------------------------------------------------------------------------
@@ -85,7 +88,8 @@ res <- data.frame(task = task, outcome = out, spec = spec,
                   ct_lower = ct$lower, ct_upper = ct$upper, ct_p_ri = ct$p_ri,
                   seed = seed, B = B, B_ri = B_ri)
 saveRDS(list(results = res, refits = refits, fp_state = fp$state,
-             fp_draws = fp$draws, riwb_draws = riwb$draws),
+             fp_draws = fp$draws, riwb_draws = riwb$draws,
+             wcbs_t = wcbs$t_star),
         path_data("tmp", sprintf("appE_r_task%d.rds", task)))
 write.csv(res, path_data("tmp", sprintf("appE_r_task%d.csv", task)),
           row.names = FALSE)
