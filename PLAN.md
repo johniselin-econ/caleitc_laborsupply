@@ -491,10 +491,18 @@ Author decisions flagged (not made unilaterally):
       DiD estimates compute EITC internally). Stata pipeline left as-is;
       **Phase 3/4 R ports must read `eitc_california_ftb3514`** and
       document the break vs the old Stata welfare numbers.
-- [ ] Re-derive the sim-3 kink targets (`caleitc_params.txt`, provenance
-      unknown — see `data/eitc_parameters/README.md`) transparently from
-      the **verified** schedule in `config/caleitc_ftb3514.yaml` (not the
-      superseded `eitc_california` block in `parameters.yaml`).
-- [ ] Remaining table helpers as needed by later exhibits (`run_all_specs`
-      wrapper, `add_table_stats` ymean/implied-effect stats, PPML wrappers,
-      export/`modelsummary` layer).
+- [x] **Sim-3 kink targets re-derived; provenance mystery solved**
+      (2026-07-06). Every `caleitc_params.txt` value is the midpoint of
+      the $50 FTB credit-table bin where the CalEITC peaks (per year ×
+      QC; pre-2015 rows carry nominal 2015 values, reflated at use).
+      `code/R/gen_caleitc_params.R` regenerates the file from
+      `data/eitc_parameters/ftb3514/` **byte-for-byte** — the sim-3
+      targets were always FTB-consistent; only the schedule *parameters*
+      (`eitc_california`) were wrong. No downstream numbers change.
+- [ ] Remaining table helpers (`run_all_specs` wrapper, `add_table_stats`
+      ymean/implied-effect stats, PPML wrappers, export/`modelsummary`
+      layer) — deliberately deferred into Phase 3: port each with the
+      first exhibit that needs it, validated against the committed tables.
+
+**Phase 2 closed 2026-07-06** (data pipeline fully ported and validated;
+the table-helper tail rides with the Phase 3 exhibits).
