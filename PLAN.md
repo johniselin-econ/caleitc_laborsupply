@@ -234,6 +234,9 @@ Notes for the port:
 4. Elasticities and MVPF last — `02_mvpf.do` is the hardest single file (9-deep spec
    loop, `savefe` counterfactuals, `runiform` behavioral-group assignment). RNG streams
    won't match Stata: treat as re-estimation with a documented seed, not replication.
+   Source CalEITC schedules from the verified `config/caleitc_ftb3514.yaml`, not the
+   superseded `eitc_california` block (wrong for every year — see the Phase 2 audit);
+   welfare numbers will shift for the better-parameters reason, not a port bug.
 
 **Repo hygiene (fold into Phase 1):** duplicate `00_caleitc.do` at root and `code/`;
 stale copies in `results/tables/` vs `results/paper/` (e.g. two different
@@ -467,13 +470,31 @@ Author decisions flagged (not made unilaterally):
       5,362 of 16M row-level EITCs but never moves a cell mean past
       tolerance. The R port sends full precision and the correct 2014-only
       sage; production impact vs the working file: 1,530 cells (~0.5%).
-- [ ] Working-file assembly (`02_working_file.R`: append + sim-2 merge-back
-      + save) and full-file validation (`validate_working_file.R`, ~105
-      columns row-for-row with the documented sim-2 carve-out) — stage-9
-      chain in flight (jobs 17115507-09). Open note: re-derive the sim-3
-      kink targets (`caleitc_params.txt`, provenance unknown — see
-      `data/eitc_parameters/README.md`) transparently from
-      `config/parameters.yaml`.
+- [x] **Working file assembled in R and validated on the full file**
+      (commit `0dc6f9b`; stage-9 chain jobs 17115507/508/509, completed
+      2026-07-05). Per-year cleans (2006–2019) run as a SLURM array, then
+      `02_working_file.R` appends years, rebuilds the sim-2 instrument
+      from 2014 primary filers, and merges cell values back.
+      `validate_working_file.R`: **113 columns identical on 30,989,151
+      rows** against the Stata working file; sim-2 fedeitc/steitc
+      divergence is the documented sage carve-out gated in
+      `validate_sim2.R`. The cleaning port is complete.
+- [x] **CalEITC schedule audit vs FTB Form 3514** (commit `4b8575c`,
+      2026-07-05): the `eitc_california` block in `parameters.yaml` /
+      `02b_caleitc_param_gen.do` matches FTB 3514 for **no year** —
+      phase-in rates 0.50× federal instead of the statutory 0.85×,
+      max_income from the wrong QC row, childless filers wrongly coded
+      ineligible pre-2018. Verified schedule (TY2015–19, incl. piecewise
+      phase-outs) in `config/caleitc_ftb3514.yaml`; parsed $50-bin FTB
+      lookup tables + archived sources in `data/eitc_parameters/ftb3514/`.
+      Affects `02_elasticities.do` / `02_mvpf.do` only (TAXSIM sims and
+      DiD estimates compute EITC internally). Stata pipeline left as-is;
+      **Phase 3/4 R ports must read `eitc_california_ftb3514`** and
+      document the break vs the old Stata welfare numbers.
+- [ ] Re-derive the sim-3 kink targets (`caleitc_params.txt`, provenance
+      unknown — see `data/eitc_parameters/README.md`) transparently from
+      the **verified** schedule in `config/caleitc_ftb3514.yaml` (not the
+      superseded `eitc_california` block in `parameters.yaml`).
 - [ ] Remaining table helpers as needed by later exhibits (`run_all_specs`
       wrapper, `add_table_stats` ymean/implied-effect stats, PPML wrappers,
       export/`modelsummary` layer).
