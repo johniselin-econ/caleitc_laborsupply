@@ -741,7 +741,61 @@ the table-helper tail rides with the Phase 3 exhibits).
    Medicaid (§A.3) and CA mother-trends (quad-diff); Kaitz variant in
    the table note. Standalone compile verified. **Bib entries needed
    on Overleaf**: cengiz_effect_2019, jardim_minimum_2022.
-7. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
-   and the rest of the §A robustness agenda (dose-response §A.2,
-   Medicaid pool §A.3, CPS timing §A.4, HonestDiD §A.6 — replication
-   matrices already saved by stage 15).
+7. **§A.6 HonestDiD — computed 2026-07-07** (`code/R/06_honestdid.R`,
+   run on the stage-15 replication matrices, no refits).
+   `results/honestdid/honestdid_sensitivity.csv`: relative-magnitudes
+   (Mbar = 0.5–2) and smoothness (M = 0–1) robust CIs for the average
+   post-period effect, FT all four weighted specs + PT triple.
+   Relative magnitudes: FT basic_cov survives Mbar = 1 (breaks at
+   1.5), triple_cov survives 0.5 (ub = +0.04 at Mbar = 1), triple
+   breaks already at 0.5; PT triple survives 0.5, breaks at 1.
+   Smoothness: FT basic_cov/triple_cov survive M = 0.25, break at
+   0.5; PT triple survives M = 0.5 (lb = 0.11), breaks at 1.
+   Exhibit: see item 10.
+8. **Stage 17 — §A.3 Medicaid pool + §A.5 alt FT thresholds + §A.7
+   earnings-density permutation** (`code/R/07_robustness_td.R`, job
+   17253645, completed 2026-07-07, 2 min; staged job-tagged in
+   `results/robustness/`).
+   - **§A.3**: triple-diff on the 11-state Medicaid-expansion control
+     pool — FT −3.0 to −4.6, PT +3.2 to +4.2, employed ≈ 0; **no
+     attenuation** vs the expansion-state controls; eq3 event studies
+     put the break at 2015, not 2014 (Medicaid timing).
+   - **§A.5**: FT thresholds 31/39 hours — effects hold, all p < 0.01
+     (FT −1.8 to −3.4, PT +2.4 to +3.0).
+   - **§A.7**: state-level earnings-density permutation (mass shifted
+     into [$6k,$18k) 2017 USD): T_CA = 3.56 pp, raw rank 3/28
+     (p_one = 0.107; ND n_eff = 459 and UT noise rank above CA).
+     **17b** (`07b_earnbins_scale.R`, job 17254260): Kish-n_eff
+     precision-scaled T puts CA 1st of 28, p = 0.036 (floor) one- and
+     two-sided. Raw stays headline; scaled reported alongside.
+9. **§A.2 dose-response — completed 2026-07-07** (`code/R/
+   08_dose_response.R`, stage 18, job 17255329, 6 min; first
+   submission 17254028 failed on ref = 0 — TY2015+ childless schedule
+   means no zero-exposure cells exist, reference switched to lowest
+   person-weighted tercile, gradient = g3 − g2). Staged job-tagged in
+   `results/dose_response/`.
+   - Spec 2 (CRVE): FT loads on the top exposure tercile (g3 −3.24,
+     SE 0.50; gradient −1.65) and PT entirely on g3 (+2.36, g2 ≈ 0)
+     — monotone in exposure, supports dose-response.
+   - Event studies (spec 2): post-2015 pattern clean (FT g3 −2.9/−2.0/
+     −1.8; PT g3 +1.7/+1.6/+2.1), **but the 2012 pre-coefficients on
+     g3 are significant and opposite-signed** (FT +2.04, PT −1.24) —
+     flag for the exhibit note / author framing.
+   - State-placebo RI (03b conventions, 27 placebos): **all
+     insignificant** (FT g3 p = 0.21, PT g3 p = 0.36, gradient
+     0.57–0.71). CRVE stars do not survive RI here — author call:
+     frame as suggestive corroboration of the exposure margin, not
+     standalone evidence.
+10. **Robustness exhibits — built 2026-07-07**
+   (`code/R/07c_robustness_tables.R` reads the committed job-tagged
+   CSVs, writes to `results/tables/` + `results/paper/`):
+   `tab_medicaid_{1,2,3}.tex` (panels employed/FT/PT × 4 specs, cells
+   b\sym{stars}/(se), 10 control states), `tab_alt_threshold_{1,2}.tex`
+   (31/39-hour panels), `tab_honestdid_{1,2}.tex` (RM/smoothness
+   panels, 5 columns). pdflatex smoke test clean (fragments in the
+   main-table environment, no alignment errors). **Not yet in the
+   paper** — wrappers + §Robustness/appendix prose, plus the §A.2
+   dose-response exhibit, are the next integration step.
+11. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
+   and the rest of the §A robustness agenda (CPS timing §A.4;
+   paper integration of items 7–10).
