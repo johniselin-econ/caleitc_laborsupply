@@ -15,16 +15,22 @@
 #          demographic cell (qc_ct x education x age_bracket; the sample is
 #          all single women, so female/mstat are fixed). A fixed cell trait:
 #          "what would someone with these traits get under CalEITC".
-#          Dose groups: G0 = zero exposure (mostly non-mothers, the
-#          within-sample control group), T1-T3 = person-weighted terciles of
-#          positive exposure.
+#          Dose groups: person-weighted terciles T1-T3, with T1 as the
+#          reference group (CGS: group-specific DiDs against the LOWEST-
+#          exposure group). There is no zero-exposure cell — TY2015+
+#          CalEITC includes a small childless schedule, so every cell's
+#          mean simulated credit is positive — but T1 is essentially
+#          unexposed (cell means <= ~$7); T2 is also near-zero (<= ~$55),
+#          so beta_2 ~ 0 is itself part of the dose-response prediction,
+#          with the real exposure concentrated in T3 (the low-earnings
+#          mother cells).
 #
 #          Estimation (generalizes eq1, qc_present -> dose group): outcome on
-#          CA x year x dose-group tokens (ref: 2014 and G0), absorbing
+#          CA x year x dose-group tokens (ref: 2014 and T1), absorbing
 #          state^year, group^year, state^group [+ demographic controls;
 #          + unemp/minwage x group in the third spec], person weights,
-#          state-clustered. Post-ATT version: beta_g per tercile plus the
-#          T3 - T1 gradient; event-study version: beta_gt, base 2014 —
+#          state-clustered. Post-ATT version: beta_2, beta_3 (vs T1) plus
+#          the T3 - T2 gradient; event-study version: beta_gt, base 2014 —
 #          CGS-style "flat pre-trends at every dose, effects increasing in
 #          dose" evidence.
 #
@@ -94,25 +100,20 @@ message("Individuals in unmapped cells (dropped): ", n_na,
         " (", round(100 * n_na / nrow(df), 3), "%)")
 df <- df |> filter(!is.na(exposure))
 
-# Dose groups: G0 zero, T1-T3 person-weighted terciles of positive exposure
-pos <- df |> filter(exposure > 0)
-qs <- with(pos[order(pos$exposure), ],
-           exposure[findInterval(c(1, 2) / 3 * sum(weight),
-                                 cumsum(weight)) + 1])
-df <- df |>
-  mutate(dose_g = case_when(exposure <= 0 ~ 0L,
-                            exposure <= qs[1] ~ 1L,
-                            exposure <= qs[2] ~ 2L,
-                            .default = 3L))
-message("Tercile cuts ($): ", paste(round(qs, 2), collapse = ", "))
+# Dose groups: person-weighted terciles, T1 (lowest exposure) = reference
+srt <- df[order(df$exposure), ]
+qs <- with(srt, exposure[findInterval(c(1, 2) / 3 * sum(weight),
+                                      cumsum(weight)) + 1])
+cut_dose <- function(x) case_when(x <= qs[1] ~ 1L, x <= qs[2] ~ 2L,
+                                  .default = 3L)
+df <- df |> mutate(dose_g = cut_dose(exposure))
+message("Exposure range ($): ", paste(round(range(df$exposure), 2),
+                                      collapse = " - "),
+        "; tercile cuts ($): ", paste(round(qs, 2), collapse = ", "))
 grp <- df |> count(dose_g, wt = weight) |> mutate(sh = round(n / sum(n), 3))
 print(as.data.frame(grp), row.names = FALSE)
 cells <- cells |>
-  mutate(dose_g = case_when(is.na(exposure) ~ NA_integer_,
-                            exposure <= 0 ~ 0L,
-                            exposure <= qs[1] ~ 1L,
-                            exposure <= qs[2] ~ 2L,
-                            .default = 3L))
+  mutate(dose_g = ifelse(is.na(exposure), NA_integer_, cut_dose(exposure)))
 write.csv(cells, path_data("tmp", "dose_cells.csv"), row.names = FALSE)
 
 ## Estimation machinery ------------------------------------------------------------
@@ -122,9 +123,9 @@ DOSE_FES <- c("state_fips^year", "dose_g^year", "state_fips^dose_g")
 add_tokens <- function(data, treat_fips) {
   data |>
     mutate(tr = as.integer(state_fips == treat_fips),
-           tok_post = ifelse(tr == 1 & dose_g > 0 & post == 1,
+           tok_post = ifelse(tr == 1 & dose_g > 1 & post == 1,
                              paste0("g", dose_g), "ref"),
-           tok_es   = ifelse(tr == 1 & dose_g > 0 & year != 2014,
+           tok_es   = ifelse(tr == 1 & dose_g > 1 & year != 2014,
                              paste0("g", dose_g, "_", year), "ref"))
 }
 
@@ -132,8 +133,8 @@ fit_dose <- function(outcome, data, token, spec = 2) {
   ctrl <- switch(spec, NULL, CONTROLS, CONTROLS)
   rhs <- paste0("i(", token, ", ref = 'ref')")
   if (spec == 3)
-    rhs <- paste0(rhs, " + i(dose_g, state_unemp, ref = 0)",
-                  " + i(dose_g, mean_st_mw, ref = 0)")
+    rhs <- paste0(rhs, " + i(dose_g, state_unemp, ref = 1)",
+                  " + i(dose_g, mean_st_mw, ref = 1)")
   fml <- as.formula(paste(outcome, "~", rhs, "|",
                           paste(c(DOSE_FES, ctrl), collapse = " + ")))
   feols(fml, data = data, weights = ~weight, cluster = ~state_fips,
@@ -157,8 +158,8 @@ for (y in OUTS) {
     g <- grab(fit_dose(y, df, "tok_post", s), "tok_post") |>
       mutate(outcome = y, spec = s, .before = 1)
     g <- bind_rows(g, data.frame(
-      outcome = y, spec = s, term = "g3_minus_g1",
-      b = g$b[g$term == "g3"] - g$b[g$term == "g1"],
+      outcome = y, spec = s, term = "g3_minus_g2",
+      b = g$b[g$term == "g3"] - g$b[g$term == "g2"],
       se = NA_real_, p = NA_real_, n = g$n[1]))
     post_res[[paste(y, s)]] <- g
   }
@@ -182,9 +183,8 @@ for (s in donors) {
     g <- grab(fit_dose(y, dfp, "tok_post", 2), "tok_post")
     ri[[paste(s, y)]] <- data.frame(
       state = s, outcome = y,
-      g1 = g$b[g$term == "g1"], g2 = g$b[g$term == "g2"],
-      g3 = g$b[g$term == "g3"],
-      grad = g$b[g$term == "g3"] - g$b[g$term == "g1"])
+      g2 = g$b[g$term == "g2"], g3 = g$b[g$term == "g3"],
+      grad = g$b[g$term == "g3"] - g$b[g$term == "g2"])
   }
   message("  placebo state ", s, " done")
 }
@@ -194,8 +194,8 @@ actual <- post_res |> filter(spec == 2)
 ri_p <- lapply(OUTS, function(y) {
   a <- actual |> filter(outcome == y)
   pl <- ri |> filter(outcome == y)
-  stat <- c(g1 = a$b[a$term == "g1"], g2 = a$b[a$term == "g2"],
-            g3 = a$b[a$term == "g3"], grad = a$b[a$term == "g3_minus_g1"])
+  stat <- c(g2 = a$b[a$term == "g2"], g3 = a$b[a$term == "g3"],
+            grad = a$b[a$term == "g3_minus_g2"])
   data.frame(outcome = y, term = names(stat), b = unname(stat),
              p_ri = sapply(names(stat), function(k)
                (1 + sum(abs(pl[[k]]) >= abs(stat[[k]]))) /
