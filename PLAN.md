@@ -642,11 +642,25 @@ the table-helper tail rides with the Phase 3 exhibits).
    employed/basic ATT reproduces stage-13 exactly, pre-coefficients
    ≈ 0. These supersede the old `fig_sdid_event_*` jpgs (not in
    paper); decide on figure export with the Table 2 exhibit.
-4. **Build the new Table 2 exhibit** (tex export): fix the misordered
-   column headers, the "500 replications" vs B note, and the 2012–17 vs
-   2010–17 note; add the in-time placebo / remedy rows and the stage-14
-   RI p-values; sweep the stale `tab_sdid_*` files from `results/`
-   (Phase 1 leftover) when the new exhibit lands.
+4. **Table 2 exhibit — built 2026-07-07** (`code/R/03d_sdid_table2.R`
+   reads the committed `results/sdid_r/` job CSVs and writes
+   `tab_sdid_county_{1,2,3,end}.tex` to `results/tables/` +
+   `results/paper/`). Panels: ATT / (unit-bootstrap SE) / [RMSPE-scaled
+   RI p] headline row, then in-time placebo / detrended / stratified
+   robustness rows (blank where the fork forbids the variant); no
+   stars — the RI p is the inference object. `main_aejep.tex` fixed:
+   header order now matches the fragments (Basic/Basic+Cov/Triple/
+   Triple+Cov — the old header was misordered), note rewritten (2010–17,
+   B = 500 now true, joint weighted fit, joint-beta covariates, RI
+   convention + 1/28 floor, raw-ATT p-values quoted, variant
+   definitions), §Robustness SDID paragraph updated to the new ranges
+   (PT +2.5–3.8, FT −1.1 to −5.0) with the placebo/RI sentences.
+   Standalone shell + fragments compile clean (pdflatex smoke test).
+   Stale `tab_sdid_county_*_{nonweighted,standard,weighted}`,
+   `tab_sdid_county_4`, `tab_sdid_state_*` swept from `results/`
+   (unreferenced in the paper; the 8 `fig_sdid_event_*` jpgs stay until
+   the stage-15 event-study figures replace them). Remaining: verify on
+   Overleaf once synced (floatfoot length).
 5. **appE + Conley–Taber exhibit integration** (the other open bullet):
    regenerate `tab_appE_tab1_1/2/3` from the R battery (job 17177816
    output), add the CT CI column, update the appendix table note and

@@ -381,7 +381,7 @@ I also estimate effects by annual weeks worked and find that the full- and part-
 
 %% --- SDID ---
 
-\paragraph{Synthetic Difference-in-Differences.} I validate the main results using SDID (\Cref{tab:sdid}). Across specifications with and without time-varying covariates, and models estimated on the within-county difference between mothers and non-mothers, I find a 1.3--5.4 percentage point decrease in full-time work and a 3.3--4.0 percentage point increase in part-time work, confirming the direction and magnitude of the triple-difference estimates.
+\paragraph{Synthetic Difference-in-Differences.} I validate the main results using SDID (\Cref{tab:sdid}), estimated as a single population-weighted fit over California's counties. Across specifications with and without time-varying covariates, and models estimated on the within-county difference between mothers and non-mothers, I find a 2.5--3.8 percentage point increase in part-time work and a 1.1--5.0 percentage point decrease in full-time work, consistent with the direction and magnitude of the triple-difference estimates. The part-time increase is stable when county-specific pre-trends are removed and when donors are matched within population strata, and in-time placebos estimated on pre-period data alone are small throughout. Randomization inference reassigning treatment across the 27 donor states places the full-time decline at the most extreme value attainable in the placebo distribution ($p = 0.036$) in three of four specifications.
 
 %% TABLE 2: SDID
 \begin{table}[htbp]
@@ -393,8 +393,8 @@ I also estimate effects by annual weeks worked and find that the full- and part-
         \hline\hline
         &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
         &\multicolumn{1}{c}{\shortstack{Basic SDID}}
-        &\multicolumn{1}{c}{\shortstack{Triple SDID}}
         &\multicolumn{1}{c}{\shortstack{Basic + Cov}}
+        &\multicolumn{1}{c}{\shortstack{Triple SDID}}
         &\multicolumn{1}{c}{\shortstack{Triple + Cov}}\\
         \hline
         \multicolumn{5}{c}{\textbf{Panel A: Employed}} \\[-2ex]
@@ -410,7 +410,7 @@ I also estimate effects by annual weeks worked and find that the full- and part-
     \end{tabular}
     }
     \label{tab:sdid}
-    \floatfoot{\textbf{Note}: Synthetic Difference-in-Differences estimates using county-level panel with population weights. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. Bootstrap standard errors (500 replications). * p<0.10, ** p<0.05, *** p<0.01.}
+    \floatfoot{\textbf{Note}: Synthetic Difference-in-Differences estimates on a county-level panel (35 treated California counties, 206 donor-state counties). Data: American Community Survey, 2010--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. The estimator is a single joint SDID fit with treated counties weighted by 2010 population; time-varying covariates (county unemployment and minimum wage) are estimated jointly with the SDID weights. Unit-level bootstrap standard errors in parentheses (500 replications). Brackets report randomization-inference $p$-values from re-estimating the model with treatment assigned to each of 27 donor states, using the RMSPE-scaled statistic and the $(1+\#exceed)/(S+1)$ convention; the smallest attainable value is $1/28 \approx 0.036$. Raw-ATT placebo $p$-values, columns (1)--(4): 0.25/0.75/0.61/0.46 (employed), 0.68/0.21/0.36/0.14 (full-time), 0.18/0.25/0.18/0.14 (part-time). In-time placebo rows assign a placebo reform in 2013 and use 2010--2014 data only; detrended rows remove county-specific linear pre-trends; stratified rows match donors within 2010-population quartiles (both available only in the no-covariate specifications).}
 \end{table}
 
 
