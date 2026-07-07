@@ -416,9 +416,12 @@ Author decisions flagged (not made unilaterally):
       targets must be re-derived transparently in Phase 2.
 - [x] `api_codes.txt` confirmed never committed (gitignored from the start);
       keys stay machine-local.
-- [ ] Stale legacy outputs in `results/` (old `tab_sdid_county_*_{nonweighted,
+- [x] Stale legacy outputs in `results/` (old `tab_sdid_county_*_{nonweighted,
       standard,weighted}`, `tab_sdid_state_*`, `tab2_*`–`tab6_*` in
-      `results/paper/`) — left in place; sweep when the new SDID exhibits land.
+      `results/paper/`) — SDID names swept 2026-07-07 with the Table 2
+      exhibit (Phase 3 item 4); `tab2_*`–`tab6_*` swept 2026-07-07
+      (unreferenced in `main_aejep.tex`; the full-draft `main.tex` lives
+      on Overleaf — recover from git history if it still inputs them).
 
 ---
 

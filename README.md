@@ -103,20 +103,48 @@ caleitc_laborsupply/
 │   ├── 04_appE_inference_worker.do         # Worker program for parallel
 │   │
 │   │   ## SUBDIRECTORIES
-│   ├── R/
+│   ├── R/                         # R pipeline (Stata-to-R migration; see below)
+│   │   ├── 00_main.R              # Master driver (mirrors 00_caleitc.do)
+│   │   ├── 01_clean_data.R        # Data cleaning port
+│   │   ├── 01_data_prep_other.R   # BLS and minimum wage data prep
+│   │   ├── 02_working_file.R      # Working-file assembly (validated vs Stata)
+│   │   ├── 03_sdid_county.R       # Table 2: weighted SDID (synthdid fork)
+│   │   ├── 03b_sdid_stateplacebo.R # State-placebo RI for the county SDID
+│   │   ├── 03c_sdid_eventstudy.R  # SDID event studies (Ciccia decomposition)
+│   │   ├── 03d_sdid_table2.R      # Table 2 tex fragments
+│   │   ├── 03e_sdid_esfigures.R   # SDID event-study figures
+│   │   ├── 04_appE_inference.R    # Appendix inference battery (R port)
+│   │   ├── 04b_appE_table.R       # Appendix inference table (+ RI, CT rows)
+│   │   ├── 05_mw_bite.R           # Minimum-wage bite test (§Threats)
+│   │   ├── 05b_mw_bite_table.R    # MW bite tex fragments
+│   │   ├── 06_honestdid.R         # Rambachan-Roth sensitivity (HonestDiD)
+│   │   ├── 07_robustness_td.R     # Medicaid pool / alt thresholds / earn-density
+│   │   ├── 07b_earnbins_scale.R   # Precision-scaled earnings permutation
+│   │   ├── 07c_robustness_tables.R # Robustness tex fragments
+│   │   ├── 08_dose_response.R     # Exposure-design dose response
 │   │   ├── api_code.R             # IPUMS API data download
-│   │   └── 01_data_prep_other.R   # BLS and minimum wage data prep
+│   │   ├── gen_caleitc_params.R   # CalEITC kink parameters (provenance-verified)
+│   │   ├── utils/                 # config, estimation, inference, taxsim,
+│   │   │                          #   qc_assignment, sdid_panel/setup, clean_steps
+│   │   └── validate/              # Stage-by-stage R-vs-Stata validation scripts
+│   ├── hpc/                       # SLURM sbatch files (stages 1-18; see below)
 │   ├── utils/
 │   │   ├── globals.do             # Global macro definitions
 │   │   ├── programs.do            # Reusable Stata programs
 │   │   └── sdid_wt.do             # Weighted SDID estimation program
 │   ├── archive/                   # Archived/backup files
-│   └── logs/                      # Log files
+│   └── logs/                      # Log files (incl. SLURM job logs)
+│
+├── config/
+│   ├── parameters.yaml            # Years, seed, sample bounds, spec definitions
+│   ├── caleitc_ftb3514.yaml       # Verified CalEITC schedule (FTB Form 3514)
+│   └── local_paths.yaml(.example) # Machine-local paths (yaml gitignored)
 │
 ├── data/
 │   ├── raw/                       # Raw data files (not tracked)
 │   ├── interim/                   # Intermediate processed data
-│   ├── final/                     # Final analysis datasets
+│   ├── final/                     # Final analysis datasets (.dta and .rds)
+│   ├── tmp/                       # Per-job scratch outputs (staged to results/)
 │   ├── acs/                       # ACS data from IPUMS
 │   ├── eitc_parameters/           # EITC benefit schedule parameters
 │   │   └── caleitc_params.txt     # CalEITC kink point parameters by year/QC
@@ -125,11 +153,63 @@ caleitc_laborsupply/
 ├── results/
 │   ├── figures/                   # Output figures (PNG, JPG)
 │   ├── tables/                    # Output tables (LaTeX, CSV)
-│   └── paper/                     # Paper-ready outputs
+│   ├── paper/                     # Paper-ready outputs
+│   ├── sdid_r/                    # Staged SDID results (job-tagged CSVs/.rds)
+│   ├── appE_r/                    # Staged R inference-battery results
+│   ├── mw_bite/                   # Staged minimum-wage bite results
+│   ├── honestdid/                 # HonestDiD sensitivity CIs
+│   ├── robustness/                # Medicaid / alt-threshold / earn-density results
+│   └── dose_response/             # Dose-response results
 │
+├── renv/ + renv.lock              # R package library (R 4.4.2)
+├── PLAN.md                        # Living revision/migration plan and work log
 ├── api_codes.txt                  # API keys (not tracked)
 └── README.md
 ```
+
+## Stata-to-R Migration (in progress)
+
+The analysis is being migrated from Stata to R; `PLAN.md` is the living
+plan and work log (author decisions, validation records, and the todo
+list). Current state:
+
+- **Validated ports** (R output checked against the Stata pipeline,
+  row-for-row or coefficient-by-coefficient): QC assignment, working-file
+  assembly, TAXSIM sims 1-3, the triple-diff/event-study estimation
+  helpers, and the appendix inference battery.
+- **New R-only analyses** (Phase 3 robustness agenda, PLAN.md §A):
+  weighted county SDID on the `synthdid_weights` fork (Table 2), state-
+  placebo randomization inference, SDID event studies + HonestDiD
+  sensitivity, minimum-wage bite test, Medicaid-pool and alternative-
+  threshold triple-diffs, earnings-density permutation, and the
+  exposure-design dose response.
+- **Still Stata**: the original `01`-`04` pipeline remains runnable;
+  elasticities/MVPF (Phase 4) not yet ported.
+
+### Cluster workflow
+
+Long-running jobs go through SLURM (`code/hpc/stage*.sbatch`, stages
+1-18: stages 1-3 legacy Stata jobs, 4-12 port-validation and inference
+stages, 13-18 the SDID/robustness analyses). Jobs write to `data/tmp/`;
+results are then staged into the job-tagged `results/` subdirectories
+(e.g. `results/robustness/robustness_medicaid_job17253645.csv`) and
+committed, so every committed result traces to a SLURM job id and log
+in `code/logs/`.
+
+### R environment
+
+```bash
+module load R/4.4.2-gfbf-2024a   # cluster
+Rscript -e 'renv::restore()'     # installs the locked package library
+```
+
+`renv` activates via the root `.Rprofile`. Machine-local paths go in
+`config/local_paths.yaml` (copy the `.example`); shared parameters
+(years, seed, sample bounds) live in `config/parameters.yaml`. The SDID
+estimation sources John's fork of `synthdid` with population weights
+from a local checkout (`synthdid_weights`, path set by
+`synthdid_dir` in `config/local_paths.yaml`; default sibling
+`../synthdid_weights`).
 
 ## Data Sources
 
@@ -210,16 +290,15 @@ net install taxsimlocal35, from("https://taxsim.nber.org/stata")
 
 ### R Packages
 
-```r
-# Core packages
-install.packages(c(
-  "dplyr", "tidyr", "readr", "stringr",
-  "tidycensus", "blsR", "readxl", "here"
-))
+The R library is managed by `renv` (see the migration section above):
 
-# IPUMS integration
-install.packages("ipumsr")
+```r
+renv::restore()   # installs everything in renv.lock (R 4.4.2)
 ```
+
+Key packages: `dplyr`/`tidyr`/`readr` (data), `fixest` (estimation),
+`HonestDiD` (sensitivity), `yaml`, `ipumsr`, `blsR`, `here`, plus the
+local `synthdid_weights` fork for SDID.
 
 ## Running the Analysis
 
