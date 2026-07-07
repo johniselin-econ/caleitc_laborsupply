@@ -618,16 +618,19 @@ the table-helper tail rides with the Phase 3 exhibits).
    this PLAN update is uncommitted. Consider copying the per-task
    `data/tmp` CSVs somewhere durable (`results/` staging or a job-tagged
    folder) before anything sweeps tmp.
-2. **Author decisions before the exhibit is built** (they change what
-   Table 2 shows): (i) which variant is the headline column — weighted,
-   or weighted + remedies as a reported range per §D; (ii) how the
-   full-time −1.15 to −5.02 spread is presented (maps directly onto the
-   §C "bounded quantity" framing; note the covariate handling is a
-   documented methodology break vs Stata, so cov-vs-no-cov is estimator
-   AND spec); (iii) raw vs RMSPE-scaled RI statistic for the stage-14
-   p-values, and whether Table 2 reports RI p-values alongside/instead
-   of unit-bootstrap SEs (the fork's MC says placebo/bootstrap SEs
-   under-cover; the RI p is the defensible object).
+2. **Author decisions — made 2026-07-07:**
+   (i) **Weighted joint fit is the headline** column per spec; in-time
+   placebos + detrend/stratified remedies as a compact robustness panel
+   below the main panel (no-cov specs only, per fork constraints). The
+   passing in-time placebos are displayed as a result, given the fork's
+   ACA warning. (ii) **All four specs stay in Table 2**; the full-time
+   −1.15 to −5.02 spread is stated as a range in text, with part-time
+   (spec-invariant, 2.5–3.8) as the SDID takeaway; full-time
+   attribution stays with the quad-diff/DiD bounds machinery in §C;
+   joint-beta covariate break documented in the table note. (iii)
+   **Table 2 cells: ATT (unit-bootstrap SE) [RMSPE-scaled RI p]**;
+   raw-ATT RI p-values in the note/appendix detail; note states the
+   1/28 attainable floor; state-placebo RI framed as corroboration.
 3. **Build the new Table 2 exhibit** (tex export): fix the misordered
    column headers, the "500 replications" vs B note, and the 2012–17 vs
    2010–17 note; add the in-time placebo / remedy rows and the stage-14
