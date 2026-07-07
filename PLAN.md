@@ -519,7 +519,7 @@ the table-helper tail rides with the Phase 3 exhibits).
       2026-07-06): 1,928 rows × 24 columns; the four `_diff` columns pass
       under level-scaled gates (float-storage cancellation only, all
       levels ≤ 1e-7 rel).
-- [ ] **FP + RIWB ported to R** (`code/R/utils/inference.R`): appE sample/
+- [x] **FP + RIWB ported to R** (`code/R/utils/inference.R`): appE sample/
       specs, CRVE (dof = G-1), Ferman-Pinto (parallel-program correction
       semantics), RIWB (+1 convention, placebo-only reference,
       identical-design refits). Deterministic layers validated against
@@ -540,14 +540,106 @@ the table-helper tail rides with the Phase 3 exhibits).
       cluster) remains the §B upgrade path if enumeration/WCU variants
       are wanted later. Full R battery (stage 12,
       `code/R/04_appE_inference.R`, 12-task array, B=1000/B_ri=100, seed
-      56403+task with per-method offsets +0/+1e5/+2e5) resubmitted as
-      job 17177816 — resampling p-values to be compared against the
-      job-17058169 golden tables within Monte-Carlo bands.
+      56403+task with per-method offsets +0/+1e5/+2e5) completed as job
+      17177816 (2026-07-06). **Validator PASSED** (`validate_appE_battery.R`,
+      12 tasks × 8 gates): deterministic ATE/SE/N/CRVE-p match at display
+      precision; WCBS/RIWB-t/RIWB-b/BB/FP-corrected-BB all inside the
+      Bonferroni MC bands vs the job-17058169 golden tables. Remaining:
+      exhibit/table integration (with CT, below).
 - [ ] **Conley-Taber (2011) CIs** — implemented on the placebo-refit
       distribution (`conley_taber()` in inference.R; inverse-ECDF
       quantiles, 27 placebos, convention flagged for author review);
       produced per task by stage 12. Needs: exhibit/table integration.
-- [ ] **SDID Table 2 on the synthdid_weights fork** — next up: panel is
-      regenerated; estimation per §D notes (joint weighted fit,
-      treated.weights = 2010 county pop, seeded, in-time placebos +
-      detrend/stratified remedies).
+- [x] **SDID Table 2 on the synthdid_weights fork** — estimation script
+      written 2026-07-06 (`code/R/03_sdid_county.R`): joint
+      weighted fit per §D (treated.weights = 2010 county pop, aligned by
+      rownames), specs in the CODE order of `03_sdid_county.do` (Basic/
+      Basic+Cov/Triple/Triple+Cov; the paper's printed headers are
+      misordered vs the numbers — fix when the exhibit is rebuilt), unit-
+      level bootstrap B = 500 seeded per fit, variants per spec: weighted /
+      unweighted / detrend / stratified (no-cov specs; fork forbids
+      detrend+X, X-in-strata unverified) / in-time placebo (2013 law on
+      2010-14 data). Covariates use the fork's joint-beta X handling, not
+      Stata's covariates(, projected) — a documented methodology break.
+      Panel: 241 units (35 CA counties, 206 donors), T0 = 5. Smoke run
+      (triple FT): weighted −2.56, detrend −2.17, stratified −2.95 vs old
+      per-county-loop −2.40/−2.45. First serial run (job 17185223) was
+      cancelled at 2h46: cov-spec bootstraps redo the joint-beta
+      optimization per replicate (~90 min/variant → ~24h serial vs the 4h
+      limit), and output was written only at the end. Restructured
+      2026-07-06 as a 12-task array (one outcome × spec per task,
+      per-task `sdid_county_r_task<k>.{csv,rds}`, per-cell seed offsets so
+      array == serial seeds) and resubmitted as job 17203764 (12h limit).
+      **Completed 2026-07-07**: all 12 tasks exited 0 (no-cov ~12 min,
+      cov ~5.2h each); 48 fits in `data/tmp/sdid_county_r_task*.csv`.
+      Results (pp; weighted = headline candidate, unit bootstrap SE):
+      - **Part-time is clean everywhere**: weighted 3.08/2.53/3.49/3.77
+        (Basic/Basic+Cov/Triple/Triple+Cov), robust to unweighted
+        (2.8–3.4), detrend (2.8/2.0), stratified (2.3/3.0); in-time
+        placebos small (−0.78 to +1.37, all |t| < 1).
+      - **Full-time spans −1.15 to −5.02**: weighted −1.15/−3.67/−2.56/
+        −5.02 — covariates (fork joint-beta) amplify the decline;
+        remedies on the no-cov specs are stable (detrend −1.82/−2.17,
+        stratified −1.19/−2.95, vs old per-county-loop triple
+        −2.40/−2.45). **In-time placebos pass** (+0.49/−0.81/−0.30/
+        −1.43, all |t| ≤ 0.9) — the fork's ACA-style size-correlated-
+        trend failure does NOT materialize on this panel.
+      - **Employed is null/unstable**: weighted +2.35/−1.00/+0.99/−1.37
+        (sign flips with covariates); in-time placebos comparable in
+        magnitude. Consistent with the paper's employment-flat framing.
+- [x] **State-level placebo (RI) inference for the county SDID**
+      (`code/R/03b_sdid_stateplacebo.R`, stage 14, job 17220617,
+      completed 2026-07-07; all 12 tasks, ≤ 8 min each). Treatment is
+      assigned at the state level, so the county unit bootstrap in
+      stage 13 is not the inference object: each of the 27 donor states
+      is refit as the pseudo-treated block (its counties weighted by
+      their 2010 pops, CA kept in the donor pool — identical-design
+      convention per `PLAN_inference_litreview.md`, author decision
+      2026-07-07), exhaustive enumeration, deterministic, +1 convention
+      (floor 1/28 ≈ 0.036). Two statistics reported (raw ATT and
+      ATT/pre-RMSPE, ADH scaling on the covariate-adjusted gap).
+      Results in `data/tmp/sdid_county_stateplacebo_r_task*.csv`:
+      - Full-time: RMSPE-scaled p at the 0.036 floor for Basic+Cov/
+        Triple/Triple+Cov (CA has the best pre-fit AND a large post
+        gap); raw-ATT p 0.14–0.68 (placebo sd 3.1–3.6 pp swamps the
+        smaller ATTs).
+      - Part-time: raw p 0.14–0.25, RMSPE p 0.14 for Triple/Triple+Cov.
+      - Employed: null under both statistics (p 0.25–0.75).
+      Note the tension with the DiD appE battery (there part-time is
+      the significant margin): here the RMSPE statistic favors
+      full-time. Raw-vs-RMSPE is a flagged author decision; with 27
+      placebos the floor itself limits what "significant" can mean —
+      frame as corroboration, not a standalone test.
+
+**Phase 3 remaining — ordered next steps (as of 2026-07-07):**
+
+1. **Commit the estimation layer** — `03_sdid_county.R`,
+   `03b_sdid_stateplacebo.R`, stage 13/14 sbatch files are untracked;
+   this PLAN update is uncommitted. Consider copying the per-task
+   `data/tmp` CSVs somewhere durable (`results/` staging or a job-tagged
+   folder) before anything sweeps tmp.
+2. **Author decisions before the exhibit is built** (they change what
+   Table 2 shows): (i) which variant is the headline column — weighted,
+   or weighted + remedies as a reported range per §D; (ii) how the
+   full-time −1.15 to −5.02 spread is presented (maps directly onto the
+   §C "bounded quantity" framing; note the covariate handling is a
+   documented methodology break vs Stata, so cov-vs-no-cov is estimator
+   AND spec); (iii) raw vs RMSPE-scaled RI statistic for the stage-14
+   p-values, and whether Table 2 reports RI p-values alongside/instead
+   of unit-bootstrap SEs (the fork's MC says placebo/bootstrap SEs
+   under-cover; the RI p is the defensible object).
+3. **Build the new Table 2 exhibit** (tex export): fix the misordered
+   column headers, the "500 replications" vs B note, and the 2012–17 vs
+   2010–17 note; add the in-time placebo / remedy rows and the stage-14
+   RI p-values; sweep the stale `tab_sdid_*` files from `results/`
+   (Phase 1 leftover) when the new exhibit lands.
+4. **appE + Conley–Taber exhibit integration** (the other open bullet):
+   regenerate `tab_appE_tab1_1/2/3` from the R battery (job 17177816
+   output), add the CT CI column, update the appendix table note and
+   re-check fn. 261 prose. This is where the deferred table helpers
+   (`add_table_stats`, export layer) get ported, validated against the
+   committed tables.
+5. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
+   and the §A robustness agenda — the county minimum-wage bite test
+   (§A.1) is the natural first item since the county panel machinery
+   is now live in R.
