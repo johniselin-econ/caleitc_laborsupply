@@ -458,6 +458,52 @@ I also estimate effects by annual weeks worked and find that the full- and part-
 \paragraph{Additional robustness.} Specification curves varying the sample (with/without college, ages 20--49 vs.\ 20--64), control state pool (main, no-EITC, Medicaid expansion), time period, and control sets show a consistent 2--4 percentage point increase in part-time work and a matching decline in full-time work (\Cref{fig:appA_specurve}). Approximately 75 percent of the part-time increase is driven by wage workers (\Cref{sec:app_self}).\footnote{A simulated instrument approach following \cite{gruber_elasticity_2002} confirms the overall employment effect but lacks power to decompose the full-time/part-time margin; see Online Appendix E.}
 
 
+%% --- Threats to identification (NEW) ---
+
+\subsection{Threats to Identification} \label{sec:threats}
+
+The estimates above could in principle reflect other California-specific shocks that coincided with the CalEITC's introduction and differentially affected single mothers without a college degree. Three candidates stand out: the state's minimum wage increases, the Medicaid expansion, and a broader California-specific trend in mothers' employment. I address each with a targeted test.
+
+%% NOTE: add cengiz_effect_2019 (Cengiz, Dube, Lindner, Zipperer, QJE 2019) and
+%% jardim_minimum_2022 (Jardim et al., AEJ:EP 2022) to references.bib on Overleaf.
+
+\paragraph{Minimum wage.} California raised its statewide minimum wage from \$8.00 to \$9.00 in July 2014, to \$10.00 in January 2016, and to \$10.50 in January 2017, and several large cities---San Francisco, San Jose, Los Angeles, and Oakland among them---enacted higher local ordinances over the same window. The main specifications control for the binding state minimum wage $\times$ QC count, but the direction of any remaining bias is theoretically ambiguous: \cite{godoy_parental_2024} find that minimum wage increases raise single mothers' full-time employment, which would bias the full-time estimate toward zero, while the hours-adjustment literature finds that employers respond to minimum wage increases in part by reducing hours \citep{cengiz_effect_2019, jardim_minimum_2022}---a response that could mimic the shift from full-time to part-time work that I attribute to the credit.
+
+I separate the two policies using cross-county variation within California, which is immune by construction to concerns about the out-of-state or college-educated comparison groups. From the 2012--2014 pre-period I construct, for each of the 35 treated county units of \Cref{tab:sdid}, a minimum wage \emph{bite} measure---the share of employed workers in the analysis sample whose implied hourly wage falls below the incoming \$10.50 statewide minimum---and a CalEITC \emph{exposure} measure---the share of mothers with positive earnings at or below the credit's maximum qualifying income. Counties differ widely on both measures (bite: 0.22--0.55; exposure: 0.09--0.30), and the two are only moderately correlated (0.53), so the data can distinguish where each policy binds. I then regress the within-county difference in outcomes between mothers and non-mothers on the interactions of a post-2015 indicator with both standardized measures.
+
+Panel A of \Cref{tab:mw_bite} shows that the part-time increase tracks the credit, not the minimum wage: a one-standard-deviation increase in CalEITC exposure raises the part-time effect by 1.5 percentage points ($p = 0.053$), while the minimum wage bite coefficient is negative---the opposite sign of what minimum-wage-driven hours reductions would produce. The full-time decline likewise loads on exposure rather than on bite, which is again wrong-signed for a minimum wage confounder, although neither full-time coefficient is precisely estimated with 35 clusters. Panel B addresses the local ordinances directly by re-estimating the weighted SDID of \Cref{tab:sdid} excluding the ordinance counties. The part-time effect is essentially unchanged (3.4 and 2.9 versus 3.5 percentage points in the full sample), while the full-time decline falls by roughly half and loses statistical significance. Because Los Angeles, San Francisco, and Santa Clara together account for about a third of the treated-sample population (Los Angeles alone, 28 percent), this comparison also changes the estimand; I therefore read it as evidence that the full-time decline is concentrated in the large urban counties---where the credit and the ordinances both bind---rather than as a clean attribution. Together, the two panels support the bounded interpretation in \Cref{sec:decomposition}: the part-time increase is robustly attributable to the CalEITC, while part of the full-time decline may reflect concurrent minimum wage increases.
+
+%% TABLE: minimum-wage bite test
+\begin{table}[htbp]
+    \centering
+    \caption{Minimum wage or CalEITC? Within-California evidence}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{3}{>{\centering\arraybackslash}p{.18\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} \\
+        &\multicolumn{1}{c}{Employed}
+        &\multicolumn{1}{c}{\shortstack{Employed\\full-time}}
+        &\multicolumn{1}{c}{\shortstack{Employed\\part-time}}\\
+        \hline
+        \multicolumn{4}{c}{\textbf{Panel A: County-level horse race (per 1 SD)}} \\[-2ex]
+        \input{tables/tab_mw_bite_1} \\
+        \hline
+        \multicolumn{4}{c}{\textbf{Panel B: SDID excluding local-ordinance counties}} \\[-2ex]
+        \input{tables/tab_mw_bite_2} \\
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:mw_bite}
+    \floatfoot{\textbf{Note}: Panel A: county-year regressions on the 35 treated California county units, 2010--2017 ($N = 280$); the dependent variable is the within-county difference between mothers and non-mothers in each outcome, as in the triple SDID specifications of \Cref{tab:sdid}. MW bite is the share of employed workers in the 2012--2014 analysis sample whose implied hourly wage (annual earnings over annual hours, trimmed to \$1--\$200; 2019 dollars) falls below the incoming \$10.50 statewide minimum (January 2017). CalEITC exposure is the share of mothers with positive earnings at or below the tax-year-2015 CalEITC maximum qualifying income for their number of qualifying children. Both measures are standardized (population-weighted) across counties; coefficients are percentage points per one standard deviation. All regressions include county and year fixed effects and population weights; standard errors (parentheses) are clustered by county; cluster-$t$ $p$-values in brackets. Replacing bite with a Kaitz index (the incoming minimum over the county median implied wage) yields $-1.01$ (SE $0.61$) on the minimum wage term and $1.46$ (SE $0.74$) on exposure for part-time work. Panel B: weighted triple SDID as in \Cref{tab:sdid}, column (3), excluding treated counties with local minimum wage ordinances in the sample window: Los Angeles, San Francisco, and Santa Clara (32 treated units remain), then additionally Alameda (31 units). Unit-level bootstrap standard errors (500 replications).}
+\end{table}
+
+\paragraph{Medicaid.}
+\todo{Promote the Medicaid-expansion-states-only control pool (already in the specification curve, \Cref{fig:appA_specurve}) to a named test (PLAN \S A.3): California expanded Medicaid in January 2014 while part of the control pool did not; the event-study break at 2015 rather than 2014 is supporting evidence.}
+
+\paragraph{California-specific trends in mothers' employment.}
+\todo{Tie to the college placebo and the quadruple-difference above once the quad-diff numbers are in (PLAN \S A/\S C): the college placebo bounds any CA-wide trend in mothers' employment, and the quad-diff nets out confounders common to college and non-college mothers.}
+
+
 %% =============================================================================
 %% SECTION 6: EARNINGS + ELASTICITIES (target: 2-3 pages)
 %% =============================================================================

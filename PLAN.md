@@ -729,10 +729,18 @@ the table-helper tail rides with the Phase 3 exhibits).
      +3.49): drop3 FT −1.47 (SE 1.28), PT +3.35; drop4 FT −1.18
      (SE 1.36), PT +2.90. **PT robust; the SDID FT decline roughly
      halves and loses significance without the ordinance counties** —
-     caveat: dropping LA/SF/SC also drops most treated population, so
-     the estimand shifts to non-ordinance CA.
-   Remaining: exhibit + "Threats to identification" subsection text
-   (§C); defaults review done, results accepted.
+     caveat: dropping LA/SF/SC drops ~32% of the treated-sample
+     population (LA alone 28%), so the estimand shifts toward
+     non-ordinance CA.
+   **Exhibit + §C text done 2026-07-07**: `05b_mw_bite_table.R` builds
+   tab_mw_bite_{1,2}.tex (Panel A horse race, coef/(SE)/[cluster-t p],
+   no stars; Panel B ordinance drops with the Table 2 col-3 weighted
+   triple as reference row) from the committed job-tagged CSVs; new
+   "Threats to identification" subsection (`sec:threats`) after
+   Robustness with the minimum-wage test written and \todo stubs for
+   Medicaid (§A.3) and CA mother-trends (quad-diff); Kaitz variant in
+   the table note. Standalone compile verified. **Bib entries needed
+   on Overleaf**: cengiz_effect_2019, jardim_minimum_2022.
 7. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
    and the rest of the §A robustness agenda (dose-response §A.2,
    Medicaid pool §A.3, CPS timing §A.4, HonestDiD §A.6 — replication
