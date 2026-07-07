@@ -544,12 +544,14 @@ the table-helper tail rides with the Phase 3 exhibits).
       17177816 (2026-07-06). **Validator PASSED** (`validate_appE_battery.R`,
       12 tasks × 8 gates): deterministic ATE/SE/N/CRVE-p match at display
       precision; WCBS/RIWB-t/RIWB-b/BB/FP-corrected-BB all inside the
-      Bonferroni MC bands vs the job-17058169 golden tables. Remaining:
-      exhibit/table integration (with CT, below).
-- [ ] **Conley-Taber (2011) CIs** — implemented on the placebo-refit
+      Bonferroni MC bands vs the job-17058169 golden tables. Exhibit
+      integrated 2026-07-07 (step 5 below).
+- [x] **Conley-Taber (2011) CIs** — implemented on the placebo-refit
       distribution (`conley_taber()` in inference.R; inverse-ECDF
-      quantiles, 27 placebos, convention flagged for author review);
-      produced per task by stage 12. Needs: exhibit/table integration.
+      quantiles, 27 placebos); produced per task by stage 12.
+      Convention settled with the exhibit: 90% level (95% endpoints
+      with 27 placebos are the min/max order statistics — rationale in
+      the table note). Integrated 2026-07-07 (step 5 below).
 - [x] **SDID Table 2 on the synthdid_weights fork** — estimation script
       written 2026-07-06 (`code/R/03_sdid_county.R`): joint
       weighted fit per §D (treated.weights = 2010 county pop, aligned by
@@ -661,12 +663,26 @@ the table-helper tail rides with the Phase 3 exhibits).
    (unreferenced in the paper; the 8 `fig_sdid_event_*` jpgs stay until
    the stage-15 event-study figures replace them). Remaining: verify on
    Overleaf once synced (floatfoot length).
-5. **appE + Conley–Taber exhibit integration** (the other open bullet):
-   regenerate `tab_appE_tab1_1/2/3` from the R battery (job 17177816
-   output), add the CT CI column, update the appendix table note and
-   re-check fn. 261 prose. This is where the deferred table helpers
-   (`add_table_stats`, export layer) get ported, validated against the
-   committed tables.
+5. **appE + Conley–Taber exhibit integration — done 2026-07-07**
+   (`code/R/04b_appE_table.R` reads the staged
+   `results/appE_r/appE_r_job17177816.csv`; battery CSVs + per-task
+   refit .rds staged there from data/tmp). Regenerated
+   `tab_appE_tab1_{1,2,3}.tex` (results/tables + results/paper):
+   deterministic rows (ATE/SE/N/CRVE) match the committed Stata tables
+   at display precision; resampling p-values are now the R battery's
+   (canonical; within MC bands — note FT spec-2 Corrected BB moved
+   0.043 → 0.052, prose claims unaffected). Two new rows: RI P-Value
+   (pure placebo-refit RI on the coefficient, floor 1/28) and CT 90%
+   CI. CT intervals are wide and include zero everywhere (placebo-b
+   dispersion ~10× the CRVE SEs) — framed in the appendix prose as a
+   bounding exercise. Paper updates: §app_inf procedure list (+RI,
+   +CT), results paragraph (+CT/RI sentences), table note (+RI/CT
+   definitions, 1/28 floor, 90% rationale), fn. 261 softened ("at or
+   near the ten percent level, p = 0.10–0.12" — PT spec-4 WCBS is now
+   0.111) with a CT sentence. Standalone compile verified. The generic
+   esttab-replacement layer (`add_table_stats`, modelsummary export)
+   stays deferred — 03d/04b are purpose-built writers; port the
+   generic layer with the first main-text table that needs it.
 6. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
    and the §A robustness agenda — the county minimum-wage bite test
    (§A.1) is the natural first item since the county panel machinery
