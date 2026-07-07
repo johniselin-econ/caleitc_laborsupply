@@ -704,8 +704,17 @@ the table-helper tail rides with the Phase 3 exhibits).
    county-clustered (35 clusters); (3) ordinance-drop SDID refits of
    the weighted triple spec — drop3 = LA/SF/Santa Clara (plan's named
    three), drop4 = +Alameda, B = 500, seeds +301...
-   **Defaults flagged for author review**: the $10.50 incoming-minimum
-   choice, the wage trim, mothers-only exposure, drop3/drop4 sets.
+   **Defaults reviewed — author decisions 2026-07-07: all kept as
+   implemented.** (i) $10.50 incoming minimum stays (z-scored ranking is
+   threshold-insensitive; Kaitz variant is the hedge); (ii) [$1,$200]
+   trim stays (permissive but transparent; z-scoring absorbs the level);
+   (iii) exposure stays mothers-only with all mothers in the denominator
+   (matches the QC-present treated margin; zero-earners capture the
+   extensive margin); (iv) drop3/drop4 only — no San Diego/Contra Costa
+   variant (SD's Jul-2016 ordinance led the statewide $10.50 by six
+   months, immaterial for annual ACS outcomes; further drops push the
+   estimand away from statewide CA). No reruns; job-17232853 results
+   are final.
    First submission (17232841) cancelled pre-results: R zero-indexing
    bug in the exposure threshold lookup (qc_ct = 0 rows), fixed.
    **Completed 2026-07-07** (13 min; staged in `results/mw_bite/`,
@@ -722,8 +731,8 @@ the table-helper tail rides with the Phase 3 exhibits).
      halves and loses significance without the ordinance counties** —
      caveat: dropping LA/SF/SC also drops most treated population, so
      the estimand shifts to non-ordinance CA.
-   Remaining: author review of the defaults + results, then exhibit +
-   "Threats to identification" subsection text (§C).
+   Remaining: exhibit + "Threats to identification" subsection text
+   (§C); defaults review done, results accepted.
 7. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
    and the rest of the §A robustness agenda (dose-response §A.2,
    Medicaid pool §A.3, CPS timing §A.4, HonestDiD §A.6 — replication
