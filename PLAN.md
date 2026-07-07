@@ -683,7 +683,25 @@ the table-helper tail rides with the Phase 3 exhibits).
    esttab-replacement layer (`add_table_stats`, modelsummary export)
    stays deferred — 03d/04b are purpose-built writers; port the
    generic layer with the first main-text table that needs it.
-6. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
-   and the §A robustness agenda — the county minimum-wage bite test
-   (§A.1) is the natural first item since the county panel machinery
-   is now live in R.
+6. **§A.1 minimum-wage bite test — in flight** (started 2026-07-07;
+   `code/R/05_mw_bite.R`, stage 16, job 17232853). Three parts:
+   (1) county measures from the 2012–14 working file on the 35 SDID CA
+   units — bite (share of employed with implied real hourly wage below
+   the incoming $10.50 Jan-2017 statewide minimum; wage trim $1–200
+   2019 USD), Kaitz variant, CalEITC exposure (share of mothers with
+   earnings in (0, TY2015 max_income(qc)]; FTB 3514 schedule);
+   (2) within-CA county-year DiD horse race: outcome_diff on
+   post×bite_z and post×exposure_z, county+year FE, pop-weighted,
+   county-clustered (35 clusters); (3) ordinance-drop SDID refits of
+   the weighted triple spec — drop3 = LA/SF/Santa Clara (plan's named
+   three), drop4 = +Alameda, B = 500, seeds +301...
+   **Defaults flagged for author review**: the $10.50 incoming-minimum
+   choice, the wage trim, mothers-only exposure, drop3/drop4 sets.
+   First submission (17232841) cancelled pre-results: R zero-indexing
+   bug in the exposure threshold lookup (qc_ct = 0 rows), fixed.
+   Remaining: review results, exhibit + "Threats to identification"
+   text (§C) once the numbers are in.
+7. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
+   and the rest of the §A robustness agenda (dose-response §A.2,
+   Medicaid pool §A.3, CPS timing §A.4, HonestDiD §A.6 — replication
+   matrices already saved by stage 15).
