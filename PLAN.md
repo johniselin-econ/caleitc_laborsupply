@@ -631,18 +631,29 @@ the table-helper tail rides with the Phase 3 exhibits).
    **Table 2 cells: ATT (unit-bootstrap SE) [RMSPE-scaled RI p]**;
    raw-ATT RI p-values in the note/appendix detail; note states the
    1/28 attainable floor; state-placebo RI framed as corroboration.
-3. **Build the new Table 2 exhibit** (tex export): fix the misordered
+3. **Weighted event studies** (author request 2026-07-07) —
+   `code/R/03c_sdid_eventstudy.R` (stage 15, job 17232065, submitted
+   2026-07-07): Ciccia decomposition via the fork's
+   `synthdid_event_study()` on the 12 weighted headline fits, unit
+   bootstrap bands B = 500 (same scheme as the stage-13 SEs), seeds
+   `params$seed + 201..212`. Replication matrices saved in the .rds
+   for HonestDiD (§A.6) without refitting. `make_setup` extracted to
+   `code/R/utils/sdid_setup.R` (shared with 03, verbatim). Smoke test:
+   employed/basic ATT reproduces stage-13 exactly, pre-coefficients
+   ≈ 0. These supersede the old `fig_sdid_event_*` jpgs (not in
+   paper); decide on figure export with the Table 2 exhibit.
+4. **Build the new Table 2 exhibit** (tex export): fix the misordered
    column headers, the "500 replications" vs B note, and the 2012–17 vs
    2010–17 note; add the in-time placebo / remedy rows and the stage-14
    RI p-values; sweep the stale `tab_sdid_*` files from `results/`
    (Phase 1 leftover) when the new exhibit lands.
-4. **appE + Conley–Taber exhibit integration** (the other open bullet):
+5. **appE + Conley–Taber exhibit integration** (the other open bullet):
    regenerate `tab_appE_tab1_1/2/3` from the R battery (job 17177816
    output), add the CT CI column, update the appendix table note and
    re-check fn. 261 prose. This is where the deferred table helpers
    (`add_table_stats`, export layer) get ported, validated against the
    committed tables.
-5. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
+6. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
    and the §A robustness agenda — the county minimum-wage bite test
    (§A.1) is the natural first item since the county panel machinery
    is now live in R.
