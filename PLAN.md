@@ -708,8 +708,22 @@ the table-helper tail rides with the Phase 3 exhibits).
    choice, the wage trim, mothers-only exposure, drop3/drop4 sets.
    First submission (17232841) cancelled pre-results: R zero-indexing
    bug in the exposure threshold lookup (qc_ct = 0 rows), fixed.
-   Remaining: review results, exhibit + "Threats to identification"
-   text (§C) once the numbers are in.
+   **Completed 2026-07-07** (13 min; staged in `results/mw_bite/`,
+   job-tagged). Results support the §C attribution story:
+   - Horse race (per 1 SD): the PART-TIME increase tracks CalEITC
+     exposure (+1.48, p = 0.053), not minimum-wage bite (−0.93,
+     p = 0.17, wrong-signed for confounding). The FT decline loads on
+     exposure (−1.15) not bite (+1.05, again wrong-signed), but
+     neither is significant (35 clusters). Employed: nothing.
+     bite–exposure corr 0.53; measures: bite 0.22–0.55, exp 0.09–0.30.
+   - Ordinance drops (weighted triple; full sample FT −2.56, PT
+     +3.49): drop3 FT −1.47 (SE 1.28), PT +3.35; drop4 FT −1.18
+     (SE 1.36), PT +2.90. **PT robust; the SDID FT decline roughly
+     halves and loses significance without the ordinance counties** —
+     caveat: dropping LA/SF/SC also drops most treated population, so
+     the estimand shifts to non-ordinance CA.
+   Remaining: author review of the defaults + results, then exhibit +
+   "Threats to identification" subsection text (§C).
 7. **Then Phase 4** (elasticities/MVPF on `eitc_california_ftb3514`),
    and the rest of the §A robustness agenda (dose-response §A.2,
    Medicaid pool §A.3, CPS timing §A.4, HonestDiD §A.6 — replication
