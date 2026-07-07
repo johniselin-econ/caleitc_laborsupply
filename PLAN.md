@@ -640,10 +640,19 @@ the table-helper tail rides with the Phase 3 exhibits).
    bootstrap bands B = 500 (same scheme as the stage-13 SEs), seeds
    `params$seed + 201..212`. Replication matrices saved in the .rds
    for HonestDiD (§A.6) without refitting. `make_setup` extracted to
-   `code/R/utils/sdid_setup.R` (shared with 03, verbatim). Smoke test:
-   employed/basic ATT reproduces stage-13 exactly, pre-coefficients
-   ≈ 0. These supersede the old `fig_sdid_event_*` jpgs (not in
-   paper); decide on figure export with the Table 2 exhibit.
+   `code/R/utils/sdid_setup.R` (shared with 03, verbatim).
+   **Completed 2026-07-07**: all 12 tasks (no-cov ~2.5 min, cov
+   ~1.8-2h), no bootstrap warnings; curves staged in
+   `results/sdid_r/sdid_county_es_r_job17232065.csv` (+ per-task .rds
+   with replication matrices). **Figures built**
+   (`code/R/03e_sdid_esfigures.R`): 12 × `fig_sdid_event_<out>_<spec>`
+   (png → results/figures, jpg → results/paper), paper coefplot style,
+   ATT cross-check vs stage 13 exact. Old per-county-loop jpgs
+   replaced (same names for basic/triple; basic_cov/triple_cov new).
+   Pre-period placebo coefficients ≈ 0 everywhere; PT jumps +3.9/+4.4
+   in 2015-16 (2017 +2.2, CI touches 0); FT −3.0/−3.7 in 2015-16,
+   −1.0 in 2017. Not yet included in the paper — author call whether
+   an SDID event-study figure joins the robustness section.
 4. **Table 2 exhibit — built 2026-07-07** (`code/R/03d_sdid_table2.R`
    reads the committed `results/sdid_r/` job CSVs and writes
    `tab_sdid_county_{1,2,3,end}.tex` to `results/tables/` +
