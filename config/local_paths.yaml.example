@@ -17,3 +17,7 @@ api_codes: "api_codes.txt"
 # Data directories — defaults are in-repo; override e.g. to a scratch disk.
 data_dir: "data"
 results_dir: "results"
+
+# Budget Lab common ACS source (used when config/parameters.yaml acs_source: shared).
+# Point at the shared per-year IPUMS extract root (contains us<YYYY>a/ folders).
+acs_common_root: "/path/to/shared/raw_data/ACS/acs_common"

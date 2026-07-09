@@ -11,6 +11,13 @@
 # the Stata pipeline keeps its own copies; this file is authoritative for R.
 # =============================================================================
 
+# ACS data source (read by code/R/api_code.R):
+#   shared -> read the Budget Lab common IPUMS extract from the shared drive
+#             (path in config/local_paths.yaml: acs_common_root). No API key needed.
+#   local  -> download a fresh per-year extract via the IPUMS API (needs api_codes.txt).
+# Flip to "local" when working off-cluster or to pull newly released years.
+acs_source: shared
+
 years:
   analysis_start: 2012          # 00_caleitc.do
   analysis_end: 2017
