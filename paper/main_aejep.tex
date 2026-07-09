@@ -433,27 +433,61 @@ I also estimate effects by annual weeks worked and find that the full- and part-
 
 %% --- Quadruple-difference (NEW) ---
 
-\paragraph{Quadruple-difference.}
-\todo{Insert quadruple-difference results from \texttt{03\_tab\_quad\_diff.do}. Key content:
-\begin{itemize}
-    \item Uses education (college vs. non-college) as a fourth difference dimension
-    \item Nets out any CA $\times$ Post $\times$ QC confounder common to both education groups
-    \item Report coefficients and SEs for employed, full-time, and part-time
-    \item If the full-time effect survives the quad-diff, the college placebo concern is resolved
-    \item Expected framing: ``To directly address this concern, I estimate a quadruple-difference that uses education as a fourth dimension. The estimated effect on part-time work is [X] pp (SE [Y]), and on full-time work is [X] pp (SE [Y]).''
-\end{itemize}}
+\paragraph{Quadruple-difference.} To net out any California-specific shock common to college-educated and non-college mothers, I estimate a quadruple-difference that adds education as a fourth dimension, interacting the triple-difference treatment of Equation~\eqref{eq:eq1} with an indicator for not holding a college degree. Saturated three-way fixed effects---state $\times$ year $\times$ qualifying-child count, state $\times$ year $\times$ non-college, state $\times$ qualifying-child count $\times$ non-college, and year $\times$ qualifying-child count $\times$ non-college---absorb all lower-order interactions and the economic controls, so the four-way term isolates the part of the California $\times$ post $\times$ qualifying-child change that is specific to non-college mothers, the group the CalEITC targets. \Cref{tab:quad_diff} reports the results. The part-time increase survives cleanly: $+1.9$ percentage points (SE $0.6$) with the saturated fixed effects alone and $+1.8$ (SE $0.6$) adding demographic controls, both significant at the one percent level and close to the main triple-difference estimate; the overall employment increase survives as well ($+1.8$ and $+1.6$ pp, $p<0.01$). The full-time decline does not: the quadruple-difference estimate is $-0.1$ (SE $0.7$) and $-0.2$ (SE $0.7$), statistically indistinguishable from zero, and the earnings effect is likewise insignificant ($-\$411$ and $-\$256$). The reading is direct: the part-time response is specific to the credit-eligible group, whereas the full-time decline in the main results largely reflects a California-wide trend shared by college-educated mothers---consistent with the college placebo above and with the minimum-wage evidence in \Cref{sec:threats}.
+
+%% TABLE: quadruple-difference
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Quadruple-difference estimates (education as a fourth dimension)}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{2}{>{\centering\arraybackslash}p{.28\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)} \\
+        &\multicolumn{1}{c}{\shortstack{Saturated\\3-way FEs}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}\\
+        \hline
+        \multicolumn{3}{c}{\textbf{Panel A: Employed}} \\[-2ex]
+        \input{tables/tab_quad_diff_1} \\
+        \hline
+        \multicolumn{3}{c}{\textbf{Panel B: Employed full-time}} \\[-2ex]
+        \input{tables/tab_quad_diff_2} \\
+        \hline
+        \multicolumn{3}{c}{\textbf{Panel C: Employed part-time}} \\[-2ex]
+        \input{tables/tab_quad_diff_3} \\[-3.5ex]
+        \input{tables/tab_quad_diff_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:quad_diff}
+    \floatfoot{\textbf{Note}: Quadruple-difference estimates on the full sample of single women aged 20--49, both college and non-college (American Community Survey, 2012--2017; $N = 761{,}195$). The treatment is the four-way interaction of non-college status, California residence, the post-2014 indicator, and the presence of a qualifying child. Column (1) includes the four saturated three-way fixed effects (state $\times$ year $\times$ qualifying-child count, state $\times$ year $\times$ non-college, state $\times$ qualifying-child count $\times$ non-college, and year $\times$ qualifying-child count $\times$ non-college), which subsume all lower-order interactions and absorb the unemployment and minimum-wage controls; column (2) adds demographic controls (age, minimum age of a qualifying child, race, ethnicity, and household adult count). Employment outcomes are in percentage points; the treated-group pre-period mean and implied effect are reported per panel. Standard errors clustered at the state level in parentheses. * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
 
 
 %% --- Oster bounds (NEW) ---
 
-\paragraph{Selection on unobservables.}
-\todo{Insert Oster (2019) bounds from \texttt{03\_tab\_oster\_bounds.do}. Key content:
-\begin{itemize}
-    \item Report $\delta^*$ (the proportional selection ratio) for full-time and part-time outcomes
-    \item Report bias-adjusted $\beta$ estimates
-    \item Convention: $\delta^* > 1$ means unobservables would need to be more important than observables to explain away the result
-    \item Expected framing: ``Following \cite{oster_unobservable_2019}, I assess the degree of selection on unobservables required to explain away the estimated effects. The implied $\delta^*$ values are [X] for full-time and [Y] for part-time, well above the conventional threshold of 1.''
-\end{itemize}}
+\paragraph{Selection on unobservables.} Following \cite{oster_unobservable_2019}, I assess how much selection on unobservables, relative to the included controls, would be required to overturn the estimates, comparing the uncontrolled and fully controlled triple-difference specifications (\Cref{tab:oster}). For every outcome the coefficient moves \emph{away} from zero as controls are added---the part-time estimate rises from $+3.1$ to $+3.7$ percentage points and the full-time estimate from $-2.2$ to $-4.1$---so the selection ratio $\delta^*$ that would drive the coefficient to zero is negative (part-time $-1.8$, full-time $-0.7$ at $R_{max}=1.3\,R^2_F$). Unobservable selection operating in the same direction as the observable selection therefore only strengthens the estimates; it would take reverse-signed selection to explain them away. These bounds address selection proportional to the included covariates; they do not speak to a California-wide trend common to both education groups, which the quadruple-difference isolates directly.
+
+%% TABLE: Oster (2019) bounds
+\begin{table}[htbp]
+    \centering
+    \caption{Oster (2019) coefficient-stability bounds}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{8}{c}}
+        \hline\hline
+        &\multicolumn{2}{c}{Coefficient}&\multicolumn{2}{c}{Adj.\ $R^2$}
+        &\multicolumn{2}{c}{$R_{max}=1.3\,R^2_F$}
+        &\multicolumn{2}{c}{$R_{max}=\min(2R^2_F,1)$}\\
+        \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+        Outcome&$\beta_R$&$\beta_F$&$R^2_R$&$R^2_F$&$\delta^*$&$\beta_{adj}$&$\delta^*$&$\beta_{adj}$\\
+        \hline
+        \input{tables/tab_oster_bounds}
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:oster}
+    \floatfoot{\textbf{Note}: \cite{oster_unobservable_2019} coefficient-stability bounds for the triple-difference treatment effect, baseline non-college sample (2012--2017). $\beta_R$ and $R^2_R$ are from the restricted model (baseline fixed effects only); $\beta_F$ and $R^2_F$ from the full model (adding demographic, unemployment, and minimum-wage controls). $\delta^*$ is the proportional degree of selection on unobservables, relative to observables, that would drive the treatment coefficient to zero; $\beta_{adj}$ is the bias-adjusted coefficient at $\delta=1$. The two rightmost pairs use $R_{max}=1.3\,R^2_F$ (Oster's recommended default) and $R_{max}=\min(2R^2_F,1)$. Employment coefficients are in percentage points; earnings in 2019 dollars. A negative $\delta^*$ indicates that the coefficient moves away from zero when controls are added, so selection in the same direction as observables would strengthen rather than attenuate the estimate.}
+\end{table}
 
 
 %% --- Specification curves + other robustness (compressed) ---
@@ -559,8 +593,7 @@ Panel A of \Cref{tab:mw_bite} shows that the part-time increase tracks the credi
     \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1} restricting the control pool to the ten states that expanded Medicaid in January 2014, as in the Medicaid-expansion specification of \Cref{fig:appA_specurve}. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. Columns add controls as in \Cref{tab:triple_diff_main}. Standard errors clustered at state level. * p<0.10, ** p<0.05, *** p<0.01.}
 \end{table}
 
-\paragraph{California-specific trends in mothers' employment.}
-\todo{Tie to the college placebo and the quadruple-difference above once the quad-diff numbers are in (PLAN \S A/\S C): the college placebo bounds any CA-wide trend in mothers' employment, and the quad-diff nets out confounders common to college and non-college mothers.}
+\paragraph{California-specific trends in mothers' employment.} Finally, the college placebo and the quadruple-difference together bound any California-specific trend in mothers' employment. College-educated mothers, who are largely unexposed to the credit, show a full-time decline of similar timing (\Cref{fig:college_placebo}), and once that common trend is netted out the quadruple-difference (\Cref{tab:quad_diff}) leaves no full-time effect specific to non-college mothers, while the part-time increase appears only among the credit-eligible group in both designs. I therefore attribute the part-time response to the CalEITC and treat the full-time decline as a partial bound that may incorporate a broader California trend, as reflected in the bounded decomposition of \Cref{sec:decomposition}.
 
 
 %% =============================================================================
