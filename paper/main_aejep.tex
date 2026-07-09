@@ -381,7 +381,10 @@ I also estimate effects by annual weeks worked and find that the full- and part-
 
 %% --- SDID ---
 
-\paragraph{Synthetic Difference-in-Differences.} I validate the main results using SDID (\Cref{tab:sdid}), estimated as a single population-weighted fit over California's counties. Across specifications with and without time-varying covariates, and models estimated on the within-county difference between mothers and non-mothers, I find a 2.5--3.8 percentage point increase in part-time work and a 1.1--5.0 percentage point decrease in full-time work, consistent with the direction and magnitude of the triple-difference estimates. The part-time increase is stable when county-specific pre-trends are removed and when donors are matched within population strata, and in-time placebos estimated on pre-period data alone are small throughout. Randomization inference reassigning treatment across the 27 donor states places the full-time decline at the most extreme value attainable in the placebo distribution ($p = 0.036$) in three of four specifications.
+\paragraph{Synthetic Difference-in-Differences.} I validate the main results using SDID (\Cref{tab:sdid}), estimated as a single population-weighted fit over California's counties. Across specifications with and without time-varying covariates, and models estimated on the within-county difference between mothers and non-mothers, I find a 2.5--3.8 percentage point increase in part-time work and a 1.1--5.0 percentage point decrease in full-time work, consistent with the direction and magnitude of the triple-difference estimates. The part-time increase is stable when county-specific pre-trends are removed and when donors are matched within population strata, and in-time placebos estimated on pre-period data alone are small throughout. Randomization inference reassigning treatment across the 27 donor states places the full-time decline at the most extreme value attainable in the placebo distribution ($p = 0.036$) in three of four specifications. A \cite{rambachan_more_2023} sensitivity analysis on the SDID event studies (\Cref{tab:honestdid}) shows that the full-time decline in the basic-plus-covariates specification is robust to post-period violations of parallel trends as large as the pre-period differences ($\bar{M} = 1$), and the part-time increase to violations half that size ($\bar{M} = 0.5$).
+
+%% NOTE: add rambachan_more_2023 (Rambachan & Roth, "A More Credible Approach to
+%% Parallel Trends," Rev. Econ. Stud. 2023) to references.bib on Overleaf.
 
 %% TABLE 2: SDID
 \begin{table}[htbp]
@@ -455,7 +458,34 @@ I also estimate effects by annual weeks worked and find that the full- and part-
 
 %% --- Specification curves + other robustness (compressed) ---
 
-\paragraph{Additional robustness.} Specification curves varying the sample (with/without college, ages 20--49 vs.\ 20--64), control state pool (main, no-EITC, Medicaid expansion), time period, and control sets show a consistent 2--4 percentage point increase in part-time work and a matching decline in full-time work (\Cref{fig:appA_specurve}). Approximately 75 percent of the part-time increase is driven by wage workers (\Cref{sec:app_self}).\footnote{A simulated instrument approach following \cite{gruber_elasticity_2002} confirms the overall employment effect but lacks power to decompose the full-time/part-time margin; see Online Appendix E.}
+\paragraph{Additional robustness.} Specification curves varying the sample (with/without college, ages 20--49 vs.\ 20--64), control state pool (main, no-EITC, Medicaid expansion), time period, and control sets show a consistent 2--4 percentage point increase in part-time work and a matching decline in full-time work (\Cref{fig:appA_specurve}). Approximately 75 percent of the part-time increase is driven by wage workers (\Cref{sec:app_self}).\footnote{A simulated instrument approach following \cite{gruber_elasticity_2002} confirms the overall employment effect but lacks power to decompose the full-time/part-time margin; see Online Appendix E.} The full-time decline and part-time increase are also robust to defining the full-time margin at alternative thresholds of 31 or 39 hours per week rather than 35 (\Cref{tab:alt_threshold}).
+
+
+%% --- Dose-response within non-college mothers (NEW) ---
+
+\paragraph{Dose-response.} A final concern is that non-college single mothers in California followed a distinct employment path for reasons unrelated to the credit. I address this with a design that stays entirely within the non-college sample and so relies on neither the out-of-state nor the college-educated comparison group. Using the simulated-credit machinery of Online Appendix E, I compute the CalEITC a woman would receive under the 2015--2017 schedules as a function of her demographic cell---number of qualifying children $\times$ education $\times$ age---and assign this predicted exposure to women in every state. I sort women into person-weighted exposure terciles, generalizing the main triple-difference \eqref{eq:eq1} by replacing the qualifying-child indicator with tercile indicators (the lowest, essentially unexposed tercile omitted as the reference). If the credit drives the results, the effect should concentrate in the top exposure tercile, which collects the low-earning mother cells.
+
+\Cref{tab:dose} bears this out. The full-time decline loads on the top tercile ($-3.24$ percentage points, versus $-1.59$ for the middle tercile), and the part-time increase falls entirely on the top tercile ($+2.36$, with the middle tercile essentially zero)---monotone in exposure, as a dose-response in the credit would predict. Two caveats temper the reading: randomization inference reassigning the exposure design to each control state does not reject the null at conventional levels (top-tercile $p = 0.21$ for full-time and $0.36$ for part-time), and the event-study version shows a significant, opposite-signed pre-period (2012) coefficient on the top tercile. I therefore read the dose-response as suggestive corroboration of the exposure margin rather than as standalone evidence.
+
+%% TABLE: dose-response
+\begin{table}[htbp]
+    \centering
+    \caption{Dose-response by predicted CalEITC exposure}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{3}{>{\centering\arraybackslash}p{.18\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} \\
+        &\multicolumn{1}{c}{Employed}
+        &\multicolumn{1}{c}{\shortstack{Employed\\full-time}}
+        &\multicolumn{1}{c}{\shortstack{Employed\\part-time}}\\
+        \hline
+        \input{tables/tab_dose_1} \\
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:dose}
+    \floatfoot{\textbf{Note}: Tercile-specific difference-in-differences on the baseline sample (single non-college women aged 20--49, US citizens, not in school, 2012--2017; $N = 461{,}616$), generalizing Equation \eqref{eq:eq1} by replacing the qualifying-child indicator with predicted-exposure tercile indicators (lowest tercile, T1, omitted as the reference). Predicted CalEITC exposure is the simulated credit a woman would receive under the 2015--2017 schedules given her demographic cell (number of qualifying children $\times$ education $\times$ 5-year age bin), computed with the Simulation-2 machinery of Online Appendix E and assigned to women in every state; women are sorted into person-weighted terciles of this measure. T1 is essentially unexposed. All models include demographic controls, state $\times$ year, tercile $\times$ year, and state $\times$ tercile fixed effects, and person weights. The gradient is the T3 $-$ T2 difference (a linear combination, no standard error). Cluster-robust standard errors (state) in parentheses; brackets report two-sided randomization-inference $p$-values reassigning the exposure design to each of the 27 control states, using the $(1+\#\mathrm{exceed})/(S+1)$ convention (smallest attainable value $1/28 \approx 0.036$). In the corresponding event study, the top-tercile pre-period (2012) coefficients are $+2.04$ (full-time) and $-1.24$ (part-time), both significant. No significance stars: the randomization-inference $p$-value is the inference object.}
+\end{table}
 
 
 %% --- Threats to identification (NEW) ---
@@ -497,8 +527,37 @@ Panel A of \Cref{tab:mw_bite} shows that the part-time increase tracks the credi
     \floatfoot{\textbf{Note}: Panel A: county-year regressions on the 35 treated California county units, 2010--2017 ($N = 280$); the dependent variable is the within-county difference between mothers and non-mothers in each outcome, as in the triple SDID specifications of \Cref{tab:sdid}. MW bite is the share of employed workers in the 2012--2014 analysis sample whose implied hourly wage (annual earnings over annual hours, trimmed to \$1--\$200; 2019 dollars) falls below the incoming \$10.50 statewide minimum (January 2017). CalEITC exposure is the share of mothers with positive earnings at or below the tax-year-2015 CalEITC maximum qualifying income for their number of qualifying children. Both measures are standardized (population-weighted) across counties; coefficients are percentage points per one standard deviation. All regressions include county and year fixed effects and population weights; standard errors (parentheses) are clustered by county; cluster-$t$ $p$-values in brackets. Replacing bite with a Kaitz index (the incoming minimum over the county median implied wage) yields $-1.01$ (SE $0.61$) on the minimum wage term and $1.46$ (SE $0.74$) on exposure for part-time work. Panel B: weighted triple SDID as in \Cref{tab:sdid}, column (3), excluding treated counties with local minimum wage ordinances in the sample window: Los Angeles, San Francisco, and Santa Clara (32 treated units remain), then additionally Alameda (31 units). Unit-level bootstrap standard errors (500 replications).}
 \end{table}
 
-\paragraph{Medicaid.}
-\todo{Promote the Medicaid-expansion-states-only control pool (already in the specification curve, \Cref{fig:appA_specurve}) to a named test (PLAN \S A.3): California expanded Medicaid in January 2014 while part of the control pool did not; the event-study break at 2015 rather than 2014 is supporting evidence.}
+\paragraph{Medicaid.} California expanded Medicaid under the Affordable Care Act in January 2014, a year before the CalEITC took effect, while several states in the control pool did not expand. If the coverage expansion rather than the credit drove single mothers' labor supply, restricting the comparison to states that expanded Medicaid on a similar timetable should attenuate the estimates. It does not. Re-estimating the triple-difference using only the ten Medicaid-expansion control states (\Cref{tab:medicaid}) leaves the full-time decline (2.99--4.55 percentage points) and part-time increase (3.17--4.19 percentage points) essentially unchanged, with no effect on overall employment. The timing is also wrong for a Medicaid story: full-time work among treated mothers breaks in 2015, when the credit took effect, rather than in 2014, when the expansion did (\Cref{fig:fig_event_emp}).
+
+%% TABLE: Medicaid-expansion control pool
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference estimates, Medicaid-expansion control states}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
+        &\multicolumn{1}{c}{\shortstack{Basic Triple \\ Difference}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Unemployment\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Minimum Wage\\Controls}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: Employed in the last 12-months}} \\[-2ex]
+        \input{tables/tab_medicaid_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: Employed full-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_medicaid_2} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel C: Employed part-time in the last 12-months}} \\[-2ex]
+        \input{tables/tab_medicaid_3} \\[-3.5ex]
+        \input{tables/tab_main_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:medicaid}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1} restricting the control pool to the ten states that expanded Medicaid in January 2014, as in the Medicaid-expansion specification of \Cref{fig:appA_specurve}. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Full-time: 35+ hours/week; part-time: $<35$ hours/week. Columns add controls as in \Cref{tab:triple_diff_main}. Standard errors clustered at state level. * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
 
 \paragraph{California-specific trends in mothers' employment.}
 \todo{Tie to the college placebo and the quadruple-difference above once the quad-diff numbers are in (PLAN \S A/\S C): the college placebo bounds any CA-wide trend in mothers' employment, and the quad-diff nets out confounders common to college and non-college mothers.}
@@ -780,6 +839,59 @@ Two important limitations stem from the ACS data. First, without longitudinal da
     \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1}. Sample: single women aged 20-49, \textit{with} college degree, 2012-2017. Standard errors clustered at state level. * 0.10 ** 0.05 *** 0.01.}
 \end{table}
 
+
+%% Alternative full-time thresholds
+\begin{table}[htbp]
+    \centering
+    \def\sym#1{\ifmmode^{#1}\else\(^{#1}\)\fi}
+    \caption{Triple-difference estimates, alternative full-time thresholds}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{4}{>{\centering\arraybackslash}p{.2\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)} &\multicolumn{1}{c}{(4)} \\
+        &\multicolumn{1}{c}{\shortstack{Basic Triple \\ Difference}}
+        &\multicolumn{1}{c}{\shortstack{Add Demographic\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Unemployment\\Controls}}
+        &\multicolumn{1}{c}{\shortstack{Add Minimum Wage\\Controls}}\\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel A: 31-hour full-time threshold}} \\[-2ex]
+        \input{tables/tab_alt_threshold_1} \\
+        \hline
+        \multicolumn{5}{c}{\textbf{Panel B: 39-hour full-time threshold}} \\[-2ex]
+        \input{tables/tab_alt_threshold_2} \\[-3.5ex]
+        \input{tables/tab_main_end} \\[-3.5ex]
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:alt_threshold}
+    \floatfoot{\textbf{Note}: Estimates of Equation \eqref{eq:eq1} redefining the full-time margin at 31 hours (Panel A) and 39 hours (Panel B) per week rather than the 35-hour cutoff used throughout; part-time is the complement in each panel. Data: American Community Survey, 2012--2017. Sample: single women aged 20--49, US citizens, not in school, without college degree, not potential qualifying children. Columns add controls as in \Cref{tab:triple_diff_main}. Standard errors clustered at state level. * p<0.10, ** p<0.05, *** p<0.01.}
+\end{table}
+
+%% HonestDiD sensitivity
+\begin{table}[htbp]
+    \centering
+    \caption{Rambachan--Roth (2023) sensitivity of the SDID event-study estimates}
+    \resizebox{\textwidth}{!}{%
+    \begin{tabular}{l*{5}{>{\centering\arraybackslash}p{.15\linewidth}}}
+        \hline\hline
+        &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}&\multicolumn{1}{c}{(5)} \\
+        &\multicolumn{1}{c}{\shortstack{Full-time\\Basic}}
+        &\multicolumn{1}{c}{\shortstack{Full-time\\Basic+Cov}}
+        &\multicolumn{1}{c}{\shortstack{Full-time\\Triple}}
+        &\multicolumn{1}{c}{\shortstack{Full-time\\Triple+Cov}}
+        &\multicolumn{1}{c}{\shortstack{Part-time\\Triple}}\\
+        \hline
+        \multicolumn{6}{c}{\textbf{Panel A: Relative magnitudes ($\bar{M}$)}} \\[-2ex]
+        \input{tables/tab_honestdid_1} \\
+        \hline
+        \multicolumn{6}{c}{\textbf{Panel B: Smoothness ($M$)}} \\[-2ex]
+        \input{tables/tab_honestdid_2} \\
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:honestdid}
+    \floatfoot{\textbf{Note}: \cite{rambachan_more_2023} robust 95\% confidence intervals for the average post-period effect, computed on the weighted SDID event studies of \Cref{tab:sdid} (columns identify the outcome and specification). Panel A allows post-period deviations from parallel trends up to $\bar{M}$ times the largest pre-period deviation; Panel B bounds the change in the slope of the differential trend by $M$ percentage points per period. ``Original 95\% CI'' is the SDID event-study confidence interval under exact parallel trends. Intervals excluding zero indicate the effect is robust at that level of assumed violation.}
+\end{table}
 
 \clearpage
 
