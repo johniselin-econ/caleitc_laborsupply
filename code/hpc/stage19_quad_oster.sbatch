@@ -15,4 +15,4 @@
 # the committed Stata golden outputs in-run. No seeds (all deterministic).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/09_quad_oster.R
+Rscript code/38_quad_oster.R

@@ -13,4 +13,4 @@
 # (no-cov triple, ~2.5 min each x 6).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/05_mw_bite.R
+Rscript code/30_mw_bite.R

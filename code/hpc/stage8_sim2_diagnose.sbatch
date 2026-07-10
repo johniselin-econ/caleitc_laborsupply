@@ -9,4 +9,4 @@
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
 # needs the stage8b golden dump (code/hpc/stage8_txpydump.do) on disk first
-Rscript code/R/validate/diagnose_sim2_residual.R
+Rscript code/validate/diagnose_sim2_residual.R

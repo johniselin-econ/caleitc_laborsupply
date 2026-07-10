@@ -15,4 +15,4 @@
 # the headroom in the limit.
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/03b_sdid_stateplacebo.R
+Rscript code/11_sdid_placebo.R

@@ -11,4 +11,4 @@
 # 2010-2019). 2014 already exists from job 17096067.
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/01_clean_data.R $SLURM_ARRAY_TASK_ID
+Rscript code/04_clean_acs.R $SLURM_ARRAY_TASK_ID

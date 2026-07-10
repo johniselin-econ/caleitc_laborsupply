@@ -13,4 +13,4 @@
 # 462k baseline sample; deterministic, no seeds.
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/08_dose_response.R
+Rscript code/36_dose_response.R

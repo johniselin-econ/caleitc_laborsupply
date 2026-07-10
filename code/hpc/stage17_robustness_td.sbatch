@@ -13,4 +13,4 @@
 # a cheap state-level collapse. No seeds (permutation is exhaustive).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/07_robustness_td.R
+Rscript code/33_robustness_td.R

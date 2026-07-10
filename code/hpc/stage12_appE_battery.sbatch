@@ -11,4 +11,4 @@
 # Run only after stage11_det_validate passes (deterministic layers validated).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/04_appE_inference.R
+Rscript code/20_altinference.R

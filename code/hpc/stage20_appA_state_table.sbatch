@@ -14,4 +14,4 @@
 # per-session memory cap.
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/04c_appA_state_table.R
+Rscript code/60_state_tab.R

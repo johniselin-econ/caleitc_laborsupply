@@ -13,4 +13,4 @@
 # in-run against the committed Stata golden (logs.zip 02_elasticities_2026-03-07).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/10_elasticities.R
+Rscript code/50_elasticities.R

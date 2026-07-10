@@ -10,4 +10,4 @@
 # Needs all per-year RDS files (stage9_clean_years.sbatch).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/02_working_file.R
+Rscript code/05_working_file.R

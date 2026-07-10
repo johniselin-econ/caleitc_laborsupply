@@ -14,4 +14,4 @@
 # split and the 12h limit; no-cov tasks finish in ~30 min.
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/03_sdid_county.R
+Rscript code/10_sdid.R

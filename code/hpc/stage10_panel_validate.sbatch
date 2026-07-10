@@ -10,4 +10,4 @@
 # file (needs stage10_sdid_panel.sbatch to have completed).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/validate/validate_sdid_panel.R
+Rscript code/validate/validate_sdid_panel.R

@@ -10,4 +10,4 @@
 # Needs acs_working_file_r.rds (stage9_working_file.sbatch).
 module load R/4.4.2-gfbf-2024a
 cd /nfs/roberts/project/pi_nrs36/ji252/repos/caleitc_laborsupply
-Rscript code/R/validate/validate_working_file.R
+Rscript code/validate/validate_working_file.R
