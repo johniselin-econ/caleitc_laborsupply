@@ -141,3 +141,6 @@ renv/staging/
 
 # Recovered author run logs (mined in Phase 0; see PLAN.md and logszip memory)
 logs.zip
+
+# Local paper build scratch (paper/build.sh)
+paper/build/
