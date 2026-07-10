@@ -6,6 +6,21 @@ stages (parameter prep, exhibit builders) run locally. This is the end-to-end
 recipe. The legacy Stata implementation is archived under `legacy/stata/` and
 its golden logs (`legacy/stata/logs.zip`) are the validation targets.
 
+## TL;DR — one-command re-run (from the working file)
+
+```
+bash code/hpc/run_pipeline.sh          # (--dry to preview)
+```
+
+Submits the 12 analysis compute stages in parallel (they depend only on the
+existing working file), then a final `stage_exhibits` job (`--dependency=afterok`
+on all of them) that stages the fresh outputs (`stage_rerun.R`), rebuilds every
+paper table/figure (`00_run_all.R`), and compiles `paper/main_aejep.pdf`. Each
+compute stage self-validates in-run against the Stata golden. Track with
+`squeue -u $USER`; logs in `code/logs/`. Re-cleaning + rebuilding the working
+file first is §1–§2 below. Everything else in this runbook is the manual
+breakdown of that command.
+
 ## 0. Prerequisites
 
 - **R** 4.4.2 (`module load R/4.4.2-gfbf-2024a` on the cluster). Restore the

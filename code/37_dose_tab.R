@@ -21,11 +21,9 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
-post <- read.csv(file.path("results", "dose_response",
-                           "dose_post_job17255329.csv")) |>
+post <- read.csv(latest_result("dose_response", "dose_post")) |>
   filter(spec == 2)
-ri <- read.csv(file.path("results", "dose_response",
-                         "dose_ri_job17255329.csv"))
+ri <- read.csv(latest_result("dose_response", "dose_ri"))
 
 OUTS <- c("employed_y", "full_time_y", "part_time_y")  # column order
 
@@ -75,8 +73,7 @@ for (d in c("results/tables", "results/paper"))
 message("tab_dose_1: ", length(tex), " lines (N = ", N, ")")
 
 # Event-study pre-trend flag quoted in the paper note — print for cross-check.
-es <- read.csv(file.path("results", "dose_response",
-                         "dose_es_job17255329.csv"))
+es <- read.csv(latest_result("dose_response", "dose_es"))
 message("\n2012 (pre) T3 coefficients, spec 2 (note text), employed/FT/PT:")
 for (y in OUTS) {
   d <- es |> filter(outcome == y, term == "g3_2012")

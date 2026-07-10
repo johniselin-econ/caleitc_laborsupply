@@ -30,10 +30,8 @@ suppressPackageStartupMessages({
   library(ggplot2)
 })
 
-es <- read.csv(file.path("results", "sdid_r",
-                         "sdid_county_es_r_job17232065.csv"))
-county <- read.csv(file.path("results", "sdid_r",
-                             "sdid_county_r_job17203764.csv"))
+es <- read.csv(latest_result("sdid_r", "sdid_county_es_r"))
+county <- read.csv(latest_result("sdid_r", "sdid_county_r"))
 
 # Cross-check: each curve's stored ATT must equal the stage-13 weighted ATT
 chk <- es |>

@@ -34,7 +34,7 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
-bat <- read.csv(file.path("results", "appE_r", "appE_r_job17177816.csv"))
+bat <- read.csv(latest_result("appE_r", "appE_r"))
 stopifnot(nrow(bat) == 12, all(bat$N == 461616))
 
 OUTCOMES <- c("employed_y", "full_time_y", "part_time_y")  # panels 1/2/3

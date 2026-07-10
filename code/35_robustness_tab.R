@@ -30,10 +30,8 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
-med <- read.csv(file.path("results", "robustness",
-                          "robustness_medicaid_job17253645.csv"))
-alt <- read.csv(file.path("results", "robustness",
-                          "robustness_altthresh_job17253645.csv"))
+med <- read.csv(latest_result("robustness", "robustness_medicaid"))
+alt <- read.csv(latest_result("robustness", "robustness_altthresh"))
 hon <- read.csv(file.path("results", "honestdid",
                           "honestdid_sensitivity.csv"))
 

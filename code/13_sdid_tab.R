@@ -30,10 +30,8 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
-county <- read.csv(file.path("results", "sdid_r",
-                             "sdid_county_r_job17203764.csv"))
-plac   <- read.csv(file.path("results", "sdid_r",
-                             "sdid_county_stateplacebo_r_job17220617.csv"))
+county <- read.csv(latest_result("sdid_r", "sdid_county_r"))
+plac   <- read.csv(latest_result("sdid_r", "sdid_county_stateplacebo_r"))
 
 OUTCOMES <- c("employed_y", "full_time_y", "part_time_y")  # panels 1/2/3
 SPECS    <- c("basic", "basic_cov", "triple", "triple_cov")  # cols (1)-(4)

@@ -30,12 +30,9 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
-reg  <- read.csv(file.path("results", "mw_bite",
-                           "mw_bite_reg_job17232853.csv"))
-drop <- read.csv(file.path("results", "mw_bite",
-                           "mw_bite_sdid_drop_job17232853.csv"))
-full <- read.csv(file.path("results", "sdid_r",
-                           "sdid_county_r_job17203764.csv")) |>
+reg  <- read.csv(latest_result("mw_bite", "mw_bite_reg"))
+drop <- read.csv(latest_result("mw_bite", "mw_bite_sdid_drop"))
+full <- read.csv(latest_result("sdid_r", "sdid_county_r")) |>
   filter(spec == "triple", variant == "weighted")
 
 # Columns (1)-(3): the triple margins, Table 2 panel order

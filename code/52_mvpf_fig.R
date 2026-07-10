@@ -22,7 +22,7 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages({library(dplyr); library(tidyr); library(ggplot2)})
 
-m <- read.csv(file.path("results", "mvpf", "mvpf_models_job17750705.csv"))
+m <- read.csv(latest_result("mvpf", "mvpf_models"))
 
 save_fig <- function(p, base, w = 8, h = 16/3) {
   ggsave(file.path("results", "figures", paste0(base, ".png")), p,

@@ -49,3 +49,14 @@ params <- yaml::read_yaml(file.path(repo_root, "config", "parameters.yaml"))
 
 path_data    <- function(...) file.path(cfg$data_dir, ...)
 path_results <- function(...) file.path(cfg$results_dir, ...)
+
+# Newest job-tagged result in results/<area> matching <base>_job*.<ext>. On a
+# fresh checkout this is the committed file; after a re-run + staging (see
+# code/hpc/stage_rerun.R) the freshly staged file wins by mtime. Lets the
+# exhibit builders track re-runs without hard-coded job ids.
+latest_result <- function(area, base, ext = "csv") {
+  fs <- Sys.glob(path_results(area, paste0(base, "_job*.", ext)))
+  if (!length(fs))
+    stop("latest_result: no results/", area, "/", base, "_job*.", ext)
+  fs[order(file.mtime(fs), decreasing = TRUE)][1]
+}

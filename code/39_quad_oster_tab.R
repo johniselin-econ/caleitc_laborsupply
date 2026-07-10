@@ -29,11 +29,8 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
-JOB  <- "17562426"
-quad <- read.csv(file.path("results", "quad_oster",
-                           paste0("quad_diff_r_job", JOB, ".csv")))
-ost  <- read.csv(file.path("results", "quad_oster",
-                           paste0("oster_bounds_r_job", JOB, ".csv")))
+quad <- read.csv(latest_result("quad_oster", "quad_diff_r"))
+ost  <- read.csv(latest_result("quad_oster", "oster_bounds_r"))
 
 stars <- function(p) ifelse(p < 0.01, "\\sym{***}",
                      ifelse(p < 0.05, "\\sym{**}",
