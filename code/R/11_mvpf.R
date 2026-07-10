@@ -249,10 +249,12 @@ mvpf_from_pool <- function(p, ft_pt_cf, meta) {
   numerator <- DIRECT_REAL - E["caleitc"]
   d1 <- DIRECT_REAL; d2 <- d1 - E["fed_liab"]; d3 <- d2 - E["pay_liab"]
   d4 <- d3 - E["st_nocal_liab"]
+  comps <- as.list(E); names(comps) <- paste0("eff_", COMPS)   # opt3 real $M
   data.frame(as.list(meta), ft_pt_cf,
              numerator, denom1 = d1, denom2 = d2, denom3 = d3, denom4 = d4,
              mvpf_1 = numerator/d1, mvpf_2 = numerator/d2,
-             mvpf_3 = numerator/d3, mvpf_4 = numerator/d4, row.names = NULL)
+             mvpf_3 = numerator/d3, mvpf_4 = numerator/d4,
+             comps, direct_real = DIRECT_REAL, row.names = NULL)
 }
 
 # =============================================================================

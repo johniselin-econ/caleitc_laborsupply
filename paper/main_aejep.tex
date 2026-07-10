@@ -742,7 +742,7 @@ Program cost incorporates fiscal spillovers from the labor supply response on fe
 \end{split}
 \end{equation}
 
-I simulate fiscal spillovers using TAXSIM, drawing a random sample of single mothers working part-time in the CalEITC earnings range and computing their federal and state tax liabilities with and without the labor supply change.\footnote{I do not estimate spillovers from other social programs or long-term effects due to data limitations; the direction of bias is ambiguous. See Online Appendix for details.}
+I simulate fiscal spillovers using TAXSIM, computing the federal and state tax liabilities of single mothers working part-time in the CalEITC earnings range with and without the labor supply change and weighting each by the estimated share who shifted into part-time work.\footnote{I do not estimate spillovers from other social programs or long-term effects due to data limitations; the direction of bias is ambiguous. See Online Appendix for details.}
 
 %% --- Results ---
 
@@ -1080,10 +1080,15 @@ The employment estimates are indistinguishable from zero under every procedure. 
 
 %% Most demoted appendix figures are now inserted above in \Cref{sec:app_a}
 %% (emp_trends, weeks, specurve, het_qc, het_qc_age, sch_15_17, eitc_ctc,
-%% eitc_sch_2017). Remaining figure still to add:
-\todo{Add \texttt{fig:appA\_fiscal\_spill} -- fiscal spillover decomposition by
-revenue source (referenced from \Cref{sec:mvpf}); pending the Phase-4 MVPF
-figure (\texttt{fig\_mvpf\_distribution} / fiscal-externality exhibit).}
+%% eitc_sch_2017, and fiscal_spill below).
+
+%% Fiscal spillover decomposition (referenced from Section MVPF)
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.85\linewidth]{figures/fig_mvpf_spillovers.jpg}
+\caption{Fiscal spillovers of the CalEITC, by revenue source} \label{fig:appA_fiscal_spill}
+\floatfoot{\textbf{Note}: Change in annual government revenue (millions of 2017 dollars) from the CalEITC-induced full-time-to-part-time shift, for the preferred specification (\Cref{tab:triple_diff_main}, low-education sample, full controls, heterogeneity by qualifying-child count), decomposed by revenue source and shown for each of the three counterfactual full-time earnings assumptions. Federal IIT, payroll tax, and state IIT (excluding the CalEITC itself) are changes in revenue; Federal EITC and CTC are shown as changes in expenditure (positive = higher outlay). Liabilities computed with NBER's TAXSIM v35 at CalEITC-maximizing income versus the counterfactual, summed over the affected population using the estimated shift shares. State IIT net of the CalEITC is near zero because affected filers have no California income-tax liability at these earnings.}
+\end{figure}
 
 
 %% =============================================================================
