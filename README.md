@@ -11,186 +11,73 @@ This paper examines the labor supply effects of the CalEITC, introduced in 2015 
 
 ## Repository Structure
 
-The code is organized to match the paper structure. Files are numbered by section:
-- `00_` - Main orchestration script
-- `01_` - Data cleaning
-- `02_` - Analysis (elasticities, MVPF)
-- `03_` - Main text figures and tables (organized by paper section)
-- `04_` - Appendix material
+The R pipeline lives at the `code/` root, numbered by phase (data → SDID →
+inference → robustness → welfare); exhibit-builders carry a `_tab`/`_fig`
+suffix. Stages marked `[HPC]` load the ~2 GB working file (or TAXSIM) and run
+as SLURM jobs; the rest run locally. The superseded Stata implementation is
+archived under `legacy/stata/`. See `RUNBOOK.md` for the end-to-end recipe.
 
 ```
 caleitc_laborsupply/
 ├── code/
-│   │
-│   │   ## (00-02) DATA AND ANALYSIS
-│   ├── 00_caleitc.do              # Main script (runs all analyses)
-│   ├── 01_clean_data.do           # Data cleaning and preparation
-│   ├── 02_elasticities.do         # Elasticity calculations
-│   ├── 02_mvpf.do                 # MVPF calculations
-│   ├── 02_eitc_param_prep.do      # EITC benefit schedule preparation
-│   ├── 02b_caleitc_param_gen.do   # CalEITC parameters generation
-│   │
-│   │   ## (03) MAIN TEXT — AEJ:EP (main_aejep.tex)
-│   │   # Section 2: Policy Background
-│   ├── 03_fig_eitc_sched.do       # Fig 1: EITC benefit schedules (TY 2016)
-│   ├── 03_fig_earn_hist.do        # Fig 2: Histograms of CA workers
-│   │   # Section 3: Conceptual Framework
-│   ├── 03_fig_budget.do           # Fig 3: Budget constraint (2 QC, 2016)
-│   │   # Section 5.1: Main Results
-│   ├── 03_tab_main.do             # Table 1: Main triple-diff estimates
-│   ├── 03_fig_event_emp.do        # Fig 4: Event-study (employment)
-│   │   # Section 5.2: Decomposition
-│   ├── 03_fig_hours_bins.do       # Fig 5: Effect by weekly hours
-│   │   # Section 5.3: Robustness
-│   ├── 03_sdid_county.do          # Table 2: County-panel weighted SDID
-│   ├── 03_fig_event_col_placebo.do # Fig 6: College placebo (falsification)
-│   ├── 03_tab_quad_diff.do        # (inline) Quadruple-difference
-│   ├── 03_tab_oster_bounds.do     # (inline) Oster bounds
-│   │   # Section 6: Earnings
-│   ├── 03_tab_earnings.do         # Table 3: Earnings effects (OLS & PPML)
-│   ├── 03_fig_earn_bins.do        # Fig 7: Earnings distribution changes
-│   │   # Section 7: Heterogeneity
-│   ├── 03_tab_het_adults.do       # Fig 8: By number of adults
-│   ├── 03_fig_event_earn.do       # Own vs HH income event-study
-│   │   # Section 8: MVPF
-│   ├── 03_fig_mvpf_dist.do        # Fig 9: MVPF distribution
-│   │   # Demoted to appendix (uncomment in 00_caleitc.do for full draft)
-│   ├── 03_fig_emp_trends.do       # FT/PT employment trends
-│   ├── 03_fig_weeks.do            # Effect by annual weeks
-│   ├── 03_fig_spec_curve.do       # Specification curves
-│   ├── 03_tab_het_qc.do           # By number of QC
-│   ├── 03_tab_het_qc_age.do       # By age of youngest QC
-│   ├── 03_fig_mvpf_spillovers.do  # Fiscal spillovers
-│   │   # Archived (not in AEJ:EP submission)
-│   ├── 03_sdid_state.do           # State-level SDID (superseded by county)
-│   ├── 03_fig_treat_by_earn.do    # Treatment effects by earnings bins
-│   ├── 03_tab_earn_hhcomp.do      # Earnings by HH composition
-│   ├── 03_tab_intensive.do        # Intensive margin (hours, weeks)
-│   ├── 03_tab_sim_inst.do         # Simulated instrument results
-│   ├── 03_tab_hh_earn.do          # Household earnings (OLS & PPML)
-│   ├── 03_tab_desc.do             # Deprecated — see 04_appA_tab1.do
-│   ├── 02_descriptives.do         # Summary statistics (standalone)
-│   │
-│   │   ## (04) APPENDICES
-│   │   # Appendix A: Additional Tables and Figures
-│   ├── 04_appA_tab1.do            # Table A.1: Sample states and statistics
-│   ├── 04_appA_fig_eitc_sched_15_17.do     # Figure A.1: EITC schedules 2015/2017
-│   ├── 04_appA_fig_eitc_ctc_sched.do       # Figure A.2: EITC/CTC schedules (2016)
-│   ├── 04_appA_fig_tcja_yctc.do            # Figure A.3: Post-2017 tax credit changes
-│   ├── 04_appA_fig_unemp_trends.do         # Figure A.4: Unemployment trends
-│   ├── 04_appA_fig_minwage.do              # Figure A.5: Minimum wages
-│   ├── 04_appA_fig_atr_event.do            # Figure A.6: After-tax rate effect
-│   ├── 04_appA_tab_balance.do              # Tables A.2-A.3: Balance tests
-│   ├── 04_appA_tab_col_placebo.do          # Table A.4: College placebo table
-│   │   # Appendix A: ** FUTURE WORK **
-│   ├── 04_appA_fig_spec_curve_reported.do  # Spec curves (reported hours/weeks)
-│   ├── 04_appA_fig_emp_trends_alt.do       # Alt FT/PT thresholds
-│   ├── 04_appA_tab_alt_threshold.do        # Alt threshold estimates
-│   ├── 04_appA_tab_het_qc_age.do           # Heterogeneity by youngest QC age
-│   ├── 04_appendix.do                      # Placeholder (unused)
-│   │   # Appendix B: Other Populations
-│   ├── 04_appB_otherpops.do       # Figures B.1-B.3: Married women, single/married men
-│   │   # Appendix C: Self-Employment
-│   ├── 04_appC_tab_wage_emp.do    # Table C.1: Wage workers
-│   ├── 04_appC_tab_self_emp.do    # Table C.2: Self-employment
-│   ├── 04_appC_fig_wage_emp.do    # Figure C.1: Wage workers event-study
-│   ├── 04_appC_fig_self_emp.do    # Figure C.2: Self-employment event-study
-│   │   # Appendix D: Inference
-│   ├── 04_appE_inference.do       # Table D.1: Alternative inference procedures
-│   │   # Appendix D: Helper files (not directly called)
-│   ├── 04_appE_inference_programs.do       # Inference helper programs
-│   ├── 04_appE_inference_parallel.do       # Parallelized inference
-│   ├── 04_appE_inference_worker.do         # Worker program for parallel
-│   │
-│   │   ## SUBDIRECTORIES
-│   ├── R/                         # R pipeline (Stata-to-R migration; see below)
-│   │   ├── 00_main.R              # Master driver (mirrors 00_caleitc.do)
-│   │   ├── 01_clean_data.R        # Data cleaning port
-│   │   ├── 01_data_prep_other.R   # BLS and minimum wage data prep
-│   │   ├── 02_working_file.R      # Working-file assembly (validated vs Stata)
-│   │   ├── 03_sdid_county.R       # Table 2: weighted SDID (synthdid fork)
-│   │   ├── 03b_sdid_stateplacebo.R # State-placebo RI for the county SDID
-│   │   ├── 03c_sdid_eventstudy.R  # SDID event studies (Ciccia decomposition)
-│   │   ├── 03d_sdid_table2.R      # Table 2 tex fragments
-│   │   ├── 03e_sdid_esfigures.R   # SDID event-study figures
-│   │   ├── 04_appE_inference.R    # Appendix inference battery (R port)
-│   │   ├── 04b_appE_table.R       # Appendix inference table (+ RI, CT rows)
-│   │   ├── 05_mw_bite.R           # Minimum-wage bite test (§Threats)
-│   │   ├── 05b_mw_bite_table.R    # MW bite tex fragments
-│   │   ├── 06_honestdid.R         # Rambachan-Roth sensitivity (HonestDiD)
-│   │   ├── 07_robustness_td.R     # Medicaid pool / alt thresholds / earn-density
-│   │   ├── 07b_earnbins_scale.R   # Precision-scaled earnings permutation
-│   │   ├── 07c_robustness_tables.R # Robustness tex fragments
-│   │   ├── 08_dose_response.R     # Exposure-design dose response
-│   │   ├── api_code.R             # IPUMS API data download
-│   │   ├── gen_caleitc_params.R   # CalEITC kink parameters (provenance-verified)
-│   │   ├── utils/                 # config, estimation, inference, taxsim,
-│   │   │                          #   qc_assignment, sdid_panel/setup, clean_steps
-│   │   └── validate/              # Stage-by-stage R-vs-Stata validation scripts
-│   ├── hpc/                       # SLURM sbatch files (stages 1-18; see below)
-│   ├── utils/
-│   │   ├── globals.do             # Global macro definitions
-│   │   ├── programs.do            # Reusable Stata programs
-│   │   └── sdid_wt.do             # Weighted SDID estimation program
-│   ├── archive/                   # Archived/backup files
-│   └── logs/                      # Log files (incl. SLURM job logs)
-│
-├── config/
-│   ├── parameters.yaml            # Years, seed, sample bounds, spec definitions
-│   ├── caleitc_ftb3514.yaml       # Verified CalEITC schedule (FTB Form 3514)
-│   └── local_paths.yaml(.example) # Machine-local paths (yaml gitignored)
-│
-├── data/
-│   ├── raw/                       # Raw data files (not tracked)
-│   ├── interim/                   # Intermediate processed data
-│   ├── final/                     # Final analysis datasets (.dta and .rds)
-│   ├── tmp/                       # Per-job scratch outputs (staged to results/)
-│   ├── acs/                       # ACS data from IPUMS
-│   ├── eitc_parameters/           # EITC benefit schedule parameters
-│   │   └── caleitc_params.txt     # CalEITC kink point parameters by year/QC
-│   └── taxsim/                    # TAXSIM working directory
-│
-├── results/
-│   ├── figures/                   # Output figures (PNG, JPG)
-│   ├── tables/                    # Output tables (LaTeX, CSV)
-│   ├── paper/                     # Paper-ready outputs
-│   ├── sdid_r/                    # Staged SDID results (job-tagged CSVs/.rds)
-│   ├── appE_r/                    # Staged R inference-battery results
-│   ├── mw_bite/                   # Staged minimum-wage bite results
-│   ├── honestdid/                 # HonestDiD sensitivity CIs
-│   ├── robustness/                # Medicaid / alt-threshold / earn-density results
-│   └── dose_response/             # Dose-response results
-│
-├── renv/ + renv.lock              # R package library (R 4.4.2)
-├── PLAN.md                        # Living revision/migration plan and work log
-├── api_codes.txt                  # API keys (not tracked)
-└── README.md
+│   ├── 00_run_all.R            # driver: params + exhibits (local); HPC recipe
+│   ├── 01_download_acs.R       # IPUMS ACS extract
+│   ├── 02_download_aux.R       # FIPS, BLS unemployment, minimum wage
+│   ├── 03_caleitc_params.R     # CalEITC schedule params (FTB 3514)
+│   ├── 04_clean_acs.R          # per-year cleaning                     [HPC]
+│   ├── 05_working_file.R       # append years + TAXSIM sim-2      [HPC ~96G]
+│   ├── 10_sdid.R 11_sdid_placebo.R 12_sdid_eventstudy.R           [HPC]
+│   ├── 13_sdid_tab.R 14_sdid_fig.R              # Table 2 + event-study figs
+│   ├── 20_altinference.R       # alternative-inference battery         [HPC]
+│   ├── 21_altinference_tab.R
+│   ├── 30_mw_bite.R 33_robustness_td.R 34_earnbins_scale.R        [HPC]
+│   ├── 36_dose_response.R 38_quad_oster.R                         [HPC]
+│   ├── 32_honestdid.R          # HonestDiD (local; SDID rep matrices)
+│   ├── 31/35/37/39_*_tab.R     # robustness exhibit builders (local)
+│   ├── 50_elasticities.R 51_mvpf.R                               [HPC]
+│   ├── 52_mvpf_fig.R           # MVPF distribution + spillover figures
+│   ├── 60_state_tab.R          # sample-states table              [HPC]
+│   ├── lib/                    # shared utils (config, estimation, taxsim, …)
+│   ├── validate/               # R-vs-Stata golden validation scripts
+│   └── hpc/                    # SLURM sbatch (one per compute stage)
+├── config/                     # parameters.yaml, caleitc_ftb3514.yaml, paths
+├── data/                       # acs/, final/, eitc_parameters/ (mostly gitignored)
+├── results/                    # job-tagged outputs: tables/ figures/ paper/ <area>/
+├── paper/                      # main_aejep.tex, references.bib, build.sh
+├── legacy/stata/               # archived Stata pipeline + golden logs.zip
+├── RUNBOOK.md                  # full re-run recipe
+└── PLAN.md                     # migration plan + work log
 ```
 
-## Stata-to-R Migration (in progress)
+## Stata-to-R Migration (complete)
 
-The analysis is being migrated from Stata to R; `PLAN.md` is the living
-plan and work log (author decisions, validation records, and the todo
-list). Current state:
+The analysis has been fully ported from Stata to R; `PLAN.md` is the work
+log (author decisions, validation records) and `RUNBOOK.md` is the re-run
+recipe. Summary:
 
-- **Validated ports** (R output checked against the Stata pipeline,
+- **Validated ports** (R output checked against the Stata golden,
   row-for-row or coefficient-by-coefficient): QC assignment, working-file
-  assembly, TAXSIM sims 1-3, the triple-diff/event-study estimation
-  helpers, and the appendix inference battery.
-- **New R-only analyses** (Phase 3 robustness agenda, PLAN.md §A):
-  weighted county SDID on the `synthdid_weights` fork (Table 2), state-
-  placebo randomization inference, SDID event studies + HonestDiD
-  sensitivity, minimum-wage bite test, Medicaid-pool and alternative-
-  threshold triple-diffs, earnings-density permutation, and the
-  exposure-design dose response.
-- **Still Stata**: the original `01`-`04` pipeline remains runnable;
-  elasticities/MVPF (Phase 4) not yet ported.
+  assembly, TAXSIM sims 1-3, triple-diff/event-study estimation, the main
+  table, the appendix inference battery, the quad-diff + Oster bounds, the
+  participation/mobility elasticities, and the MVPF grid. The golden logs
+  are archived at `legacy/stata/logs.zip`.
+- **New R analyses** (Phase 3 robustness agenda, PLAN.md §A): weighted
+  county SDID on the `synthdid_weights` fork (Table 2), state-placebo
+  randomization inference, SDID event studies + HonestDiD sensitivity,
+  minimum-wage bite test, Medicaid-pool and alternative-threshold
+  triple-diffs, earnings-density permutation, and the exposure-design dose
+  response.
+- **Two deliberate deviations from the golden**, documented in the scripts:
+  the elasticities adopt the current rebuilt-extract values (superseding the
+  older Stata golden by ~0.7%), and the MVPF uses a deterministic
+  expected-value assignment in place of the do-file's unseeded Monte-Carlo
+  draw (reproduces the golden within MC tolerance).
+- The Stata pipeline is archived under `legacy/stata/` for provenance.
 
 ### Cluster workflow
 
-Long-running jobs go through SLURM (`code/hpc/stage*.sbatch`, stages
-1-18: stages 1-3 legacy Stata jobs, 4-12 port-validation and inference
-stages, 13-18 the SDID/robustness analyses). Jobs write to `data/tmp/`;
+Long-running jobs go through SLURM (`code/hpc/stage*.sbatch`; each compute
+stage maps to one script — see `RUNBOOK.md`). Jobs write to `data/tmp/`;
 results are then staged into the job-tagged `results/` subdirectories
 (e.g. `results/robustness/robustness_medicaid_job17253645.csv`) and
 committed, so every committed result traces to a SLURM job id and log
