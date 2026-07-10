@@ -926,6 +926,116 @@ Two important limitations stem from the ACS data. First, without longitudinal da
     \floatfoot{\textbf{Note}: \cite{rambachan_more_2023} robust 95\% confidence intervals for the average post-period effect, computed on the weighted SDID event studies of \Cref{tab:sdid} (columns identify the outcome and specification). Panel A allows post-period deviations from parallel trends up to $\bar{M}$ times the largest pre-period deviation; Panel B bounds the change in the slope of the differential trend by $M$ percentage points per period. ``Original 95\% CI'' is the SDID event-study confidence interval under exact parallel trends. Intervals excluding zero indicate the effect is robust at that level of assumed violation.}
 \end{table}
 
+%% =============================================================================
+%% Demoted main-text figures (re-inserted here as appendix A figures)
+%% =============================================================================
+
+%% Employment trends (demoted from main Fig 4)
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_emp_trends_a.jpg}
+   \caption{Full-time}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_emp_trends_b.jpg}
+   \caption{Part-time}
+\end{subfigure}
+\caption{Employment trends by qualifying-child status, California} \label{fig:appA_emp_trends}
+\floatfoot{\textbf{Note}: Share of single non-college women aged 20--49 employed full-time (35+ hours) and part-time ($<35$ hours) in California, by whether they have a qualifying child, 2012--2017. Shaded bands are 95\% confidence intervals. The two series trend in parallel before 2015.}
+\end{figure}
+
+%% Weeks worked (demoted from main Fig 7)
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.7\linewidth]{figures/fig_weeks.jpg}
+\caption{Treatment effects by annual weeks worked} \label{fig:appA_weeks}
+\floatfoot{\textbf{Note}: Triple-difference estimates of Equation \eqref{eq:eq1} interacting treatment with bins of annual weeks worked, for employment, full-time, and part-time work. Data: American Community Survey, 2012--2017. Sample: single non-college women aged 20--49. The full- and part-time effects are concentrated among those working 50--52 weeks per year. Standard errors clustered at the state level; bars are 95\% confidence intervals.}
+\end{figure}
+
+%% Specification curves (demoted from main Fig 9)
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_spec_curve_reported_employed_y.jpg}
+   \caption{Employed}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_spec_curve_reported_full_time_y.jpg}
+   \caption{Employed full-time}
+\end{subfigure}
+
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_spec_curve_reported_part_time_y.jpg}
+   \caption{Employed part-time}
+\end{subfigure}
+\caption{Specification-curve estimates} \label{fig:appA_specurve}
+\floatfoot{\textbf{Note}: Triple-difference estimates across specifications varying the sample (with/without college, ages 20--49 vs.\ 20--64), the control-state pool (main, no-EITC, Medicaid expansion), the time period, and the control set. Each point is one specification's treatment effect; specifications are sorted by point estimate. Data: American Community Survey. Bars are 95\% confidence intervals.}
+\end{figure}
+
+%% Heterogeneity by QC count (demoted from main Fig 11)
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.7\linewidth]{figures/fig_tab_het_qc.jpg}
+\caption{Heterogeneity by number of qualifying children} \label{fig:appA_het_qc}
+\floatfoot{\textbf{Note}: Triple-difference estimates of Equation \eqref{eq:eq1} estimated separately by number of qualifying children. Data: American Community Survey, 2012--2017. Sample: single non-college women aged 20--49. Standard errors clustered at the state level; bars are 95\% confidence intervals.}
+\end{figure}
+
+%% Heterogeneity by QC age (demoted from main Fig 13)
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.7\linewidth]{figures/fig_tab_het_qc_age.jpg}
+\caption{Heterogeneity by age of youngest qualifying child} \label{fig:appA_het_qc_age}
+\floatfoot{\textbf{Note}: Triple-difference estimates of Equation \eqref{eq:eq1} estimated separately by the age of the youngest qualifying child. Data: American Community Survey, 2012--2017. Sample: single non-college women aged 20--49. Standard errors clustered at the state level; bars are 95\% confidence intervals.}
+\end{figure}
+
+%% CalEITC schedules 2015/2017 (kept from appendix)
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_eitc_2015.jpg}
+   \caption{Tax year 2015}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.48\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_eitc_2017.jpg}
+   \caption{Tax year 2017}
+\end{subfigure}
+\caption{CalEITC benefit schedules, 2015 and 2017} \label{fig:fig_appA_sch_15_17}
+\floatfoot{\textbf{Note}: CalEITC benefit schedules by number of qualifying children, tax years 2015 and 2017. In 2017 the eligibility range was expanded and self-employment income was added to the earnings definition. Schedules generated using NBER's TAXSIM model version 35 \citep{feenberg_introduction_1993}.}
+\end{figure}
+
+%% CalEITC schedule 2017 (referenced from Section 2)
+\begin{figure}[htbp]
+\centering
+   \includegraphics[width=0.6\linewidth]{figures/fig_appA_eitc_2017.jpg}
+\caption{CalEITC benefit schedule, tax year 2017} \label{fig:eitc_sch_2017}
+\floatfoot{\textbf{Note}: CalEITC benefit schedule by number of qualifying children for tax year 2017, after the 2017 expansion of the eligibility range and the inclusion of self-employment income in the earnings definition. Generated using NBER's TAXSIM model version 35 \citep{feenberg_introduction_1993}.}
+\end{figure}
+
+%% EITC+CTC combined schedules (kept from appendix)
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_eitc_ctc_scheda.jpg}
+   \caption{No qualifying children}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.45\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_eitc_ctc_schedb.jpg}
+   \caption{One qualifying child}
+\end{subfigure}
+
+\begin{subfigure}[b]{0.45\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_eitc_ctc_schedc.jpg}
+   \caption{Two qualifying children}
+\end{subfigure}\hfill
+\begin{subfigure}[b]{0.45\textwidth}
+   \includegraphics[width=\linewidth]{figures/fig_appA_eitc_ctc_schedd.jpg}
+   \caption{Three qualifying children}
+\end{subfigure}
+\caption{Combined federal EITC and Child Tax Credit schedules, by number of qualifying children} \label{fig:fig_appA_eitc_ctc}
+\floatfoot{\textbf{Note}: Combined federal EITC and Child Tax Credit benefit as a function of earned income, by number of qualifying children. Generated using NBER's TAXSIM model version 35 \citep{feenberg_introduction_1993}; assumes a single filer whose adjusted gross income is solely wage income.}
+\end{figure}
+
 \clearpage
 
 \section{Alternative Inference} \label{sec:app_inf}
@@ -968,20 +1078,12 @@ The employment estimates are indistinguishable from zero under every procedure. 
 %% These need to be created / moved from current appendix or main text
 %% =============================================================================
 
-\todo{The following appendix figures are referenced from the main text and need to be included here or in the online supplement:
-\begin{itemize}
-    \item \texttt{fig:appA\_emp\_trends} -- Employment trends (demoted from main Fig 4)
-    \item \texttt{fig:appA\_weeks} -- Weeks worked (demoted from main Fig 7)
-    \item \texttt{fig:appA\_specurve} -- Specification curves (demoted from main Fig 9)
-    \item \texttt{fig:appA\_het\_qc} -- Heterogeneity by QC count (demoted from main Fig 11)
-    \item \texttt{fig:appA\_het\_qc\_age} -- Heterogeneity by QC age (demoted from main Fig 13)
-    \item \texttt{fig:appA\_fiscal\_spill} -- Fiscal spillover decomposition (demoted from main Fig 16)
-    \item \texttt{fig:fig\_appA\_sch\_15\_17} -- EITC schedules 2015/2017 (keep from current appendix)
-    \item \texttt{fig:fig\_appA\_eitc\_ctc} -- EITC+CTC schedules (keep from current appendix)
-    \item \texttt{fig:fig\_appA\_unemp} -- Unemployment trends (keep from current appendix)
-    \item \texttt{fig:fig\_appA\_minwage} -- Minimum wages (keep from current appendix)
-    \item \texttt{fig:fig\_appA\_firststage} -- ATR first stage (keep from current appendix)
-\end{itemize}}
+%% Most demoted appendix figures are now inserted above in \Cref{sec:app_a}
+%% (emp_trends, weeks, specurve, het_qc, het_qc_age, sch_15_17, eitc_ctc,
+%% eitc_sch_2017). Remaining figure still to add:
+\todo{Add \texttt{fig:appA\_fiscal\_spill} -- fiscal spillover decomposition by
+revenue source (referenced from \Cref{sec:mvpf}); pending the Phase-4 MVPF
+figure (\texttt{fig\_mvpf\_distribution} / fiscal-externality exhibit).}
 
 
 %% =============================================================================
