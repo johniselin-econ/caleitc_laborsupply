@@ -51,6 +51,9 @@ invisible(lapply(list.files(file.path(synthdid_dir, "R"),
                             pattern = "[.][Rr]$", full.names = TRUE), source))
 source(file.path("code", "R", "utils", "sdid_setup.R"))
 
+# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
+
 ## Panel ------------------------------------------------------------------------
 panel_rds <- path_data("interim", "sdid_county_panel_r.rds")
 if (file.exists(panel_rds)) {

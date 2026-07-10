@@ -59,6 +59,9 @@
 source(file.path("code", "R", "utils", "config.R"))
 source(file.path("code", "R", "utils", "estimation.R"))
 
+# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
+
 LAW_YEARS <- 2015:2017                 # CA cell-exposure law years (default)
 OUTS <- c("employed_y", "full_time_y", "part_time_y")
 

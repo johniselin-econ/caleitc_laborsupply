@@ -57,6 +57,9 @@
 source(file.path("code", "R", "utils", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
+# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
+
 ## Load the fork (their scripts source R/*.R directly; base R + mvtnorm) -------
 synthdid_dir <- cfg$synthdid_dir %||% file.path(dirname(repo_root),
                                                 "synthdid_weights")
@@ -106,7 +109,7 @@ res <- list()
 fits <- list()
 fit_i <- 0
 
-run_fit <- function(est, tag) {
+run_fit <- function(est) {
   fit_i <<- fit_i + 1
   seed_i <- params$seed + fit_i
   set.seed(seed_i)
@@ -152,7 +155,7 @@ for (gi in if (is.na(task)) seq_len(nrow(GRID)) else task) {
       treated.weights = s_pl$treated.weights, X = s_pl$X)
 
     for (v in names(variants)) {
-      st <- run_fit(variants[[v]], paste(out, sp, v))
+      st <- run_fit(variants[[v]])
       message(sprintf("  %-11s ATT %7.3f (SE %.3f)", v, st$att, st$se))
       res[[length(res) + 1]] <- cbind(
         data.frame(outcome = out, spec = sp, variant = v,

@@ -59,6 +59,9 @@ suppressPackageStartupMessages({
   library(fixest)
 })
 
+# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
+
 ## Constants --------------------------------------------------------------------
 cpi99 <- params$prices$cpi99
 to2019 <- function(x, yr) x * cpi99[[as.character(yr)]] / cpi99[["2019"]]
@@ -115,7 +118,8 @@ meas <- ca |>
     n_wage   = sum(!is.na(impl_wage)),
     n_mother = sum(qc_ct >= 1),
     popw     = sum(weight), .groups = "drop")
-stopifnot(nrow(meas) == length(ca_units), !anyNA(meas$bite_mw))
+stopifnot(nrow(meas) == length(ca_units), !anyNA(meas$bite_mw),
+          !anyNA(meas$exposure))
 
 wz <- function(x, w) (x - weighted.mean(x, w)) /
   sqrt(weighted.mean((x - weighted.mean(x, w))^2, w))

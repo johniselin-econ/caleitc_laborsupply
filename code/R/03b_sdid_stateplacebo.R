@@ -52,6 +52,9 @@
 source(file.path("code", "R", "utils", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
+# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
+
 ## Load the fork (their scripts source R/*.R directly; base R + mvtnorm) -------
 synthdid_dir <- cfg$synthdid_dir %||% file.path(dirname(repo_root),
                                                 "synthdid_weights")
