@@ -59,8 +59,6 @@ suppressPackageStartupMessages({
   library(fixest)
 })
 
-# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
-dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
 
 ## Constants --------------------------------------------------------------------
 cpi99 <- params$prices$cpi99

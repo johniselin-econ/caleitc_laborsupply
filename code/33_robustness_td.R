@@ -48,8 +48,6 @@
 source(file.path("code", "lib", "config.R"))
 source(file.path("code", "lib", "estimation.R"))
 
-# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
-dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
 
 ## Constants --------------------------------------------------------------------
 # Medicaid-expansion pool (03_fig_spec_curve.do:81-86; includes CA = 6)

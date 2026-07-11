@@ -60,3 +60,8 @@ latest_result <- function(area, base, ext = "csv") {
     stop("latest_result: no results/", area, "/", base, "_job*.", ext)
   fs[order(file.mtime(fs), decreasing = TRUE)][1]
 }
+
+# Guarantee the scratch output dir exists for every stage that sources config
+# (data/tmp is gitignored, so absent on fresh clones / clean cluster nodes).
+# Central here so all stages are covered; formerly duplicated per-stage.
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
