@@ -25,6 +25,9 @@
 source(file.path("code", "lib", "config.R"))
 suppressPackageStartupMessages(library(dplyr))
 
+# Ensure the scratch output dir exists (gitignored; absent on fresh clones)
+dir.create(path_data("tmp"), recursive = TRUE, showWarnings = FALSE)
+
 BIN_W    <- 6000
 BIN_MAX  <- 60000
 CAL_BINS <- c(6000, 12000)
