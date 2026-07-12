@@ -35,6 +35,9 @@ rm -rf "$BUILD"
 mkdir -p "$BUILD/tables" "$BUILD/figures"
 ln -sf "$REPO/$SRC/$MAIN.tex"      "$BUILD/$MAIN.tex"
 ln -sf "$REPO/$SRC/references.bib" "$BUILD/references.bib"
+# Vendored bib style: TinyTeX (local) lacks aer.bst; cluster texlive has it,
+# but the local copy takes precedence harmlessly either way.
+[ -f "$REPO/$SRC/aer.bst" ] && ln -sf "$REPO/$SRC/aer.bst" "$BUILD/aer.bst"
 
 # Search paths in precedence order (first hit wins).
 TAB_SRCS=(results/tables results/paper)
@@ -84,6 +87,8 @@ else
 fi
 
 # --- Diagnostics -------------------------------------------------------------
-echo "--- Undefined citations:  $(grep -c "Warning--I didn't find a database entry" "$MAIN.blg" 2>/dev/null || echo 0)"
-echo "--- Undefined references: $(grep -c 'LaTeX Warning: Reference.*undefined' "$MAIN.log" 2>/dev/null || echo 0)"
-echo "--- Undefined citations (LaTeX): $(grep -c 'LaTeX Warning: Citation.*undefined' "$MAIN.log" 2>/dev/null || echo 0)"
+echo "--- BibTeX errors:         $(grep -c 'error message' "$MAIN.blg" 2>/dev/null || true) (see $BUILD/$MAIN.blg)"
+echo "--- Undefined citations:   $(grep -c "Warning--I didn't find a database entry" "$MAIN.blg" 2>/dev/null || true)"
+echo "--- Undefined references:  $(grep -c 'LaTeX Warning: Reference.*undefined' "$MAIN.log" 2>/dev/null || true)"
+echo "--- Undefined citations (LaTeX+natbib): $(grep -cE '(LaTeX|Package natbib) Warning: Citation.*undefined' "$MAIN.log" 2>/dev/null || true)"
+[ -s "$MAIN.bbl" ] || echo "--- WARNING: $MAIN.bbl is EMPTY — bibliography did not build (missing .bst?)"
